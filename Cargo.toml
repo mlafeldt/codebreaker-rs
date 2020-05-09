@@ -4,7 +4,12 @@ version = "0.1.0"
 description = "Cryptographic functions for CodeBreaker PS2"
 authors = ["Mathias Lafeldt <mathias.lafeldt@gmail.com>"]
 license = "MIT"
+readme = "README.md"
 repository = "https://github.com/mlafeldt/codebreaker"
+documentation = "https://docs.rs/codebreaker/"
+homepage = "https://crates.io/crates/codebreaker"
+keywords = ["codebreaker", "ps2", "gamehacking", "homebrew"]
+categories = ["algorithms", "cryptography"]
 edition = "2018"
 
 [lib]
