@@ -1,4 +1,4 @@
-// Encrypt and decrypt codes using CB v7 scheme
+//! Encrypt and decrypt cheat codes for CodeBreaker PS2 v7+.
 
 use crate::rc4::Rc4;
 
@@ -91,13 +91,33 @@ impl Cb7 {
         self.beefcodf = addr & 1 != 0;
     }
 
-    // Encrypts a V7+ code.
+    /// Encrypts a code using CB v7 scheme and returns the result.
+    ///
+    /// # Example
+    /// ```
+    /// use codebreaker::cb7::Cb7;
+    ///
+    /// let mut cb7 = Cb7::default();
+    /// let code = cb7.encrypt_code(0x2043AFCC, 0x2411FFFF);
+    /// assert_eq!((0x397951B0, 0x41569FE0), code);
+    /// ```
     pub fn encrypt_code(&mut self, addr: u32, val: u32) -> (u32, u32) {
         let mut code = (addr, val);
         self.encrypt_code_mut(&mut code.0, &mut code.1);
         code
     }
 
+    /// Encrypts a code directly using CB v7 scheme.
+    ///
+    /// # Example
+    /// ```
+    /// use codebreaker::cb7::Cb7;
+    ///
+    /// let mut cb7 = Cb7::default();
+    /// let mut code = (0x2043AFCC, 0x2411FFFF);
+    /// cb7.encrypt_code_mut(&mut code.0, &mut code.1);
+    /// assert_eq!((0x397951B0, 0x41569FE0), code);
+    /// ```
     pub fn encrypt_code_mut(&mut self, addr: &mut u32, val: &mut u32) {
         let oldaddr = *addr;
         let oldval = *val;
@@ -142,13 +162,33 @@ impl Cb7 {
         }
     }
 
-    // Decrypts a V7+ code.
+    /// Decrypts a code using CB v7 scheme and returns the result.
+    ///
+    /// # Example
+    /// ```
+    /// use codebreaker::cb7::Cb7;
+    ///
+    /// let mut cb7 = Cb7::default();
+    /// let code = cb7.decrypt_code(0x397951B0, 0x41569FE0);
+    /// assert_eq!((0x2043AFCC, 0x2411FFFF), code);
+    /// ```
     pub fn decrypt_code(&mut self, addr: u32, val: u32) -> (u32, u32) {
         let mut code = (addr, val);
         self.decrypt_code_mut(&mut code.0, &mut code.1);
         code
     }
 
+    /// Decrypts a code directly using CB v7 scheme.
+    ///
+    /// # Example
+    /// ```
+    /// use codebreaker::cb7::Cb7;
+    ///
+    /// let mut cb7 = Cb7::default();
+    /// let mut code = (0x397951B0, 0x41569FE0);
+    /// cb7.decrypt_code_mut(&mut code.0, &mut code.1);
+    /// assert_eq!((0x2043AFCC, 0x2411FFFF), code);
+    /// ```
     pub fn decrypt_code_mut(&mut self, addr: &mut u32, val: &mut u32) {
         // Step 1: Decryption loop of 64 cycles, using the generated seeds
         let s = unsafe { slice_to_u32(&self.seeds) };

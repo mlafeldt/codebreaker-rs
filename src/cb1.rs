@@ -1,5 +1,14 @@
-// Encrypt and decrypt codes using CB v1 scheme
+//! Encrypt and decrypt cheat codes for CodeBreaker PS2 v1 - v6.
 
+/// Encrypts a code using CB v1 scheme and returns the result.
+///
+/// # Example
+/// ```
+/// use codebreaker::cb1;
+///
+/// let code = cb1::encrypt_code(0x1023CED8, 0x000003E7);
+/// assert_eq!((0x1A11330E, 0x000003E7), code);
+/// ```
 pub fn encrypt_code(mut addr: u32, mut val: u32) -> (u32, u32) {
     let cmd = (addr >> 28) as usize;
     let tmp = addr & 0xff000000;
@@ -11,12 +20,31 @@ pub fn encrypt_code(mut addr: u32, mut val: u32) -> (u32, u32) {
     (addr, val)
 }
 
+/// Encrypts a code directly using CB v1 scheme.
+///
+/// # Example
+/// ```
+/// use codebreaker::cb1;
+///
+/// let mut code = (0x1023CED8, 0x000003E7);
+/// cb1::encrypt_code_mut(&mut code.0, &mut code.1);
+/// assert_eq!((0x1A11330E, 0x000003E7), code);
+/// ```
 pub fn encrypt_code_mut(addr: &mut u32, val: &mut u32) {
     let code = encrypt_code(*addr, *val);
     *addr = code.0;
     *val = code.1;
 }
 
+/// Decrypts a code using CB v1 scheme and returns the result.
+///
+/// # Example
+/// ```
+/// use codebreaker::cb1;
+///
+/// let code = cb1::decrypt_code(0x1A11330E, 0x000003E7);
+/// assert_eq!((0x1023CED8, 0x000003E7), code);
+/// ```
 pub fn decrypt_code(mut addr: u32, mut val: u32) -> (u32, u32) {
     let cmd = (addr >> 28) as usize;
     if cmd > 2 {
@@ -28,6 +56,16 @@ pub fn decrypt_code(mut addr: u32, mut val: u32) -> (u32, u32) {
     (addr, val)
 }
 
+/// Decrypts a code directly using CB v1 scheme.
+///
+/// # Example
+/// ```
+/// use codebreaker::cb1;
+///
+/// let mut code = (0x1A11330E, 0x000003E7);
+/// cb1::decrypt_code_mut(&mut code.0, &mut code.1);
+/// assert_eq!((0x1023CED8, 0x000003E7), code);
+/// ```
 pub fn decrypt_code_mut(addr: &mut u32, val: &mut u32) {
     let code = decrypt_code(*addr, *val);
     *addr = code.0;
