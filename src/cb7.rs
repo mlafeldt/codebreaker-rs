@@ -5,6 +5,7 @@ use crate::rc4::Rc4;
 use std::mem::size_of;
 use std::slice;
 
+/// Represents the current state of the encryption scheme.
 pub struct Cb7 {
     seeds: [[u8; 256]; 5],
     key: [u32; 5],
@@ -12,7 +13,7 @@ pub struct Cb7 {
     initialized: bool,
 }
 
-// Use common CB V7 encryption (B4336FA9 4DFEFB79) of CMGSCCC.com
+/// Implements the default CB v7 encryption used by former CMGSCCC.com.
 impl Default for Cb7 {
     fn default() -> Self {
         let mut cb7 = Self::new();
@@ -22,6 +23,7 @@ impl Default for Cb7 {
 }
 
 impl Cb7 {
+    /// Allows to encrypt and decrypt codes for CB v7+.
     pub fn new() -> Cb7 {
         Cb7 {
             seeds: ZERO_SEEDS,
@@ -31,9 +33,28 @@ impl Cb7 {
         }
     }
 
-    // Used to generate/change the encryption key and seeds.
-    // "Beefcode" is the new V7+ seed code:
-    // BEEFC0DE vvvvvvvv, where vvvvvvvv = val.
+    /// Generates or changes the encryption key and seeds. Needs to be called
+    /// for every "beefcode", which comes in two flavors:
+    ///
+    /// ```text
+    /// BEEFC0DE vvvvvvvv
+    ///
+    /// or:
+    ///
+    /// BEEFC0DF vvvvvvvv
+    /// wwwwwwww wwwwwwww
+    ///
+    /// v = seed value
+    /// w = extra seed value
+    /// ```
+    ///
+    /// # Example
+    /// ```
+    /// use codebreaker::cb7::Cb7;
+    ///
+    /// let mut cb7 = Cb7::new();
+    /// cb7.beefcode(0xBEEFC0DE, 0x00000000);
+    /// ```
     pub fn beefcode(&mut self, addr: u32, val: u32) {
         assert!(is_beefcode(addr));
 
@@ -82,16 +103,12 @@ impl Cb7 {
             rc4.crypt(k);
         }
 
-        // BEEFC0DF is an extension of BEEFC0DE that uses additional seed values:
-        //
-        // BEEFC0DF vvvvvvvv
-        // wwwwwwww wwwwwwww
-        //
-        // Since we don't know "wwwwwwww wwwwwwww" yet, all we can do is set a flag.
+        // Since we don't know the extra seed value of BEEFC0DF yet,
+        // all we can do is set a flag.
         self.beefcodf = addr & 1 != 0;
     }
 
-    /// Encrypts a code using CB v7 scheme and returns the result.
+    /// Encrypts a code using the v7 scheme and returns the result.
     ///
     /// # Example
     /// ```
@@ -107,7 +124,7 @@ impl Cb7 {
         code
     }
 
-    /// Encrypts a code directly using CB v7 scheme.
+    /// Encrypts a code directly using the v7 scheme.
     ///
     /// # Example
     /// ```
@@ -162,7 +179,7 @@ impl Cb7 {
         }
     }
 
-    /// Decrypts a code using CB v7 scheme and returns the result.
+    /// Decrypts a code using the v7 scheme and returns the result.
     ///
     /// # Example
     /// ```
@@ -178,7 +195,7 @@ impl Cb7 {
         code
     }
 
-    /// Decrypts a code directly using CB v7 scheme.
+    /// Decrypts a code directly using the v7 scheme.
     ///
     /// # Example
     /// ```
@@ -231,9 +248,20 @@ impl Cb7 {
     }
 }
 
+/// Returns true if the code address indicates a "beefcode". In that case, the
+/// [`beefcode`](struct.Cb7.html#method.beefcode) method should be invoked.
+///
+/// # Example
+/// ```
+/// use codebreaker::cb7::is_beefcode;
+///
+/// assert_eq!(true, is_beefcode(0xBEEFC0DE));
+/// assert_eq!(true, is_beefcode(0xBEEFC0DF));
+/// assert_eq!(false, is_beefcode(0x12345678));
+/// ```
 #[inline(always)]
-pub fn is_beefcode(val: u32) -> bool {
-    val & 0xfffffffe == BEEFCODE
+pub fn is_beefcode(addr: u32) -> bool {
+    addr & 0xfffffffe == BEEFCODE
 }
 
 // Multiplication, modulo (2^32)
