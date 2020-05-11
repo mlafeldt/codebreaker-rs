@@ -14,6 +14,8 @@ pub struct Cb7 {
 }
 
 /// Implements the default CB v7 encryption used by former CMGSCCC.com.
+///
+/// Lets you omit `B4336FA9 4DFEFB79` as the first code in the list.
 impl Default for Cb7 {
     fn default() -> Self {
         let mut cb7 = Self::new();
@@ -108,7 +110,7 @@ impl Cb7 {
         self.beefcodf = addr & 1 != 0;
     }
 
-    /// Encrypts a code using the v7 scheme and returns the result.
+    /// Encrypts a code and returns the result.
     ///
     /// # Example
     /// ```
@@ -124,7 +126,7 @@ impl Cb7 {
         code
     }
 
-    /// Encrypts a code directly using the v7 scheme.
+    /// Encrypts a code directly.
     ///
     /// # Example
     /// ```
@@ -179,7 +181,7 @@ impl Cb7 {
         }
     }
 
-    /// Decrypts a code using the v7 scheme and returns the result.
+    /// Decrypts a code and returns the result.
     ///
     /// # Example
     /// ```
@@ -195,7 +197,7 @@ impl Cb7 {
         code
     }
 
-    /// Decrypts a code directly using the v7 scheme.
+    /// Decrypts a code directly.
     ///
     /// # Example
     /// ```

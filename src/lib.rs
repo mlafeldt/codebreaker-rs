@@ -1,4 +1,29 @@
 //! Encrypt and decrypt cheat codes for all versions of CodeBreaker PS2.
+//!
+//! Uses [cb1](cb1/index.html) and [cb7](cb7/index.html) under the hood to
+//! support both CB v1 and v7 codes.
+//!
+//! # Quick Start
+//! ```
+//! use codebreaker::Codebreaker;
+//!
+//! let mut encrypted: Vec<(u32, u32)> = vec![
+//!     (0x2AFF014C, 0x2411FFFF),
+//!     (0xB4336FA9, 0x4DFEFB79),
+//!     (0x973E0B2A, 0xA7D4AF10),
+//! ];
+//! let decrypted: Vec<(u32, u32)> = vec![
+//!     (0x2043AFCC, 0x2411FFFF),
+//!     (0xBEEFC0DE, 0x00000000),
+//!     (0x2096F5B8, 0x000000BE),
+//! ];
+//!
+//! let mut cb = Codebreaker::new();
+//! for code in encrypted.iter_mut() {
+//!     cb.decrypt_code_mut(&mut code.0, &mut code.1);
+//! }
+//! assert_eq!(decrypted, encrypted);
+//! ```
 
 // I don't like to reformat CB codes, seed tables, etc. for Clippy
 #![allow(clippy::unreadable_literal)]
@@ -33,7 +58,7 @@ impl Default for Codebreaker {
 }
 
 impl Codebreaker {
-    /// Allows to encrypt and decrypt any CB code (both v1 and v7).
+    /// Allows to encrypt and decrypt all CB v1 and v7 codes.
     pub fn new() -> Codebreaker {
         Codebreaker {
             scheme: Scheme::RAW,
@@ -43,6 +68,8 @@ impl Codebreaker {
     }
 
     /// Allows to encrypt and decrypt any CB v7 code published on CMGSCCC.com.
+    ///
+    /// Lets you omit `B4336FA9 4DFEFB79` as the first code in the list.
     pub fn new_v7() -> Codebreaker {
         Codebreaker {
             scheme: Scheme::V7,
@@ -51,7 +78,7 @@ impl Codebreaker {
         }
     }
 
-    /// Encrypts a code using the current scheme and returns the result.
+    /// Encrypts a code and returns the result.
     ///
     /// # Example
     /// ```
@@ -67,7 +94,7 @@ impl Codebreaker {
         code
     }
 
-    /// Encrypts a code directly using the current scheme.
+    /// Encrypts a code directly.
     ///
     /// # Example
     /// ```
@@ -93,7 +120,7 @@ impl Codebreaker {
         }
     }
 
-    /// Decrypts a code using the current scheme and returns the result.
+    /// Decrypts a code and returns the result.
     ///
     /// # Example
     /// ```
@@ -122,7 +149,7 @@ impl Codebreaker {
         code
     }
 
-    /// Decrypts a code directly using the current scheme.
+    /// Decrypts a code directly.
     ///
     /// # Example
     /// ```
@@ -158,8 +185,8 @@ impl Codebreaker {
         }
     }
 
-    /// Smart version of [decrypt_code](#method.decrypt_code) that detects if a
-    /// code needs to be decrypted and how.
+    /// Smart version of [decrypt_code](#method.decrypt_code) that detects if
+    /// and how a code needs to be decrypted.
     ///
     /// # Example
     /// ```
@@ -190,7 +217,7 @@ impl Codebreaker {
     }
 
     /// Smart version of [decrypt_code_mut](#method.decrypt_code_mut) that
-    /// detects if a code needs to be decrypted and how.
+    /// detects if and how a code needs to be decrypted.
     pub fn auto_decrypt_code_mut(&mut self, addr: &mut u32, val: &mut u32) {
         if self.scheme != Scheme::V7 {
             if self.code_lines == 0 {

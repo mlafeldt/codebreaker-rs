@@ -1,6 +1,6 @@
 //! Encrypt and decrypt cheat codes for CodeBreaker PS2 v1 - v6.
 
-/// Encrypts a code using the v1 scheme and returns the result.
+/// Encrypts a code and returns the result.
 ///
 /// # Example
 /// ```
@@ -20,7 +20,7 @@ pub fn encrypt_code(mut addr: u32, mut val: u32) -> (u32, u32) {
     (addr, val)
 }
 
-/// Encrypts a code directly using the v1 scheme.
+/// Encrypts a code directly.
 ///
 /// # Example
 /// ```
@@ -36,7 +36,7 @@ pub fn encrypt_code_mut(addr: &mut u32, val: &mut u32) {
     *val = code.1;
 }
 
-/// Decrypts a code using the v1 scheme and returns the result.
+/// Decrypts a code and returns the result.
 ///
 /// # Example
 /// ```
@@ -56,7 +56,7 @@ pub fn decrypt_code(mut addr: u32, mut val: u32) -> (u32, u32) {
     (addr, val)
 }
 
-/// Decrypts a code directly using the v1 scheme.
+/// Decrypts a code directly.
 ///
 /// # Example
 /// ```
