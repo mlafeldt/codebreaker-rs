@@ -341,23 +341,23 @@ const RC4_KEY: [u32; 5] = [0xd0dba9d7, 0x13a0a96c, 0x80410df0, 0x2ccdbe1f, 0xe57
 const RSA_DEC_KEY: u64 = 11;
 // This is how I calculated the encryption key e from d (some number theory):
 //
-// 	d = 11
-// 	n = 18446744073709551605
-// 	e = d^(-1) mod phi(n)
+//   d = 11
+//   n = 18446744073709551605
+//   e = d^(-1) mod phi(n)
 //
-// 	n factored:
-// 	n = 5 * 2551 * 1446236305269271
-// 	  = p*q*r, only single prime factors
+//   n factored:
+//   n = 5 * 2551 * 1446236305269271
+//     = p*q*r, only single prime factors
 //
-// 	phi(n) = phi(p*q*r)
-// 	       = phi(p) * phi(q) * phi(r), phi(p) = p - 1
-// 	       = (p-1)*(q-1)*(r-1)
-// 	       = (5-1) * (2551-1) * (1446236305269271-1)
-// 	       = 4 * 2550 * 1446236305269270
-// 	       = 14751610313746554000
+//   phi(n) = phi(p*q*r)
+//          = phi(p) * phi(q) * phi(r), phi(p) = p - 1
+//          = (p-1)*(q-1)*(r-1)
+//          = (5-1) * (2551-1) * (1446236305269271-1)
+//          = 4 * 2550 * 1446236305269270
+//          = 14751610313746554000
 //
-// 	e = 11^(-1) mod 14751610313746554000
-// 	e = 2682110966135737091
+//   e = 11^(-1) mod 14751610313746554000
+//   e = 2682110966135737091
 const RSA_ENC_KEY: u64 = 2682110966135737091;
 const RSA_MODULUS: u64 = 18446744073709551605; // 0xffffffff_fffffff5
 
