@@ -1,5 +1,9 @@
+//! Encrypt and decrypt cheat codes for all versions of CodeBreaker PS2.
+
 // I don't like to reformat CB codes, seed tables, etc. for Clippy
 #![allow(clippy::unreadable_literal)]
+// Enforce rustdoc
+#![deny(missing_docs)]
 
 pub mod cb1;
 pub mod cb7;
@@ -14,12 +18,14 @@ enum Scheme {
     V7,
 }
 
+/// Represents the current state of the code processor.
 pub struct Codebreaker {
     scheme: Scheme,
     cb7: Cb7,
     code_lines: usize,
 }
 
+/// Does the same as [new](#method.new).
 impl Default for Codebreaker {
     fn default() -> Self {
         Self::new()
@@ -27,6 +33,7 @@ impl Default for Codebreaker {
 }
 
 impl Codebreaker {
+    /// Allows to encrypt and decrypt any CB code (both v1 and v7).
     pub fn new() -> Codebreaker {
         Codebreaker {
             scheme: Scheme::RAW,
@@ -35,6 +42,7 @@ impl Codebreaker {
         }
     }
 
+    /// Allows to encrypt and decrypt any CB v7 code published on CMGSCCC.com.
     pub fn new_v7() -> Codebreaker {
         Codebreaker {
             scheme: Scheme::V7,
@@ -43,13 +51,33 @@ impl Codebreaker {
         }
     }
 
-    // Used to encrypt a list of CB codes (V1 + V7)
+    /// Encrypts a code using the current scheme and returns the result.
+    ///
+    /// # Example
+    /// ```
+    /// use codebreaker::Codebreaker;
+    ///
+    /// let mut cb = Codebreaker::new();
+    /// let code = cb.encrypt_code(0x2043AFCC, 0x2411FFFF);
+    /// assert_eq!((0x2AFF014C, 0x2411FFFF), code);
+    /// ```
     pub fn encrypt_code(&mut self, addr: u32, val: u32) -> (u32, u32) {
         let mut code = (addr, val);
         self.encrypt_code_mut(&mut code.0, &mut code.1);
         code
     }
 
+    /// Encrypts a code directly using the current scheme.
+    ///
+    /// # Example
+    /// ```
+    /// use codebreaker::Codebreaker;
+    ///
+    /// let mut cb = Codebreaker::new();
+    /// let mut code = (0x2043AFCC, 0x2411FFFF);
+    /// cb.encrypt_code_mut(&mut code.0, &mut code.1);
+    /// assert_eq!((0x2AFF014C, 0x2411FFFF), code);
+    /// ```
     pub fn encrypt_code_mut(&mut self, addr: &mut u32, val: &mut u32) {
         let (oldaddr, oldval) = (*addr, *val);
 
@@ -65,13 +93,58 @@ impl Codebreaker {
         }
     }
 
-    // Used to decrypt a list of CB codes (V1 + V7)
+    /// Decrypts a code using the current scheme and returns the result.
+    ///
+    /// # Example
+    /// ```
+    /// use codebreaker::Codebreaker;
+    ///
+    /// let encrypted: Vec<(u32, u32)> = vec![
+    ///     (0x2AFF014C, 0x2411FFFF),
+    ///     (0xB4336FA9, 0x4DFEFB79),
+    ///     (0x973E0B2A, 0xA7D4AF10),
+    /// ];
+    /// let decrypted: Vec<(u32, u32)> = vec![
+    ///     (0x2043AFCC, 0x2411FFFF),
+    ///     (0xBEEFC0DE, 0x00000000),
+    ///     (0x2096F5B8, 0x000000BE),
+    /// ];
+    ///
+    /// let mut cb = Codebreaker::new();
+    /// for (i, code) in encrypted.iter().enumerate() {
+    ///     let result = cb.decrypt_code(code.0, code.1);
+    ///     assert_eq!(decrypted[i], result);
+    /// }
+    /// ```
     pub fn decrypt_code(&mut self, addr: u32, val: u32) -> (u32, u32) {
         let mut code = (addr, val);
         self.decrypt_code_mut(&mut code.0, &mut code.1);
         code
     }
 
+    /// Decrypts a code directly using the current scheme.
+    ///
+    /// # Example
+    /// ```
+    /// use codebreaker::Codebreaker;
+    ///
+    /// let mut encrypted: Vec<(u32, u32)> = vec![
+    ///     (0x2AFF014C, 0x2411FFFF),
+    ///     (0xB4336FA9, 0x4DFEFB79),
+    ///     (0x973E0B2A, 0xA7D4AF10),
+    /// ];
+    /// let decrypted: Vec<(u32, u32)> = vec![
+    ///     (0x2043AFCC, 0x2411FFFF),
+    ///     (0xBEEFC0DE, 0x00000000),
+    ///     (0x2096F5B8, 0x000000BE),
+    /// ];
+    ///
+    /// let mut cb = Codebreaker::new();
+    /// for code in encrypted.iter_mut() {
+    ///     cb.decrypt_code_mut(&mut code.0, &mut code.1);
+    /// }
+    /// assert_eq!(decrypted, encrypted);
+    /// ```
     pub fn decrypt_code_mut(&mut self, addr: &mut u32, val: &mut u32) {
         if self.scheme == Scheme::V7 {
             self.cb7.decrypt_code_mut(addr, val);
@@ -85,13 +158,39 @@ impl Codebreaker {
         }
     }
 
-    // Smart version of decrypt_code() that detects if a code needs to be decrypted and how
+    /// Smart version of [decrypt_code](#method.decrypt_code) that detects if a
+    /// code needs to be decrypted and how.
+    ///
+    /// # Example
+    /// ```
+    /// use codebreaker::Codebreaker;
+    ///
+    /// let input: Vec<(u32, u32)> = vec![
+    ///     (0x2043AFCC, 0x2411FFFF),
+    ///     (0x2A973DBD, 0x00000000),
+    ///     (0xB4336FA9, 0x4DFEFB79),
+    ///     (0x973E0B2A, 0xA7D4AF10),
+    /// ];
+    /// let output: Vec<(u32, u32)> = vec![
+    ///     (0x2043AFCC, 0x2411FFFF),
+    ///     (0x201F6024, 0x00000000),
+    ///     (0xBEEFC0DE, 0x00000000),
+    ///     (0x2096F5B8, 0x000000BE),
+    /// ];
+    ///
+    /// let mut cb = Codebreaker::new();
+    /// for (i, code) in input.iter().enumerate() {
+    ///     assert_eq!(output[i], cb.auto_decrypt_code(code.0, code.1));
+    /// }
+    /// ```
     pub fn auto_decrypt_code(&mut self, addr: u32, val: u32) -> (u32, u32) {
         let mut code = (addr, val);
         self.auto_decrypt_code_mut(&mut code.0, &mut code.1);
         code
     }
 
+    /// Smart version of [decrypt_code_mut](#method.decrypt_code_mut) that
+    /// detects if a code needs to be decrypted and how.
     pub fn auto_decrypt_code_mut(&mut self, addr: &mut u32, val: &mut u32) {
         if self.scheme != Scheme::V7 {
             if self.code_lines == 0 {
