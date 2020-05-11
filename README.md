@@ -6,7 +6,7 @@
 
 A Rust library to decrypt & encrypt any cheat code for CodeBreaker PS2.
 
-Originally reverse-engineered from MIPS R5900 assembly and [converted to C](https://github.com/mlafeldt/cb2util/blob/v1.9/cb2_crypto.c) back in 2006. Now ported to Rust for [fun and profit](https://github.com/mlafeldt/cb2util/pull/13).
+Originally reverse-engineered from MIPS R5900 assembly and [converted to C](https://github.com/mlafeldt/cb2util/blob/v1.9/cb2_crypto.c) in 2006. Now ported to Rust for [fun and profit](https://github.com/mlafeldt/cb2util/pull/13).
 
 ## Quick Start
 
