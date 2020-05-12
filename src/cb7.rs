@@ -460,6 +460,7 @@ const SEEDS: [[u8; 256]; 5] = [
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::{format_code, parse_code};
 
     fn mul_tests() -> Vec<(u32, u32, u32)> {
         vec![
@@ -514,10 +515,6 @@ mod tests {
     fn tests() -> Vec<Test> {
         vec![
             Test {
-                decrypted: vec![],
-                encrypted: vec![],
-            },
-            Test {
                 decrypted: vec![
                     "9029BEAC 0C0A9225",
                     "201F6024 00000000",
@@ -539,7 +536,7 @@ mod tests {
             for (i, line) in t.decrypted.iter().enumerate() {
                 let code = parse_code(line);
                 let result = cb7.encrypt_code(code.0, code.1);
-                assert_eq!(t.encrypted[i], format_code(result.0, result.1));
+                assert_eq!(t.encrypted[i], format_code(result));
             }
         }
     }
@@ -551,17 +548,8 @@ mod tests {
             for (i, line) in t.encrypted.iter().enumerate() {
                 let code = parse_code(line);
                 let result = cb7.decrypt_code(code.0, code.1);
-                assert_eq!(t.decrypted[i], format_code(result.0, result.1));
+                assert_eq!(t.decrypted[i], format_code(result));
             }
         }
-    }
-
-    fn parse_code(line: &str) -> (u32, u32) {
-        let code: Vec<u32> = line.split(' ').map(|v| u32::from_str_radix(v, 16).unwrap()).collect();
-        (code[0], code[1])
-    }
-
-    fn format_code(addr: u32, val: u32) -> String {
-        format!("{:08X} {:08X}", addr, val)
     }
 }

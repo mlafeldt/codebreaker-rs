@@ -536,13 +536,15 @@ mod tests {
             }
         }
     }
+}
 
-    fn parse_code(line: &str) -> (u32, u32) {
-        let code: Vec<u32> = line.split(' ').map(|v| u32::from_str_radix(v, 16).unwrap()).collect();
-        (code[0], code[1])
-    }
+#[cfg(test)]
+fn parse_code(line: &str) -> (u32, u32) {
+    let code: Vec<u32> = line.split(' ').map(|v| u32::from_str_radix(v, 16).unwrap()).collect();
+    (code[0], code[1])
+}
 
-    fn format_code(code: (u32, u32)) -> String {
-        format!("{:08X} {:08X}", code.0, code.1)
-    }
+#[cfg(test)]
+fn format_code(code: (u32, u32)) -> String {
+    format!("{:08X} {:08X}", code.0, code.1)
 }
