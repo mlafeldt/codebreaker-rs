@@ -97,37 +97,38 @@ const SEEDS: [[u32; 16]; 3] = [
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::{format_code, parse_code};
 
     struct Test {
-        decrypted: (u32, u32),
-        encrypted: (u32, u32),
+        decrypted: &'static str,
+        encrypted: &'static str,
     }
 
     fn tests() -> Vec<Test> {
         vec![
             Test {
-                decrypted: (0x0031789a, 0x00000063),
-                encrypted: (0x0ac93a95, 0x00000063),
+                decrypted: "0031789A 00000063",
+                encrypted: "0AC93A95 00000063",
             },
             Test {
-                decrypted: (0x1031a028, 0x0000ffff),
-                encrypted: (0x1a613d30, 0x0000ffff),
+                decrypted: "1031A028 0000FFFF",
+                encrypted: "1A613D30 0000FFFF",
             },
             Test {
-                decrypted: (0x201f6024, 0x00000000),
-                encrypted: (0x2a973dbd, 0x00000000),
+                decrypted: "201F6024 00000000",
+                encrypted: "2A973DBD 00000000",
             },
             Test {
-                decrypted: (0x902db32c, 0x0c0baff1),
-                encrypted: (0x9ad420d3, 0x180ddeda),
+                decrypted: "902DB32C 0C0BAFF1",
+                encrypted: "9AD420D3 180DDEDA",
             },
             Test {
-                decrypted: (0xa008060c, 0x08028007),
-                encrypted: (0xaae071c0, 0xaca684dd),
+                decrypted: "A008060C 08028007",
+                encrypted: "AAE071C0 ACA684DD",
             },
             Test {
-                decrypted: (0xbeefc0de, 0x00000000),
-                encrypted: (0xb4336fa9, 0x4dfefb79),
+                decrypted: "BEEFC0DE 00000000",
+                encrypted: "B4336FA9 4DFEFB79",
             },
         ]
     }
@@ -135,34 +136,36 @@ mod tests {
     #[test]
     fn test_encrypt_code() {
         for t in tests().iter() {
-            let result = encrypt_code(t.decrypted.0, t.decrypted.1);
-            assert_eq!(t.encrypted, result);
+            let code = parse_code(t.decrypted);
+            let result = encrypt_code(code.0, code.1);
+            assert_eq!(t.encrypted, format_code(result));
         }
     }
 
     #[test]
     fn test_encrypt_code_mut() {
         for t in tests().iter() {
-            let mut code = t.decrypted;
+            let mut code = parse_code(t.decrypted);
             encrypt_code_mut(&mut code.0, &mut code.1);
-            assert_eq!(t.encrypted, code);
+            assert_eq!(t.encrypted, format_code(code));
         }
     }
 
     #[test]
     fn test_decrypt_code() {
         for t in tests().iter() {
-            let result = decrypt_code(t.encrypted.0, t.encrypted.1);
-            assert_eq!(t.decrypted, result);
+            let code = parse_code(t.encrypted);
+            let result = decrypt_code(code.0, code.1);
+            assert_eq!(t.decrypted, format_code(result));
         }
     }
 
     #[test]
     fn test_decrypt_code_mut() {
         for t in tests().iter() {
-            let mut code = t.encrypted;
+            let mut code = parse_code(t.encrypted);
             decrypt_code_mut(&mut code.0, &mut code.1);
-            assert_eq!(t.decrypted, code);
+            assert_eq!(t.decrypted, format_code(code));
         }
     }
 }
