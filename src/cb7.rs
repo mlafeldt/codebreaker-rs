@@ -263,7 +263,7 @@ impl Cb7 {
 /// ```
 #[inline(always)]
 pub fn is_beefcode(addr: u32) -> bool {
-    addr & 0xfffffffe == BEEFCODE
+    addr & 0xffff_fffe == BEEFCODE
 }
 
 // Multiplication, modulo (2^32)
@@ -288,7 +288,7 @@ fn mul_inverse(word: u32) -> u32 {
     }
     let mut t1 = 1u32;
     let mut a3 = word;
-    let mut a0 = 0u32.wrapping_sub(0xffffffff / word);
+    let mut a0 = 0u32.wrapping_sub(0xffff_ffff / word);
     while a2 != 0 {
         let mut v0 = a3 / a2;
         let v1 = a3 % a2;
@@ -334,9 +334,9 @@ unsafe fn slice_to_u32<T: Copy>(slice: &[T]) -> &[u32] {
     slice::from_raw_parts(slice.as_ptr() as *const u32, len)
 }
 
-const BEEFCODE: u32 = 0xbeefc0de;
+const BEEFCODE: u32 = 0xbeef_c0de;
 
-const RC4_KEY: [u32; 5] = [0xd0dba9d7, 0x13a0a96c, 0x80410df0, 0x2ccdbe1f, 0xe570a86b];
+const RC4_KEY: [u32; 5] = [0xd0db_a9d7, 0x13a0_a96c, 0x8041_0df0, 0x2ccd_be1f, 0xe570_a86b];
 
 const RSA_DEC_KEY: u64 = 11;
 // This is how I calculated the encryption key e from d (some number theory):
@@ -358,8 +358,8 @@ const RSA_DEC_KEY: u64 = 11;
 //
 //   e = 11^(-1) mod 14751610313746554000
 //   e = 2682110966135737091
-const RSA_ENC_KEY: u64 = 2682110966135737091;
-const RSA_MODULUS: u64 = 18446744073709551605; // 0xffffffff_fffffff5
+const RSA_ENC_KEY: u64 = 2_682_110_966_135_737_091;
+const RSA_MODULUS: u64 = 18_446_744_073_709_551_605; // 0xffff_ffff_ffff_fff5
 
 const ZERO_SEEDS: [[u8; 256]; 5] = [[0; 256]; 5];
 
@@ -464,14 +464,14 @@ mod tests {
 
     fn mul_tests() -> Vec<(u32, u32, u32)> {
         vec![
-            (0x00000000, 0xa686d3b6, 0x00000000),
-            (0x000e0000, 0xa686d3b6, 0xac620000),
-            (0x0067bd20, 0x4fd931ff, 0x200802e0),
-            (0x2ba0a76e, 0xa686d3b6, 0x24050002),
-            (0x4adfd954, 0x4fd931ff, 0x9029beac),
-            (0x7c016806, 0x2912dedd, 0x000000be),
-            (0xa9422f21, 0xa686d3b6, 0x03d203e7),
-            (0xfff576e0, 0xa686d3b6, 0x27bd0020),
+            (0x0000_0000, 0xa686_d3b6, 0x0000_0000),
+            (0x000e_0000, 0xa686_d3b6, 0xac62_0000),
+            (0x0067_bd20, 0x4fd9_31ff, 0x2008_02e0),
+            (0x2ba0_a76e, 0xa686_d3b6, 0x2405_0002),
+            (0x4adf_d954, 0x4fd9_31ff, 0x9029_beac),
+            (0x7c01_6806, 0x2912_dedd, 0x0000_00be),
+            (0xa942_2f21, 0xa686_d3b6, 0x03d2_03e7),
+            (0xfff5_76e0, 0xa686_d3b6, 0x27bd_0020),
         ]
     }
 
@@ -492,14 +492,14 @@ mod tests {
     #[test]
     fn test_mul_inverse() {
         let tests = vec![
-            (0x0d313243, 0x6c7b2a6b),
-            (0x0efd8231, 0xd4c096d1),
-            (0x2912dedd, 0xe09de975),
-            (0x4fd931ff, 0x9a62cdff),
-            (0x5a53abb5, 0x58f42a9d),
-            (0x9ab2af6d, 0x1043b265),
-            (0xa686d3b7, 0x57ed7a07),
-            (0xec35a92f, 0xd2743dcf),
+            (0x0d31_3243, 0x6c7b_2a6b),
+            (0x0efd_8231, 0xd4c0_96d1),
+            (0x2912_dedd, 0xe09d_e975),
+            (0x4fd9_31ff, 0x9a62_cdff),
+            (0x5a53_abb5, 0x58f4_2a9d),
+            (0x9ab2_af6d, 0x1043_b265),
+            (0xa686_d3b7, 0x57ed_7a07),
+            (0xec35_a92f, 0xd274_3dcf),
         ];
         for t in tests.iter() {
             assert_eq!(t.1, mul_inverse(t.0));

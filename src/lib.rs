@@ -26,8 +26,6 @@
 //! assert_eq!(decrypted, encrypted);
 //! ```
 
-// I don't like to reformat CB codes, seed tables, etc. for Clippy
-#![allow(clippy::unreadable_literal)]
 // Enforce rustdoc
 #![deny(missing_docs)]
 
@@ -248,7 +246,7 @@ impl Codebreaker {
             self.cb7.decrypt_code_mut(addr, val);
             if self.code_lines == 0 {
                 self.code_lines = num_code_lines(*addr);
-                if self.code_lines == 1 && *addr == 0xffffffff {
+                if self.code_lines == 1 && *addr == 0xffff_ffff {
                     // XXX: changing encryption via "FFFFFFFF 000xnnnn" is not supported
                     self.code_lines = 0;
                     return;
@@ -271,7 +269,7 @@ fn num_code_lines(addr: u32) -> usize {
     if cmd < 3 || cmd > 6 {
         1
     } else if cmd == 3 {
-        if addr & 0x00400000 != 0 {
+        if addr & 0x0040_0000 != 0 {
             2
         } else {
             1

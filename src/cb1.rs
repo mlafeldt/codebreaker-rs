@@ -11,9 +11,9 @@
 /// ```
 pub fn encrypt_code(mut addr: u32, mut val: u32) -> (u32, u32) {
     let cmd = (addr >> 28) as usize;
-    let tmp = addr & 0xff000000;
+    let tmp = addr & 0xff00_0000;
     addr = ((addr & 0xff) << 16) | ((addr >> 8) & 0xffff);
-    addr = (tmp | (addr.wrapping_add(SEEDS[1][cmd]) & 0x00ffffff)) ^ SEEDS[0][cmd];
+    addr = (tmp | (addr.wrapping_add(SEEDS[1][cmd]) & 0x00ff_ffff)) ^ SEEDS[0][cmd];
     if cmd > 2 {
         val = addr ^ val.wrapping_add(SEEDS[2][cmd]);
     }
@@ -52,7 +52,7 @@ pub fn decrypt_code(mut addr: u32, mut val: u32) -> (u32, u32) {
     }
     let tmp = addr ^ SEEDS[0][cmd];
     addr = tmp.wrapping_sub(SEEDS[1][cmd]);
-    addr = (tmp & 0xff000000) | ((addr & 0xffff) << 8) | ((addr >> 16) & 0xff);
+    addr = (tmp & 0xff00_0000) | ((addr & 0xffff) << 8) | ((addr >> 16) & 0xff);
     (addr, val)
 }
 
@@ -75,22 +75,22 @@ pub fn decrypt_code_mut(addr: &mut u32, val: &mut u32) {
 #[rustfmt::skip]
 const SEEDS: [[u32; 16]; 3] = [
     [
-        0x0a0b8d9b, 0x0a0133f8, 0x0af733ec, 0x0a15c574,
-        0x0a50ac20, 0x0a920fb9, 0x0a599f0b, 0x0a4aa0e3,
-        0x0a21c012, 0x0a906254, 0x0a31fd54, 0x0a091c0e,
-        0x0a372b38, 0x0a6f266c, 0x0a61dd4a, 0x0a0dbf92,
+        0x0a0b_8d9b, 0x0a01_33f8, 0x0af7_33ec, 0x0a15_c574,
+        0x0a50_ac20, 0x0a92_0fb9, 0x0a59_9f0b, 0x0a4a_a0e3,
+        0x0a21_c012, 0x0a90_6254, 0x0a31_fd54, 0x0a09_1c0e,
+        0x0a37_2b38, 0x0a6f_266c, 0x0a61_dd4a, 0x0a0d_bf92,
     ],
     [
-        0x00288596, 0x0037dd28, 0x003beef1, 0x000bc822,
-        0x00bc935d, 0x00a139f2, 0x00e9bbf8, 0x00f57f7b,
-        0x0090d704, 0x001814d4, 0x00c5848e, 0x005b83e7,
-        0x00108cf7, 0x0046ce5a, 0x003a5bf4, 0x006faffc,
+        0x0028_8596, 0x0037_dd28, 0x003b_eef1, 0x000b_c822,
+        0x00bc_935d, 0x00a1_39f2, 0x00e9_bbf8, 0x00f5_7f7b,
+        0x0090_d704, 0x0018_14d4, 0x00c5_848e, 0x005b_83e7,
+        0x0010_8cf7, 0x0046_ce5a, 0x003a_5bf4, 0x006f_affc,
     ],
     [
-        0x1dd9a10a, 0xb95ab9b0, 0x5cf5d328, 0x95fe7f10,
-        0x8e2d6303, 0x16bb6286, 0xe389324c, 0x07ac6ea8,
-        0xaa4811d8, 0x76ce4e18, 0xfe447516, 0xf9cd94d0,
-        0x4c24dedb, 0x68275c4e, 0x72494382, 0xc8aa88e8,
+        0x1dd9_a10a, 0xb95a_b9b0, 0x5cf5_d328, 0x95fe_7f10,
+        0x8e2d_6303, 0x16bb_6286, 0xe389_324c, 0x07ac_6ea8,
+        0xaa48_11d8, 0x76ce_4e18, 0xfe44_7516, 0xf9cd_94d0,
+        0x4c24_dedb, 0x6827_5c4e, 0x7249_4382, 0xc8aa_88e8,
     ],
 ];
 
