@@ -262,12 +262,13 @@ impl Cb7 {
 /// assert_eq!(false, is_beefcode(0x12345678));
 /// ```
 #[inline(always)]
-pub fn is_beefcode(addr: u32) -> bool {
+pub const fn is_beefcode(addr: u32) -> bool {
     addr & 0xffff_fffe == BEEFCODE
 }
 
 // Multiplication, modulo (2^32)
-fn mul_encrypt(a: u32, b: u32) -> u32 {
+#[inline(always)]
+const fn mul_encrypt(a: u32, b: u32) -> u32 {
     a.wrapping_mul(b | 1)
 }
 
