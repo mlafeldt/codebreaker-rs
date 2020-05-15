@@ -2,6 +2,7 @@
 
 use crate::rc4::Rc4;
 
+use std::fmt;
 use std::mem::size_of;
 use std::slice;
 
@@ -21,6 +22,17 @@ impl Default for Cb7 {
         let mut cb7 = Self::new();
         cb7.beefcode(BEEFCODE, 0);
         cb7
+    }
+}
+
+impl fmt::Debug for Cb7 {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.debug_struct("Cb7")
+            .field("seeds[0][0..16]", &self.seeds[0][0..16].to_vec())
+            .field("key", &self.key)
+            .field("beefcodf", &self.beefcodf)
+            .field("initialized", &self.initialized)
+            .finish()
     }
 }
 

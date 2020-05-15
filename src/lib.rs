@@ -28,6 +28,7 @@
 
 // Enforce rustdoc
 #![deny(missing_docs)]
+#![deny(missing_debug_implementations)]
 
 pub mod cb1;
 pub mod cb7;
@@ -35,7 +36,7 @@ mod rc4;
 
 use cb7::{is_beefcode, Cb7};
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Debug)]
 enum Scheme {
     RAW,
     V1,
@@ -43,6 +44,7 @@ enum Scheme {
 }
 
 /// Represents the current state of the code processor.
+#[derive(Debug)]
 pub struct Codebreaker {
     scheme: Scheme,
     cb7: Cb7,
