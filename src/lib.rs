@@ -295,29 +295,16 @@ mod tests {
     fn tests() -> Vec<Test> {
         vec![
             Test {
-                cb: Codebreaker::default(),
-                decrypted: vec![
-                    "9029BEAC 0C0A9225",
-                    "201F6024 00000000",
-                    "2096F5B8 000000BE",
-                ],
-                encrypted: vec![
-                    "9A545CC6 188CBCFB",
-                    "2A973DBD 00000000",
-                    "2A03B60A 000000BE",
-                ],
-            },
-            Test {
                 cb: Codebreaker::new(),
                 decrypted: vec![
-                    "9029BEAC 0C0A9225",
-                    "201F6024 00000000",
+                    "2043AFCC 2411FFFF",
+                    "BEEFC0DE 00000000",
                     "2096F5B8 000000BE",
                 ],
                 encrypted: vec![
-                    "9A545CC6 188CBCFB",
-                    "2A973DBD 00000000",
-                    "2A03B60A 000000BE",
+                    "2AFF014C 2411FFFF",
+                    "B4336FA9 4DFEFB79",
+                    "973E0B2A A7D4AF10",
                 ],
             },
             Test {
@@ -331,6 +318,19 @@ mod tests {
                     "D08F3A49 00078A53",
                     "3818DDE5 E72B2B16",
                     "973E0B2A A7D4AF10",
+                ],
+            },
+            Test {
+                cb: Codebreaker::default(),
+                decrypted: vec![
+                    "9029BEAC 0C0A9225",
+                    "201F6024 00000000",
+                    "2096F5B8 000000BE",
+                ],
+                encrypted: vec![
+                    "9A545CC6 188CBCFB",
+                    "2A973DBD 00000000",
+                    "2A03B60A 000000BE",
                 ],
             },
         ]
