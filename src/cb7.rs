@@ -613,6 +613,26 @@ mod tests {
     }
 
     #[test]
+    fn test_encrypt_code_mut() {
+        for t in tests().iter() {
+            let code = parse_code(t.beefcode);
+            let mut cb7 = Cb7::new();
+            cb7.beefcode(code.0, code.1);
+
+            for (i, line) in t.decrypted.iter().enumerate() {
+                let mut code = parse_code(line);
+                let oldcode = code;
+                cb7.encrypt_code_mut(&mut code.0, &mut code.1);
+                assert_eq!(t.encrypted[i], format_code(code));
+
+                if is_beefcode(oldcode.0) {
+                    cb7.beefcode(oldcode.0, oldcode.1)
+                }
+            }
+        }
+    }
+
+    #[test]
     fn test_decrypt_code() {
         for t in tests().iter() {
             let code = parse_code(t.beefcode);
@@ -622,11 +642,29 @@ mod tests {
             for (i, line) in t.encrypted.iter().enumerate() {
                 let code = parse_code(line);
                 let result = cb7.decrypt_code(code.0, code.1);
-
                 assert_eq!(t.decrypted[i], format_code(result));
 
                 if is_beefcode(result.0) {
                     cb7.beefcode(result.0, result.1)
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn test_decrypt_code_mut() {
+        for t in tests().iter() {
+            let code = parse_code(t.beefcode);
+            let mut cb7 = Cb7::new();
+            cb7.beefcode(code.0, code.1);
+
+            for (i, line) in t.encrypted.iter().enumerate() {
+                let mut code = parse_code(line);
+                cb7.decrypt_code_mut(&mut code.0, &mut code.1);
+                assert_eq!(t.decrypted[i], format_code(code));
+
+                if is_beefcode(code.0) {
+                    cb7.beefcode(code.0, code.1)
                 }
             }
         }
