@@ -6,7 +6,7 @@ use std::fmt;
 use std::mem::size_of;
 use std::slice;
 
-/// Represents the current state of the encryption scheme.
+/// A processor for CB v7+ codes.
 pub struct Cb7 {
     seeds: [[u8; 256]; 5],
     key: [u32; 5],
@@ -37,7 +37,8 @@ impl fmt::Debug for Cb7 {
 }
 
 impl Cb7 {
-    /// Allows to encrypt and decrypt codes for CB v7+.
+    /// Returns a new processor for encrypting and decrypting a list of CB v7+
+    /// codes.
     pub fn new() -> Cb7 {
         Cb7 {
             seeds: ZERO_SEEDS,
@@ -47,8 +48,9 @@ impl Cb7 {
         }
     }
 
-    /// Generates or changes the encryption key and seeds. Needs to be called
-    /// for every "beefcode", which comes in two flavors:
+    /// Generates or changes the encryption key and seeds.
+    ///
+    /// Needs to be called for every "beefcode", which comes in two flavors:
     ///
     /// ```text
     /// BEEFC0DE vvvvvvvv

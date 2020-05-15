@@ -8,22 +8,23 @@
 //! ```
 //! use codebreaker::Codebreaker;
 //!
-//! let mut encrypted: Vec<(u32, u32)> = vec![
-//!     (0x2AFF014C, 0x2411FFFF),
+//! let input: Vec<(u32, u32)> = vec![
+//!     (0x2043AFCC, 0x2411FFFF),
+//!     (0x2A973DBD, 0x00000000),
 //!     (0xB4336FA9, 0x4DFEFB79),
 //!     (0x973E0B2A, 0xA7D4AF10),
 //! ];
-//! let decrypted: Vec<(u32, u32)> = vec![
+//! let output: Vec<(u32, u32)> = vec![
 //!     (0x2043AFCC, 0x2411FFFF),
+//!     (0x201F6024, 0x00000000),
 //!     (0xBEEFC0DE, 0x00000000),
 //!     (0x2096F5B8, 0x000000BE),
 //! ];
 //!
 //! let mut cb = Codebreaker::new();
-//! for code in encrypted.iter_mut() {
-//!     cb.decrypt_code_mut(&mut code.0, &mut code.1);
+//! for (i, code) in input.iter().enumerate() {
+//!     assert_eq!(output[i], cb.auto_decrypt_code(code.0, code.1));
 //! }
-//! assert_eq!(decrypted, encrypted);
 //! ```
 
 // Enforce rustdoc
@@ -43,7 +44,7 @@ enum Scheme {
     V7,
 }
 
-/// Represents the current state of the code processor.
+/// A processor for CB v1 and v7 codes.
 #[derive(Debug)]
 pub struct Codebreaker {
     scheme: Scheme,
@@ -59,7 +60,8 @@ impl Default for Codebreaker {
 }
 
 impl Codebreaker {
-    /// Allows to encrypt and decrypt all CB v1 and v7 codes.
+    /// Returns a new processor for encrypting and decrypting a list of CB v1
+    /// and v7 codes.
     pub fn new() -> Codebreaker {
         Codebreaker {
             scheme: Scheme::RAW,
@@ -68,7 +70,7 @@ impl Codebreaker {
         }
     }
 
-    /// Allows to encrypt and decrypt any CB v7 code published on CMGSCCC.com.
+    /// Returns a new processor for all CB v7 codes published on CMGSCCC.com.
     ///
     /// Lets you omit `B4336FA9 4DFEFB79` as the first code in the list.
     pub fn new_v7() -> Codebreaker {

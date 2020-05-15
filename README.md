@@ -22,22 +22,23 @@ Now you can start decrypting some codes:
 ```rust
 use codebreaker::Codebreaker;
 
-let mut encrypted: Vec<(u32, u32)> = vec![
-    (0x2AFF014C, 0x2411FFFF),
+let input: Vec<(u32, u32)> = vec![
+    (0x2043AFCC, 0x2411FFFF),
+    (0x2A973DBD, 0x00000000),
     (0xB4336FA9, 0x4DFEFB79),
     (0x973E0B2A, 0xA7D4AF10),
 ];
-let decrypted: Vec<(u32, u32)> = vec![
+let output: Vec<(u32, u32)> = vec![
     (0x2043AFCC, 0x2411FFFF),
+    (0x201F6024, 0x00000000),
     (0xBEEFC0DE, 0x00000000),
     (0x2096F5B8, 0x000000BE),
 ];
 
 let mut cb = Codebreaker::new();
-for code in encrypted.iter_mut() {
-    cb.decrypt_code_mut(&mut code.0, &mut code.1);
+for (i, code) in input.iter().enumerate() {
+    assert_eq!(output[i], cb.auto_decrypt_code(code.0, code.1));
 }
-assert_eq!(decrypted, encrypted);
 ```
 
 Read the [full documentation](https://docs.rs/codebreaker) for more examples.
