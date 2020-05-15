@@ -102,6 +102,7 @@ impl Cb7 {
                     | u32::from(self.seeds[i % 4][v[0]]);
             }
         } else {
+            // Special case for 2x BEEFC0DE 00000000 in a row
             self.seeds.copy_from_slice(&ZERO_SEEDS);
             self.key[0] = 0;
             self.key[1] = 0;
@@ -590,6 +591,22 @@ mod tests {
                     "0CA31760 A6F7E88A",
                     "679DC392 FA43E30B",
                     "1CD9CCC3 6AF74E36",
+                ],
+            },
+            Test {
+                // 2x default BEEFC0DE
+                beefcode: "BEEFC0DE 00000000",
+                decrypted: vec![
+                    "BEEFC0DE 00000000",
+                    "9029BEAC 0C0A9225",
+                    "201F6024 00000000",
+                    "2096F5B8 000000BE",
+                ],
+                encrypted: vec![
+                    "8787C575 1AC4C1B4",
+                    "02210430 184C16E8",
+                    "32E2A916 7E6017BA",
+                    "CBB720FD D61505E0",
                 ],
             },
         ]
