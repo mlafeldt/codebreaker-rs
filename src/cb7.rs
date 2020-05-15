@@ -520,6 +520,7 @@ mod tests {
     }
 
     struct Test {
+        beefcode: &'static str,
         decrypted: Vec<&'static str>,
         encrypted: Vec<&'static str>,
     }
@@ -528,6 +529,8 @@ mod tests {
     fn tests() -> Vec<Test> {
         vec![
             Test {
+                // default BEEFC0DE
+                beefcode: "BEEFC0DE 00000000",
                 decrypted: vec![
                     "9029BEAC 0C0A9225",
                     "201F6024 00000000",
@@ -539,17 +542,72 @@ mod tests {
                     "973E0B2A A7D4AF10",
                 ],
             },
+            Test {
+                // non-default BEEFC0DE
+                beefcode: "BEEFC0DE DEADFACE",
+                decrypted: vec![
+                    "9029BEAC 0C0A9225",
+                    "201F6024 00000000",
+                    "2096F5B8 000000BE",
+                ],
+                encrypted: vec![
+                    "E65B5422 B12543CF",
+                    "D14F5E52 FE26C9ED",
+                    "DD9BB6F0 F5DF87F7",
+                ],
+            },
+            Test {
+                // BEEFC0DF
+                beefcode: "BEEFC0DF B16B00B5",
+                decrypted: vec![
+                    "01234567 89ABCDEF",
+                    "9029BEAC 0C0A9225",
+                    "201F6024 00000000",
+                    "2096F5B8 000000BE",
+                ],
+                encrypted: vec![
+                    "862316AB C59C5FB1",
+                    "06133B66 95444FF1",
+                    "565FD08D 9154AFF4",
+                    "4EF412FE D03E4E13",
+                ],
+            },
+            Test {
+                // BEEFC0DE & BEEFC0DF
+                beefcode: "BEEFC0DE 00000000",
+                decrypted: vec![
+                    "BEEFC0DF B16B00B5",
+                    "01234567 89ABCDEF",
+                    "9029BEAC 0C0A9225",
+                    "201F6024 00000000",
+                    "2096F5B8 000000BE",
+                ],
+                encrypted: vec![
+                    "FE8B8601 C7C6F6CE",
+                    "2195D855 63FA11A7",
+                    "0CA31760 A6F7E88A",
+                    "679DC392 FA43E30B",
+                    "1CD9CCC3 6AF74E36",
+                ],
+            },
         ]
     }
 
     #[test]
     fn test_encrypt_code() {
         for t in tests().iter() {
-            let mut cb7 = Cb7::default();
+            let code = parse_code(t.beefcode);
+            let mut cb7 = Cb7::new();
+            cb7.beefcode(code.0, code.1);
+
             for (i, line) in t.decrypted.iter().enumerate() {
                 let code = parse_code(line);
                 let result = cb7.encrypt_code(code.0, code.1);
                 assert_eq!(t.encrypted[i], format_code(result));
+
+                if is_beefcode(code.0) {
+                    cb7.beefcode(code.0, code.1)
+                }
             }
         }
     }
@@ -557,11 +615,19 @@ mod tests {
     #[test]
     fn test_decrypt_code() {
         for t in tests().iter() {
-            let mut cb7 = Cb7::default();
+            let code = parse_code(t.beefcode);
+            let mut cb7 = Cb7::new();
+            cb7.beefcode(code.0, code.1);
+
             for (i, line) in t.encrypted.iter().enumerate() {
                 let code = parse_code(line);
                 let result = cb7.decrypt_code(code.0, code.1);
+
                 assert_eq!(t.decrypted[i], format_code(result));
+
+                if is_beefcode(result.0) {
+                    cb7.beefcode(result.0, result.1)
+                }
             }
         }
     }

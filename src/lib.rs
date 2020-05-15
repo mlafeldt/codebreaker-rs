@@ -459,57 +459,6 @@ mod tests {
                     "2096F5B8 000000BE",
                 ],
             },
-            AutoTest {
-                // v7 encrypted (non-default BEEFC0DE)
-                input: vec![
-                    "B4336FA9 6C48E037",
-                    "E65B5422 B12543CF",
-                    "D14F5E52 FE26C9ED",
-                    "DD9BB6F0 F5DF87F7",
-                ],
-                output: vec![
-                    "BEEFC0DE DEADFACE",
-                    "9029BEAC 0C0A9225",
-                    "201F6024 00000000",
-                    "2096F5B8 000000BE",
-                ],
-            },
-            AutoTest {
-                // v7 encrypted (BEEFC0DF)
-                input: vec![
-                    "B4326FA9 1F0AFA2C",
-                    "862316AB C59C5FB1",
-                    "06133B66 95444FF1",
-                    "565FD08D 9154AFF4",
-                    "4EF412FE D03E4E13",
-                ],
-                output: vec![
-                    "BEEFC0DF B16B00B5",
-                    "01234567 89ABCDEF",
-                    "9029BEAC 0C0A9225",
-                    "201F6024 00000000",
-                    "2096F5B8 000000BE",
-                ],
-            },
-            AutoTest {
-                // v7 encrypted (BEEFC0DE + BEEFC0DF)
-                input: vec![
-                    "B4336FA9 4DFEFB79",
-                    "FE8B8601 C7C6F6CE",
-                    "2195D855 63FA11A7",
-                    "0CA31760 A6F7E88A",
-                    "679DC392 FA43E30B",
-                    "1CD9CCC3 6AF74E36",
-                ],
-                output: vec![
-                    "BEEFC0DE 00000000",
-                    "BEEFC0DF B16B00B5",
-                    "01234567 89ABCDEF",
-                    "9029BEAC 0C0A9225",
-                    "201F6024 00000000",
-                    "2096F5B8 000000BE",
-                ],
-            },
         ]
     }
 
