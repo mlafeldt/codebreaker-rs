@@ -27,7 +27,7 @@
 //! }
 //! ```
 
-// Enforce rustdoc
+// Enforce rustdoc and debug formatting
 #![deny(missing_docs)]
 #![deny(missing_debug_implementations)]
 
