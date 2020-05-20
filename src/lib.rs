@@ -27,9 +27,9 @@
 //! }
 //! ```
 
-// Enforce rustdoc and debug formatting
-#![deny(missing_docs)]
-#![deny(missing_debug_implementations)]
+#![deny(clippy::all, clippy::nursery)]
+#![deny(nonstandard_style, rust_2018_idioms)]
+#![deny(missing_docs, missing_debug_implementations)]
 
 pub mod cb1;
 pub mod cb7;
@@ -52,7 +52,7 @@ pub struct Codebreaker {
     code_lines: usize,
 }
 
-/// Does the same as [new](#method.new).
+/// Does the same as [`new`](#method.new).
 impl Default for Codebreaker {
     fn default() -> Self {
         Self::new()
@@ -62,8 +62,8 @@ impl Default for Codebreaker {
 impl Codebreaker {
     /// Returns a new processor for encrypting and decrypting a list of CB v1
     /// and v7 codes.
-    pub fn new() -> Codebreaker {
-        Codebreaker {
+    pub const fn new() -> Self {
+        Self {
             scheme: Scheme::RAW,
             cb7: Cb7::new(),
             code_lines: 0,
@@ -73,8 +73,8 @@ impl Codebreaker {
     /// Returns a new processor for all CB v7 codes published on CMGSCCC.com.
     ///
     /// Lets you omit `B4336FA9 4DFEFB79` as the first code in the list.
-    pub fn new_v7() -> Codebreaker {
-        Codebreaker {
+    pub fn new_v7() -> Self {
+        Self {
             scheme: Scheme::V7,
             cb7: Cb7::default(),
             code_lines: 0,
@@ -188,7 +188,7 @@ impl Codebreaker {
         }
     }
 
-    /// Smart version of [decrypt_code](#method.decrypt_code) that detects if
+    /// Smart version of [`decrypt_code`](#method.decrypt_code) that detects if
     /// and how a code needs to be decrypted.
     ///
     /// # Example
@@ -219,7 +219,7 @@ impl Codebreaker {
         code
     }
 
-    /// Smart version of [decrypt_code_mut](#method.decrypt_code_mut) that
+    /// Smart version of [`decrypt_code_mut`](#method.decrypt_code_mut) that
     /// detects if and how a code needs to be decrypted.
     pub fn auto_decrypt_code_mut(&mut self, addr: &mut u32, val: &mut u32) {
         if self.scheme != Scheme::V7 {

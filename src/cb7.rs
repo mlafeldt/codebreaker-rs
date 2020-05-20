@@ -26,7 +26,7 @@ impl Default for Cb7 {
 }
 
 impl fmt::Debug for Cb7 {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("Cb7")
             .field("seeds[0][0..16]", &self.seeds[0][0..16].to_vec())
             .field("key", &self.key)
@@ -39,8 +39,8 @@ impl fmt::Debug for Cb7 {
 impl Cb7 {
     /// Returns a new processor for encrypting and decrypting a list of CB v7+
     /// codes.
-    pub fn new() -> Cb7 {
-        Cb7 {
+    pub const fn new() -> Self {
+        Self {
             seeds: ZERO_SEEDS,
             key: [0; 5],
             beefcodf: false,
