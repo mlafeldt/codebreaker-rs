@@ -37,7 +37,7 @@ mod rc4;
 
 use cb7::{is_beefcode, Cb7};
 
-#[derive(PartialEq, Debug)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 enum Scheme {
     RAW,
     V1,
@@ -45,7 +45,7 @@ enum Scheme {
 }
 
 /// A processor for CB v1 and v7 codes.
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct Codebreaker {
     scheme: Scheme,
     cb7: Cb7,

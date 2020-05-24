@@ -7,6 +7,7 @@ use std::mem::size_of;
 use std::slice;
 
 /// A processor for CB v7+ codes.
+#[derive(Clone, Copy)]
 pub struct Cb7 {
     seeds: [[u8; 256]; 5],
     key: [u32; 5],

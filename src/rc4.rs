@@ -1,7 +1,7 @@
 // Implementation of the stream cipher RC4
 // Based on https://github.com/DaGenix/rust-crypto/blob/master/src/rc4.rs
 
-#[derive(Copy, Clone)]
+#[derive(Clone, Copy)]
 pub struct Rc4 {
     i: u8,
     j: u8,
