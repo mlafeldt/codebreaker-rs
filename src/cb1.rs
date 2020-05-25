@@ -98,6 +98,7 @@ const SEEDS: [[u32; 16]; 3] = [
 mod tests {
     use super::*;
     use crate::code;
+    use crate::std_alloc::Vec;
 
     struct Test {
         decrypted: &'static str,

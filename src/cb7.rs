@@ -1,10 +1,11 @@
 //! Encrypt and decrypt cheat codes for CodeBreaker PS2 v7+.
 
 use crate::rc4::Rc4;
+use crate::std_alloc::Vec;
 
-use std::fmt;
-use std::mem::size_of;
-use std::slice;
+use core::fmt;
+use core::mem::size_of;
+use core::slice;
 
 /// A processor for CB v7+ codes.
 #[derive(Clone, Copy)]
@@ -466,6 +467,7 @@ const SEEDS: [[u8; 256]; 5] = [
 mod tests {
     use super::*;
     use crate::code;
+    use crate::std_alloc::Vec;
 
     fn mul_tests() -> Vec<(u32, u32, u32)> {
         vec![
