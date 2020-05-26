@@ -97,7 +97,7 @@ const SEEDS: [[u32; 16]; 3] = [
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{format_code, parse_code};
+    use crate::code;
 
     struct Test {
         decrypted: &'static str,
@@ -136,36 +136,36 @@ mod tests {
     #[test]
     fn test_encrypt_code() {
         for t in tests().iter() {
-            let code = parse_code(t.decrypted);
+            let code = code::parse(t.decrypted);
             let result = encrypt_code(code.0, code.1);
-            assert_eq!(t.encrypted, format_code(result));
+            assert_eq!(t.encrypted, code::format(result));
         }
     }
 
     #[test]
     fn test_encrypt_code_mut() {
         for t in tests().iter() {
-            let mut code = parse_code(t.decrypted);
+            let mut code = code::parse(t.decrypted);
             encrypt_code_mut(&mut code.0, &mut code.1);
-            assert_eq!(t.encrypted, format_code(code));
+            assert_eq!(t.encrypted, code::format(code));
         }
     }
 
     #[test]
     fn test_decrypt_code() {
         for t in tests().iter() {
-            let code = parse_code(t.encrypted);
+            let code = code::parse(t.encrypted);
             let result = decrypt_code(code.0, code.1);
-            assert_eq!(t.decrypted, format_code(result));
+            assert_eq!(t.decrypted, code::format(result));
         }
     }
 
     #[test]
     fn test_decrypt_code_mut() {
         for t in tests().iter() {
-            let mut code = parse_code(t.encrypted);
+            let mut code = code::parse(t.encrypted);
             decrypt_code_mut(&mut code.0, &mut code.1);
-            assert_eq!(t.decrypted, format_code(code));
+            assert_eq!(t.decrypted, code::format(code));
         }
     }
 }
