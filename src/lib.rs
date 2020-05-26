@@ -492,7 +492,10 @@ mod tests {
 #[cfg(test)]
 mod code {
     pub(crate) fn parse(line: &str) -> (u32, u32) {
-        let code: Vec<u32> = line.split(' ').map(|v| u32::from_str_radix(v, 16).unwrap()).collect();
+        let code: Vec<u32> = line
+            .splitn(2, ' ')
+            .map(|v| u32::from_str_radix(v, 16).unwrap())
+            .collect();
         (code[0], code[1])
     }
 
