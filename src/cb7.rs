@@ -289,35 +289,23 @@ const fn mul_encrypt(a: u32, b: u32) -> u32 {
 }
 
 // Multiplication with multiplicative inverse, modulo (2^32)
-fn mul_decrypt(a: u32, b: u32) -> u32 {
-    a.wrapping_mul(mul_inverse(b | 1))
+#[inline(always)]
+const fn mul_decrypt(a: u32, b: u32) -> u32 {
+    a.wrapping_mul(mod_inverse(b | 1))
 }
 
-// Computes the multiplicative inverse of @word, modulo (2^32).
-// Original MIPS R5900 coding converted to C, and now to Rust.
-fn mul_inverse(word: u32) -> u32 {
-    if word == 1 {
-        return 1;
-    }
-    let mut a2 = 0u32.wrapping_sub(word) % word;
-    if a2 == 0 {
-        return 1;
-    }
-    let mut t1 = 1u32;
-    let mut a3 = word;
-    let mut a0 = 0u32.wrapping_sub(0xffff_ffff / word);
-    while a2 != 0 {
-        let mut v0 = a3 / a2;
-        let v1 = a3 % a2;
-        let a1 = a2;
-        a3 = a1;
-        let a1 = a0;
-        a2 = v1;
-        v0 = v0.wrapping_mul(a1);
-        a0 = t1.wrapping_sub(v0);
-        t1 = a1;
-    }
-    t1
+// Computes the multiplicative inverse of x modulo (2^32). x must be odd!
+// The code is based on Newton's method as explained in this blog post:
+// https://lemire.me/blog/2017/09/18/computing-the-inverse-of-odd-integers/
+const fn mod_inverse(x: u32) -> u32 {
+    let mut y = x;
+    // Call this recurrence formula 4 times for 32-bit values:
+    // f(y) = y * (2 - y * x) modulo 2^32
+    y = y.wrapping_mul(2u32.wrapping_sub(y.wrapping_mul(x)));
+    y = y.wrapping_mul(2u32.wrapping_sub(y.wrapping_mul(x)));
+    y = y.wrapping_mul(2u32.wrapping_sub(y.wrapping_mul(x)));
+    y = y.wrapping_mul(2u32.wrapping_sub(y.wrapping_mul(x)));
+    y
 }
 
 // RSA encryption/decryption
@@ -507,7 +495,7 @@ mod tests {
     }
 
     #[test]
-    fn test_mul_inverse() {
+    fn test_mod_inverse() {
         let tests = vec![
             (0x0d31_3243, 0x6c7b_2a6b),
             (0x0efd_8231, 0xd4c0_96d1),
@@ -517,9 +505,12 @@ mod tests {
             (0x9ab2_af6d, 0x1043_b265),
             (0xa686_d3b7, 0x57ed_7a07),
             (0xec35_a92f, 0xd274_3dcf),
+            (0x0000_0000, 0x0000_0000), // Technically, 0 has no inverse
+            (0x0000_0001, 0x0000_0001),
+            (0xffff_ffff, 0xffff_ffff),
         ];
         for t in tests.iter() {
-            assert_eq!(t.1, mul_inverse(t.0));
+            assert_eq!(t.1, mod_inverse(t.0));
         }
     }
 
