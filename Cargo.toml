@@ -16,7 +16,7 @@ edition = "2018"
 name = "codebreaker"
 
 [dependencies]
-num-bigint = { git = "https://github.com/rust-num/num-bigint", default-features = false }
+num-bigint = "0.3"
 
 [features]
 default = ["std"]
