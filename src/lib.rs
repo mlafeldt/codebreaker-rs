@@ -30,6 +30,30 @@
 #![deny(clippy::all, clippy::nursery)]
 #![deny(nonstandard_style, rust_2018_idioms)]
 #![deny(missing_docs, missing_debug_implementations)]
+#![no_std]
+
+#[cfg(feature = "std")]
+#[macro_use]
+extern crate std;
+
+#[cfg(feature = "std")]
+mod std_alloc {
+    #[cfg(test)]
+    pub use std::string::String;
+    pub use std::vec::Vec;
+}
+
+#[cfg(not(feature = "std"))]
+#[allow(unused_imports)]
+#[macro_use]
+extern crate alloc;
+
+#[cfg(not(feature = "std"))]
+mod std_alloc {
+    #[cfg(test)]
+    pub use alloc::string::String;
+    pub use alloc::vec::Vec;
+}
 
 pub mod cb1;
 pub mod cb7;
@@ -286,6 +310,7 @@ fn num_code_lines(addr: u32) -> usize {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::std_alloc::Vec;
 
     struct Test {
         cb: Codebreaker,
@@ -491,7 +516,9 @@ mod tests {
 
 #[cfg(test)]
 mod code {
-    pub(crate) fn parse(line: &str) -> (u32, u32) {
+    use crate::std_alloc::{String, Vec};
+
+    pub fn parse(line: &str) -> (u32, u32) {
         let code: Vec<u32> = line
             .splitn(2, ' ')
             .map(|v| u32::from_str_radix(v, 16).unwrap())
@@ -499,7 +526,7 @@ mod code {
         (code[0], code[1])
     }
 
-    pub(crate) fn format(code: (u32, u32)) -> String {
+    pub fn format(code: (u32, u32)) -> String {
         format!("{:08X} {:08X}", code.0, code.1)
     }
 }

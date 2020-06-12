@@ -38,6 +38,7 @@ impl Rc4 {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::std_alloc::Vec;
 
     struct Test {
         key: &'static str,

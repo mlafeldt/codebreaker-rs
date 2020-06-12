@@ -6,6 +6,9 @@ jobs:
   run:
     name: Run
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        features: [--all-features, --no-default-features]
     steps:
       - name: Install Rust stable
         uses: actions-rs/toolchain@v1
@@ -22,16 +25,16 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: build
-          args: --workspace
+          args: --workspace ${{ matrix.features }}
 
       - name: Lint
         uses: actions-rs/cargo@v1
         with:
           command: clippy
-          args: --workspace -- -D warnings
+          args: --workspace ${{ matrix.features }} -- -D warnings
 
       - name: Test
         uses: actions-rs/cargo@v1
         with:
           command: test
-          args: --workspace
+          args: --workspace ${{ matrix.features }}
