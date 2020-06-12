@@ -39,8 +39,8 @@ extern crate std;
 #[cfg(feature = "std")]
 mod std_alloc {
     #[cfg(test)]
-    pub(crate) use std::string::String;
-    pub(crate) use std::vec::Vec;
+    pub use std::string::String;
+    pub use std::vec::Vec;
 }
 
 #[cfg(not(feature = "std"))]
@@ -51,8 +51,8 @@ extern crate alloc;
 #[cfg(not(feature = "std"))]
 mod std_alloc {
     #[cfg(test)]
-    pub(crate) use alloc::string::String;
-    pub(crate) use alloc::vec::Vec;
+    pub use alloc::string::String;
+    pub use alloc::vec::Vec;
 }
 
 pub mod cb1;
@@ -518,7 +518,7 @@ mod tests {
 mod code {
     use crate::std_alloc::{String, Vec};
 
-    pub(crate) fn parse(line: &str) -> (u32, u32) {
+    pub fn parse(line: &str) -> (u32, u32) {
         let code: Vec<u32> = line
             .splitn(2, ' ')
             .map(|v| u32::from_str_radix(v, 16).unwrap())
@@ -526,7 +526,7 @@ mod code {
         (code[0], code[1])
     }
 
-    pub(crate) fn format(code: (u32, u32)) -> String {
+    pub fn format(code: (u32, u32)) -> String {
         format!("{:08X} {:08X}", code.0, code.1)
     }
 }
