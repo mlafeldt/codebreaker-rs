@@ -8,13 +8,13 @@ A Rust library to decrypt & encrypt any cheat code for CodeBreaker PS2.
 
 Originally reverse-engineered from MIPS R5900 assembly and [converted to C](https://github.com/mlafeldt/cb2util/blob/v1.9/cb2_crypto.c) in 2006. Now ported to Rust for [fun and profit](https://github.com/mlafeldt/cb2util/pull/13).
 
-## Quick Start
+## Quickstart
 
 Add the crate as a dependency to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-codebreaker = "0.1"
+codebreaker = "0.2"
 ```
 
 Now you can start decrypting some codes:
@@ -42,6 +42,15 @@ for (i, code) in input.iter().enumerate() {
 ```
 
 Read the [full documentation](https://docs.rs/codebreaker) for more examples.
+
+## `no_std` support
+
+The `codebreaker` crate has a Cargo feature named "std" that is enabled by default. In order to use the crate on embedded systems, this feature needs to be disabled:
+
+```toml
+[dependencies]
+codebreaker = { version = "0.2", default-features = false }
+```
 
 ## License
 

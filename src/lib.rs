@@ -3,7 +3,7 @@
 //! Uses [cb1](cb1/index.html) and [cb7](cb7/index.html) under the hood to
 //! support both CB v1 and v7 codes.
 //!
-//! # Quick Start
+//! # Quickstart
 //!
 //! ```
 //! use codebreaker::Codebreaker;
