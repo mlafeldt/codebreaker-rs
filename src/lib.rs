@@ -30,6 +30,7 @@
 #![deny(clippy::all, clippy::nursery)]
 #![deny(nonstandard_style, rust_2018_idioms)]
 #![deny(missing_docs, missing_debug_implementations)]
+#![forbid(unsafe_code)]
 #![no_std]
 
 #[cfg(feature = "std")]
