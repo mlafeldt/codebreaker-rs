@@ -4,8 +4,8 @@ use crate::rc4::Rc4;
 use crate::std_alloc::Vec;
 
 use core::fmt;
-use core::mem::size_of;
-use core::slice;
+
+use bytemuck::{bytes_of, bytes_of_mut, cast_slice};
 
 /// A processor for CB v7+ codes.
 #[derive(Clone, Copy)]
@@ -113,7 +113,7 @@ impl Cb7 {
         }
 
         // Use key to encrypt seeds with RC4
-        let k = unsafe { slice_to_u8_mut(&mut self.key) };
+        let k = bytes_of_mut(&mut self.key);
         for i in 0..5 {
             let mut rc4 = Rc4::new(k);
             // Encrypt seeds
@@ -164,10 +164,8 @@ impl Cb7 {
 
         // Step 2: RC4
         let mut code = [*addr, *val];
-        unsafe {
-            let mut rc4 = Rc4::new(slice_to_u8(&self.key));
-            rc4.crypt(slice_to_u8_mut(&mut code));
-        }
+        let mut rc4 = Rc4::new(bytes_of(&self.key));
+        rc4.crypt(bytes_of_mut(&mut code));
         *addr = code[0];
         *val = code[1];
 
@@ -175,7 +173,7 @@ impl Cb7 {
         rsa_crypt(addr, val, RSA_ENC_KEY, RSA_MODULUS);
 
         // Step 4: Encryption loop of 64 cycles, using the generated seeds
-        let s = unsafe { slice_to_u32(&self.seeds) };
+        let s: &[u32] = cast_slice(&self.seeds);
         for i in 0..64 {
             *addr = (addr.wrapping_add(s[2 * 64 + i]) ^ s[i]).wrapping_sub(*val ^ s[4 * 64 + i]);
             *val = (val.wrapping_sub(s[3 * 64 + i]) ^ s[64 + i]).wrapping_add(*addr ^ s[4 * 64 + i]);
@@ -190,10 +188,8 @@ impl Cb7 {
         // BEEFC0DF uses two codes. If the previous code was the first of the
         // two, use the current one to encrypt the seeds.
         if self.beefcodf {
-            unsafe {
-                let mut rc4 = Rc4::new(slice_to_u8(&[oldaddr, oldval]));
-                rc4.crypt(slice_to_u8_mut(&mut self.seeds));
-            }
+            let mut rc4 = Rc4::new(bytes_of(&[oldaddr, oldval]));
+            rc4.crypt(bytes_of_mut(&mut self.seeds));
             self.beefcodf = false;
         }
     }
@@ -227,7 +223,7 @@ impl Cb7 {
     /// ```
     pub fn decrypt_code_mut(&mut self, addr: &mut u32, val: &mut u32) {
         // Step 1: Decryption loop of 64 cycles, using the generated seeds
-        let s = unsafe { slice_to_u32(&self.seeds) };
+        let s: &[u32] = cast_slice(&self.seeds);
         for i in (0..64).rev() {
             *val = (val.wrapping_sub(*addr ^ s[4 * 64 + i]) ^ s[64 + i]).wrapping_add(s[3 * 64 + i]);
             *addr = (addr.wrapping_add(*val ^ s[4 * 64 + i]) ^ s[i]).wrapping_sub(s[2 * 64 + i]);
@@ -238,10 +234,8 @@ impl Cb7 {
 
         // Step 3: RC4
         let mut code = [*addr, *val];
-        unsafe {
-            let mut rc4 = Rc4::new(slice_to_u8(&self.key));
-            rc4.crypt(slice_to_u8_mut(&mut code));
-        }
+        let mut rc4 = Rc4::new(bytes_of(&self.key));
+        rc4.crypt(bytes_of_mut(&mut code));
         *addr = code[0];
         *val = code[1];
 
@@ -252,10 +246,8 @@ impl Cb7 {
         // BEEFC0DF uses two codes. If the previous code was the first of the
         // two, use the current one to decrypt the seeds.
         if self.beefcodf {
-            unsafe {
-                let mut rc4 = Rc4::new(slice_to_u8(&[*addr, *val]));
-                rc4.crypt(slice_to_u8_mut(&mut self.seeds));
-            }
+            let mut rc4 = Rc4::new(bytes_of(&[*addr, *val]));
+            rc4.crypt(bytes_of_mut(&mut self.seeds));
             self.beefcodf = false;
             return;
         }
@@ -322,22 +314,6 @@ fn rsa_crypt(addr: &mut u32, val: &mut u32, rsakey: u64, modulus: u64) {
         *addr = digits[1];
         *val = digits[0];
     }
-}
-
-// Source: https://github.com/BurntSushi/byteorder/blob/master/src/io.rs
-unsafe fn slice_to_u8_mut<T: Copy>(slice: &mut [T]) -> &mut [u8] {
-    let len = size_of::<T>() * slice.len();
-    slice::from_raw_parts_mut(slice.as_mut_ptr() as *mut u8, len)
-}
-
-unsafe fn slice_to_u8<T: Copy>(slice: &[T]) -> &[u8] {
-    let len = size_of::<T>() * slice.len();
-    slice::from_raw_parts(slice.as_ptr() as *const u8, len)
-}
-
-unsafe fn slice_to_u32<T: Copy>(slice: &[T]) -> &[u32] {
-    let len = size_of::<T>() * slice.len();
-    slice::from_raw_parts(slice.as_ptr() as *const u32, len)
 }
 
 const BEEFCODE: u32 = 0xbeef_c0de;
