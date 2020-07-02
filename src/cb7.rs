@@ -303,16 +303,40 @@ const fn mod_inverse(x: u32) -> u32 {
 
 // RSA encryption/decryption
 fn rsa_crypt(addr: &mut u32, val: &mut u32, rsakey: u64, modulus: u64) {
-    use num_bigint::BigUint;
+    // Code directly copy pasted from Rust's std, with addition of % modulus
+    pub fn mod_pow(base : u64, exp: u64, modulus : u64) -> u64 {
+        let mut base = base as u128;
+        let mut exp = exp as u128;
+        let modulus = modulus as u128;
+        let mut acc = 1;
 
-    let code = BigUint::from_slice(&[*val, *addr]);
-    let m = BigUint::from(modulus);
+        while exp > 1 {
+            if (exp & 1) == 1 {
+                acc = acc * base;
+                acc %= modulus;
+            }
+            exp /= 2;
+            base = base * base;
+            base %= modulus;
+        }
+
+        // Deal with the final bit of the exponent separately, since
+        // squaring the base afterwards is not necessary and may cause a
+        // needless overflow.
+        if exp == 1 {
+            acc = acc * base;
+        }
+
+        (acc % modulus) as u64
+    }
+    
+    let code = (*addr as u64) << 32 | (*val as u64);
 
     // Exponentiation is only invertible if code < modulus
-    if code < m {
-        let digits = code.modpow(&BigUint::from(rsakey), &m).to_u32_digits();
-        *addr = digits[1];
-        *val = digits[0];
+    if code < modulus {
+        let digits = mod_pow(code, rsakey, modulus);
+        *addr = (digits >> 32) as u32;
+        *val = digits as u32;
     }
 }
 

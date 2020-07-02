@@ -17,8 +17,3 @@ name = "codebreaker"
 
 [dependencies]
 bytemuck = "1.2"
-num-bigint = "0.3"
-
-[features]
-default = ["std"]
-std = ["num-bigint/std"]
