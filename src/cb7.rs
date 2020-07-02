@@ -312,7 +312,7 @@ fn rsa_crypt(addr: &mut u32, val: &mut u32, rsakey: u64, modulus: u64) {
 
         while exp > 1 {
             if (exp & 1) == 1 {
-                acc = acc * base;
+                acc *= base;
                 acc %= modulus;
             }
             exp /= 2;
@@ -324,7 +324,7 @@ fn rsa_crypt(addr: &mut u32, val: &mut u32, rsakey: u64, modulus: u64) {
         // squaring the base afterwards is not necessary and may cause a
         // needless overflow.
         if exp == 1 {
-            acc = acc * base;
+            acc *= base;
         }
 
         (acc % modulus) as u64
