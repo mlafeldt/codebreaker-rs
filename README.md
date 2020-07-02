@@ -8,6 +8,8 @@ A Rust library to decrypt & encrypt any cheat code for CodeBreaker PS2.
 
 Originally reverse-engineered from MIPS R5900 assembly and [converted to C](https://github.com/mlafeldt/cb2util/blob/v1.9/cb2_crypto.c) in 2006. Now ported to Rust for [fun and profit](https://github.com/mlafeldt/cb2util/pull/13).
 
+For more information, check out my article on [7 Things I Learned From Porting a C Crypto Library to Rust](https://sharpend.io/7-things-I-learned-from-porting-a-c-crypto-library-to-rust/).
+
 ## Quickstart
 
 Add the crate as a dependency to your `Cargo.toml`:
