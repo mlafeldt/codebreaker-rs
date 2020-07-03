@@ -76,8 +76,11 @@ impl Cb7 {
         assert!(is_beefcode(addr));
 
         // Easily access all bytes of val as indices into seeds
-        let mut v = [0; 4];
-        val.to_le_bytes().iter().zip(&mut v).for_each(|(i, v)| *v = *i as usize);
+        let mut idx = [0; 4];
+        val.to_le_bytes()
+            .iter()
+            .zip(&mut idx)
+            .for_each(|(b, i)| *i = *b as usize);
 
         // Set up key and seeds
         if !self.initialized {
@@ -86,10 +89,10 @@ impl Cb7 {
             if val != 0 {
                 self.seeds.copy_from_slice(&SEEDS);
                 for i in 0..4 {
-                    self.key[i] = u32::from(self.seeds[(i + 3) % 4][v[3]]) << 24
-                        | u32::from(self.seeds[(i + 2) % 4][v[2]]) << 16
-                        | u32::from(self.seeds[(i + 1) % 4][v[1]]) << 8
-                        | u32::from(self.seeds[i % 4][v[0]]);
+                    self.key[i] = u32::from(self.seeds[(i + 3) % 4][idx[3]]) << 24
+                        | u32::from(self.seeds[(i + 2) % 4][idx[2]]) << 16
+                        | u32::from(self.seeds[(i + 1) % 4][idx[1]]) << 8
+                        | u32::from(self.seeds[i % 4][idx[0]]);
                 }
             } else {
                 self.seeds.copy_from_slice(&ZERO_SEEDS);
@@ -98,10 +101,10 @@ impl Cb7 {
             self.initialized = true;
         } else if val != 0 {
             for i in 0..4 {
-                self.key[i] = u32::from(self.seeds[(i + 3) % 4][v[3]]) << 24
-                    | u32::from(self.seeds[(i + 2) % 4][v[2]]) << 16
-                    | u32::from(self.seeds[(i + 1) % 4][v[1]]) << 8
-                    | u32::from(self.seeds[i % 4][v[0]]);
+                self.key[i] = u32::from(self.seeds[(i + 3) % 4][idx[3]]) << 24
+                    | u32::from(self.seeds[(i + 2) % 4][idx[2]]) << 16
+                    | u32::from(self.seeds[(i + 1) % 4][idx[1]]) << 8
+                    | u32::from(self.seeds[i % 4][idx[0]]);
             }
         } else {
             // Special case for 2x BEEFC0DE 00000000 in a row
