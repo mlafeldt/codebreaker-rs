@@ -1,7 +1,6 @@
 //! Encrypt and decrypt cheat codes for CodeBreaker PS2 v7+.
 
 use crate::rc4::Rc4;
-use crate::std_alloc::Vec;
 
 use core::fmt;
 
@@ -76,8 +75,9 @@ impl Cb7 {
     pub fn beefcode(&mut self, addr: u32, val: u32) {
         assert!(is_beefcode(addr));
 
-        // Easy access to all bytes of val
-        let v: Vec<usize> = val.to_le_bytes().iter().map(|&i| i as usize).collect();
+        // Easily access all bytes of val as indices into seeds
+        let mut v = [0; 4];
+        val.to_le_bytes().iter().zip(&mut v).for_each(|(i, v)| *v = *i as usize);
 
         // Set up key and seeds
         if !self.initialized {
