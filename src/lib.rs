@@ -38,8 +38,8 @@
 extern crate std;
 
 #[cfg(feature = "std")]
+#[cfg(test)]
 mod std_alloc {
-    #[cfg(test)]
     pub use std::string::String;
     pub use std::vec::Vec;
 }
@@ -50,8 +50,8 @@ mod std_alloc {
 extern crate alloc;
 
 #[cfg(not(feature = "std"))]
+#[cfg(test)]
 mod std_alloc {
-    #[cfg(test)]
     pub use alloc::string::String;
     pub use alloc::vec::Vec;
 }
