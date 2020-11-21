@@ -16,7 +16,7 @@ edition = "2018"
 name = "codebreaker"
 
 [dependencies]
-bytemuck = "1.2"
+bytemuck = "1.4"
 num-bigint = "0.3"
 
 [features]
