@@ -292,7 +292,7 @@ impl Codebreaker {
     }
 }
 
-fn num_code_lines(addr: u32) -> usize {
+const fn num_code_lines(addr: u32) -> usize {
     let cmd = addr >> 28;
 
     if cmd < 3 || cmd > 6 {

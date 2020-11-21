@@ -9,7 +9,7 @@
 /// let code = cb1::encrypt_code(0x1023CED8, 0x000003E7);
 /// assert_eq!((0x1A11330E, 0x000003E7), code);
 /// ```
-pub fn encrypt_code(mut addr: u32, mut val: u32) -> (u32, u32) {
+pub const fn encrypt_code(mut addr: u32, mut val: u32) -> (u32, u32) {
     let cmd = (addr >> 28) as usize;
     let tmp = addr & 0xff00_0000;
     addr = ((addr & 0xff) << 16) | ((addr >> 8) & 0xffff);
@@ -45,7 +45,7 @@ pub fn encrypt_code_mut(addr: &mut u32, val: &mut u32) {
 /// let code = cb1::decrypt_code(0x1A11330E, 0x000003E7);
 /// assert_eq!((0x1023CED8, 0x000003E7), code);
 /// ```
-pub fn decrypt_code(mut addr: u32, mut val: u32) -> (u32, u32) {
+pub const fn decrypt_code(mut addr: u32, mut val: u32) -> (u32, u32) {
     let cmd = (addr >> 28) as usize;
     if cmd > 2 {
         val = (addr ^ val).wrapping_sub(SEEDS[2][cmd]);
