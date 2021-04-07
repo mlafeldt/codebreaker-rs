@@ -64,7 +64,7 @@ use cb7::{is_beefcode, Cb7};
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 enum Scheme {
-    RAW,
+    Raw,
     V1,
     V7,
 }
@@ -89,7 +89,7 @@ impl Codebreaker {
     /// and v7 codes.
     pub const fn new() -> Self {
         Self {
-            scheme: Scheme::RAW,
+            scheme: Scheme::Raw,
             cb7: Cb7::new(),
             code_lines: 0,
         }
@@ -261,12 +261,12 @@ impl Codebreaker {
                         cb1::decrypt_code_mut(addr, val);
                     }
                 } else {
-                    self.scheme = Scheme::RAW;
+                    self.scheme = Scheme::Raw;
                     self.code_lines -= 1;
                 }
             } else {
                 self.code_lines -= 1;
-                if self.scheme == Scheme::RAW {
+                if self.scheme == Scheme::Raw {
                     return;
                 }
                 cb1::decrypt_code_mut(addr, val);
