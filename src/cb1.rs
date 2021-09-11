@@ -99,6 +99,7 @@ mod tests {
     use super::*;
     use crate::code;
     use crate::std_alloc::Vec;
+    use pretty_assertions::assert_eq;
 
     struct Test {
         decrypted: &'static str,

@@ -39,6 +39,7 @@ impl Rc4 {
 mod tests {
     use super::*;
     use crate::std_alloc::Vec;
+    use pretty_assertions::assert_eq;
 
     struct Test {
         key: &'static str,

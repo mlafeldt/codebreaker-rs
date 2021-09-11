@@ -19,6 +19,9 @@ name = "codebreaker"
 bytemuck = "1.7"
 num-bigint = "0.4"
 
+[dev-dependencies]
+pretty_assertions = "0.7"
+
 [features]
 default = ["std"]
 std = ["num-bigint/std"]
