@@ -312,6 +312,7 @@ const fn num_code_lines(addr: u32) -> usize {
 mod tests {
     use super::*;
     use crate::std_alloc::Vec;
+    #[cfg(feature = "std")]
     use pretty_assertions::assert_eq;
 
     struct Test {
