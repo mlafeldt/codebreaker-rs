@@ -23,7 +23,7 @@
 //!
 //! let mut cb = Codebreaker::new();
 //! for (i, code) in input.iter().enumerate() {
-//!     assert_eq!(output[i], cb.auto_decrypt_code(code.0, code.1));
+//!     assert_eq!(cb.auto_decrypt_code(code.0, code.1), output[i]);
 //! }
 //! ```
 
@@ -114,7 +114,7 @@ impl Codebreaker {
     ///
     /// let mut cb = Codebreaker::new();
     /// let code = cb.encrypt_code(0x2043AFCC, 0x2411FFFF);
-    /// assert_eq!((0x2AFF014C, 0x2411FFFF), code);
+    /// assert_eq!(code, (0x2AFF014C, 0x2411FFFF));
     /// ```
     pub fn encrypt_code(&mut self, addr: u32, val: u32) -> (u32, u32) {
         let mut code = (addr, val);
@@ -131,7 +131,7 @@ impl Codebreaker {
     /// let mut cb = Codebreaker::new();
     /// let mut code = (0x2043AFCC, 0x2411FFFF);
     /// cb.encrypt_code_mut(&mut code.0, &mut code.1);
-    /// assert_eq!((0x2AFF014C, 0x2411FFFF), code);
+    /// assert_eq!(code, (0x2AFF014C, 0x2411FFFF));
     /// ```
     pub fn encrypt_code_mut(&mut self, addr: &mut u32, val: &mut u32) {
         let (oldaddr, oldval) = (*addr, *val);
@@ -168,7 +168,7 @@ impl Codebreaker {
     /// let mut cb = Codebreaker::new();
     /// for (i, code) in encrypted.iter().enumerate() {
     ///     let result = cb.decrypt_code(code.0, code.1);
-    ///     assert_eq!(decrypted[i], result);
+    ///     assert_eq!(result, decrypted[i]);
     /// }
     /// ```
     pub fn decrypt_code(&mut self, addr: u32, val: u32) -> (u32, u32) {
@@ -198,7 +198,7 @@ impl Codebreaker {
     /// for code in encrypted.iter_mut() {
     ///     cb.decrypt_code_mut(&mut code.0, &mut code.1);
     /// }
-    /// assert_eq!(decrypted, encrypted);
+    /// assert_eq!(encrypted, decrypted);
     /// ```
     pub fn decrypt_code_mut(&mut self, addr: &mut u32, val: &mut u32) {
         if self.scheme == Scheme::V7 {
@@ -235,7 +235,7 @@ impl Codebreaker {
     ///
     /// let mut cb = Codebreaker::new();
     /// for (i, code) in input.iter().enumerate() {
-    ///     assert_eq!(output[i], cb.auto_decrypt_code(code.0, code.1));
+    ///     assert_eq!(cb.auto_decrypt_code(code.0, code.1), output[i]);
     /// }
     /// ```
     pub fn auto_decrypt_code(&mut self, addr: u32, val: u32) -> (u32, u32) {
@@ -372,7 +372,7 @@ mod tests {
             for (i, line) in t.decrypted.iter().enumerate() {
                 let code = code::parse(line);
                 let result = t.cb.encrypt_code(code.0, code.1);
-                assert_eq!(t.encrypted[i], code::format(result));
+                assert_eq!(code::format(result), t.encrypted[i]);
             }
         }
     }
@@ -383,7 +383,7 @@ mod tests {
             for (i, line) in t.decrypted.iter().enumerate() {
                 let mut code = code::parse(line);
                 t.cb.encrypt_code_mut(&mut code.0, &mut code.1);
-                assert_eq!(t.encrypted[i], code::format(code));
+                assert_eq!(code::format(code), t.encrypted[i]);
             }
         }
     }
@@ -394,7 +394,7 @@ mod tests {
             for (i, line) in t.encrypted.iter().enumerate() {
                 let code = code::parse(line);
                 let result = t.cb.decrypt_code(code.0, code.1);
-                assert_eq!(t.decrypted[i], code::format(result));
+                assert_eq!(code::format(result), t.decrypted[i]);
             }
         }
     }
@@ -405,7 +405,7 @@ mod tests {
             for (i, line) in t.encrypted.iter().enumerate() {
                 let mut code = code::parse(line);
                 t.cb.decrypt_code_mut(&mut code.0, &mut code.1);
-                assert_eq!(t.decrypted[i], code::format(code));
+                assert_eq!(code::format(code), t.decrypted[i]);
             }
         }
     }
@@ -499,7 +499,7 @@ mod tests {
             for (i, line) in t.input.iter().enumerate() {
                 let code = code::parse(line);
                 let result = cb.auto_decrypt_code(code.0, code.1);
-                assert_eq!(t.output[i], code::format(result));
+                assert_eq!(code::format(result), t.output[i]);
             }
         }
     }
@@ -511,7 +511,7 @@ mod tests {
             for (i, line) in t.input.iter().enumerate() {
                 let mut code = code::parse(line);
                 cb.auto_decrypt_code_mut(&mut code.0, &mut code.1);
-                assert_eq!(t.output[i], code::format(code));
+                assert_eq!(code::format(code), t.output[i]);
             }
         }
     }

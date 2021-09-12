@@ -39,7 +39,7 @@ let output: Vec<(u32, u32)> = vec![
 
 let mut cb = Codebreaker::new();
 for (i, code) in input.iter().enumerate() {
-    assert_eq!(output[i], cb.auto_decrypt_code(code.0, code.1));
+    assert_eq!(cb.auto_decrypt_code(code.0, code.1), output[i]);
 }
 ```
 

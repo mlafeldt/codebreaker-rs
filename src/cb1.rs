@@ -7,7 +7,7 @@
 /// use codebreaker::cb1;
 ///
 /// let code = cb1::encrypt_code(0x1023CED8, 0x000003E7);
-/// assert_eq!((0x1A11330E, 0x000003E7), code);
+/// assert_eq!(code, (0x1A11330E, 0x000003E7));
 /// ```
 pub const fn encrypt_code(mut addr: u32, mut val: u32) -> (u32, u32) {
     let cmd = (addr >> 28) as usize;
@@ -28,7 +28,7 @@ pub const fn encrypt_code(mut addr: u32, mut val: u32) -> (u32, u32) {
 ///
 /// let mut code = (0x1023CED8, 0x000003E7);
 /// cb1::encrypt_code_mut(&mut code.0, &mut code.1);
-/// assert_eq!((0x1A11330E, 0x000003E7), code);
+/// assert_eq!(code, (0x1A11330E, 0x000003E7));
 /// ```
 pub fn encrypt_code_mut(addr: &mut u32, val: &mut u32) {
     let code = encrypt_code(*addr, *val);
@@ -43,7 +43,7 @@ pub fn encrypt_code_mut(addr: &mut u32, val: &mut u32) {
 /// use codebreaker::cb1;
 ///
 /// let code = cb1::decrypt_code(0x1A11330E, 0x000003E7);
-/// assert_eq!((0x1023CED8, 0x000003E7), code);
+/// assert_eq!(code, (0x1023CED8, 0x000003E7));
 /// ```
 pub const fn decrypt_code(mut addr: u32, mut val: u32) -> (u32, u32) {
     let cmd = (addr >> 28) as usize;
@@ -64,7 +64,7 @@ pub const fn decrypt_code(mut addr: u32, mut val: u32) -> (u32, u32) {
 ///
 /// let mut code = (0x1A11330E, 0x000003E7);
 /// cb1::decrypt_code_mut(&mut code.0, &mut code.1);
-/// assert_eq!((0x1023CED8, 0x000003E7), code);
+/// assert_eq!(code, (0x1023CED8, 0x000003E7));
 /// ```
 pub fn decrypt_code_mut(addr: &mut u32, val: &mut u32) {
     let code = decrypt_code(*addr, *val);
@@ -141,7 +141,7 @@ mod tests {
         for t in tests().iter() {
             let code = code::parse(t.decrypted);
             let result = encrypt_code(code.0, code.1);
-            assert_eq!(t.encrypted, code::format(result));
+            assert_eq!(code::format(result), t.encrypted);
         }
     }
 
@@ -150,7 +150,7 @@ mod tests {
         for t in tests().iter() {
             let mut code = code::parse(t.decrypted);
             encrypt_code_mut(&mut code.0, &mut code.1);
-            assert_eq!(t.encrypted, code::format(code));
+            assert_eq!(code::format(code), t.encrypted);
         }
     }
 
@@ -159,7 +159,7 @@ mod tests {
         for t in tests().iter() {
             let code = code::parse(t.encrypted);
             let result = decrypt_code(code.0, code.1);
-            assert_eq!(t.decrypted, code::format(result));
+            assert_eq!(code::format(result), t.decrypted);
         }
     }
 
@@ -168,7 +168,7 @@ mod tests {
         for t in tests().iter() {
             let mut code = code::parse(t.encrypted);
             decrypt_code_mut(&mut code.0, &mut code.1);
-            assert_eq!(t.decrypted, code::format(code));
+            assert_eq!(code::format(code), t.decrypted);
         }
     }
 }

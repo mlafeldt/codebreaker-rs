@@ -77,7 +77,7 @@ mod tests {
             let mut rc4 = Rc4::new(t.key.as_bytes());
             let mut buf = t.input.as_bytes().to_vec();
             rc4.crypt(&mut buf);
-            assert_eq!(t.output, buf);
+            assert_eq!(buf, t.output);
         }
     }
 }
