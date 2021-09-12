@@ -38,7 +38,7 @@ impl Rc4 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::std_alloc::Vec;
+    use crate::std_alloc::{vec, Vec};
     #[cfg(feature = "std")]
     use pretty_assertions::assert_eq;
 

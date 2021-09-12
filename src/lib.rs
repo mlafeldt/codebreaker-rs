@@ -34,25 +34,27 @@
 #![no_std]
 
 #[cfg(feature = "std")]
-#[macro_use]
 extern crate std;
 
 #[cfg(feature = "std")]
 #[cfg(test)]
 mod std_alloc {
+    pub use std::format;
     pub use std::string::String;
+    pub use std::vec;
     pub use std::vec::Vec;
 }
 
 #[cfg(not(feature = "std"))]
-#[allow(unused_imports)]
-#[macro_use]
+#[allow(unused_extern_crates)]
 extern crate alloc;
 
 #[cfg(not(feature = "std"))]
 #[cfg(test)]
 mod std_alloc {
+    pub use alloc::format;
     pub use alloc::string::String;
+    pub use alloc::vec;
     pub use alloc::vec::Vec;
 }
 
@@ -311,7 +313,7 @@ const fn num_code_lines(addr: u32) -> usize {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::std_alloc::Vec;
+    use crate::std_alloc::{vec, Vec};
     #[cfg(feature = "std")]
     use pretty_assertions::assert_eq;
 
@@ -519,7 +521,7 @@ mod tests {
 
 #[cfg(test)]
 mod code {
-    use crate::std_alloc::{String, Vec};
+    use crate::std_alloc::{format, String, Vec};
 
     pub fn parse(line: &str) -> (u32, u32) {
         let code: Vec<u32> = line

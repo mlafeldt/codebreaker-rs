@@ -98,7 +98,7 @@ const SEEDS: [[u32; 16]; 3] = [
 mod tests {
     use super::*;
     use crate::code;
-    use crate::std_alloc::Vec;
+    use crate::std_alloc::{vec, Vec};
     #[cfg(feature = "std")]
     use pretty_assertions::assert_eq;
 
