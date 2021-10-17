@@ -20,7 +20,7 @@ bytemuck = "1.7"
 num-bigint = "0.4"
 
 [dev-dependencies]
-pretty_assertions = "0.7"
+pretty_assertions = "1.0"
 
 [features]
 default = ["std"]
