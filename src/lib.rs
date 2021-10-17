@@ -33,6 +33,9 @@
 #![forbid(unsafe_code)]
 #![no_std]
 
+#[cfg(doctest)]
+doc_comment::doctest!("../README.md", readme);
+
 #[cfg(feature = "std")]
 extern crate std;
 
