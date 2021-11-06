@@ -36,29 +36,24 @@
 #[cfg(doctest)]
 doc_comment::doctest!("../README.md", readme);
 
-#[cfg(feature = "std")]
-extern crate std;
-
-#[cfg(feature = "std")]
-#[cfg(test)]
-mod std_alloc {
-    pub use std::format;
-    pub use std::string::String;
-    pub use std::vec;
-    pub use std::vec::Vec;
-}
-
-#[cfg(not(feature = "std"))]
-#[allow(unused_extern_crates)]
-extern crate alloc;
-
-#[cfg(not(feature = "std"))]
-#[cfg(test)]
-mod std_alloc {
-    pub use alloc::format;
-    pub use alloc::string::String;
-    pub use alloc::vec;
-    pub use alloc::vec::Vec;
+cfg_if::cfg_if! {
+    if #[cfg(feature = "std")] {
+        extern crate std;
+        mod std_alloc {
+            pub use std::format;
+            pub use std::string::String;
+            pub use std::vec;
+            pub use std::vec::Vec;
+        }
+    } else  {
+        extern crate alloc;
+        mod std_alloc {
+            pub use alloc::format;
+            pub use alloc::string::String;
+            pub use alloc::vec;
+            pub use alloc::vec::Vec;
+        }
+    }
 }
 
 pub mod cb1;
