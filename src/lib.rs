@@ -45,7 +45,7 @@ cfg_if::cfg_if! {
             pub use std::vec;
             pub use std::vec::Vec;
         }
-    } else  {
+    } else {
         extern crate alloc;
         mod std_alloc {
             pub use alloc::format;
