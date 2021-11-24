@@ -11,13 +11,16 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  run:
-    name: Run
+  rust:
+    name: Rust
     runs-on: ubuntu-latest
     strategy:
       matrix:
         features: [--all-features, --no-default-features]
     steps:
+      - name: Get sources
+        uses: actions/checkout@v2
+
       - name: Install Rust stable
         uses: actions-rs/toolchain@v1
         with:
@@ -26,8 +29,8 @@ jobs:
           components: rustfmt, clippy
           override: true
 
-      - name: Get sources
-        uses: actions/checkout@v2
+      - name: Set up Rust caching
+        uses: Swatinem/rust-cache@v1
 
       - name: Build
         uses: actions-rs/cargo@v1
