@@ -36,16 +36,16 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: build
-          args: --workspace ${{ matrix.features }}
+          args: ${{ matrix.features }}
 
       - name: Lint
         uses: actions-rs/cargo@v1
         with:
           command: clippy
-          args: --workspace ${{ matrix.features }} -- -D warnings
+          args: ${{ matrix.features }} -- -D warnings
 
       - name: Test
         uses: actions-rs/cargo@v1
         with:
           command: test
-          args: --workspace ${{ matrix.features }}
+          args: ${{ matrix.features }}
