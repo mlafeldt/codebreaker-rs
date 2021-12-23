@@ -97,8 +97,8 @@ const SEEDS: [[u32; 16]; 3] = [
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::code;
-    use crate::std_alloc::{vec, Vec};
+    use crate::code::Code;
+    use crate::std_alloc::{vec, ToString, Vec};
     #[cfg(feature = "std")]
     use pretty_assertions::assert_eq;
 
@@ -139,36 +139,36 @@ mod tests {
     #[test]
     fn test_encrypt_code() {
         for t in tests().iter() {
-            let code = code::parse(t.decrypted);
+            let code = Code::from(t.decrypted);
             let result = encrypt_code(code.0, code.1);
-            assert_eq!(code::format(result), t.encrypted);
+            assert_eq!(Code::from(result).to_string(), t.encrypted);
         }
     }
 
     #[test]
     fn test_encrypt_code_mut() {
         for t in tests().iter() {
-            let mut code = code::parse(t.decrypted);
+            let mut code = Code::from(t.decrypted);
             encrypt_code_mut(&mut code.0, &mut code.1);
-            assert_eq!(code::format(code), t.encrypted);
+            assert_eq!(code.to_string(), t.encrypted);
         }
     }
 
     #[test]
     fn test_decrypt_code() {
         for t in tests().iter() {
-            let code = code::parse(t.encrypted);
+            let code = Code::from(t.encrypted);
             let result = decrypt_code(code.0, code.1);
-            assert_eq!(code::format(result), t.decrypted);
+            assert_eq!(Code::from(result).to_string(), t.decrypted);
         }
     }
 
     #[test]
     fn test_decrypt_code_mut() {
         for t in tests().iter() {
-            let mut code = code::parse(t.encrypted);
+            let mut code = Code::from(t.encrypted);
             decrypt_code_mut(&mut code.0, &mut code.1);
-            assert_eq!(code::format(code), t.decrypted);
+            assert_eq!(code.to_string(), t.decrypted);
         }
     }
 }
