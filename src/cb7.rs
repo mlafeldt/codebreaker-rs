@@ -445,8 +445,8 @@ const SEEDS: [[u8; 256]; 5] = [
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::code::Code;
-    use crate::std_alloc::{vec, ToString, Vec};
+    use crate::code::{assert_equal, Code};
+    use crate::std_alloc::{vec, Vec};
     #[cfg(feature = "std")]
     use pretty_assertions::assert_eq;
 
@@ -597,7 +597,7 @@ mod tests {
             for (i, &line) in t.decrypted.iter().enumerate() {
                 let code = Code::from(line);
                 let result = cb7.encrypt_code(code.0, code.1);
-                assert_eq!(Code::from(result).to_string(), t.encrypted[i]);
+                assert_equal(result, t.encrypted[i]);
 
                 if is_beefcode(code.0) {
                     cb7.beefcode(code.0, code.1)
@@ -617,7 +617,7 @@ mod tests {
                 let mut code = Code::from(line);
                 let oldcode = code;
                 cb7.encrypt_code_mut(&mut code.0, &mut code.1);
-                assert_eq!(code.to_string(), t.encrypted[i]);
+                assert_equal(code, t.encrypted[i]);
 
                 if is_beefcode(oldcode.0) {
                     cb7.beefcode(oldcode.0, oldcode.1)
@@ -636,7 +636,7 @@ mod tests {
             for (i, &line) in t.encrypted.iter().enumerate() {
                 let code = Code::from(line);
                 let result = cb7.decrypt_code(code.0, code.1);
-                assert_eq!(Code::from(result).to_string(), t.decrypted[i]);
+                assert_equal(result, t.decrypted[i]);
 
                 if is_beefcode(result.0) {
                     cb7.beefcode(result.0, result.1)
@@ -655,7 +655,7 @@ mod tests {
             for (i, &line) in t.encrypted.iter().enumerate() {
                 let mut code = Code::from(line);
                 cb7.decrypt_code_mut(&mut code.0, &mut code.1);
-                assert_eq!(code.to_string(), t.decrypted[i]);
+                assert_equal(code, t.decrypted[i]);
 
                 if is_beefcode(code.0) {
                     cb7.beefcode(code.0, code.1)
