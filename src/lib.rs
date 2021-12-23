@@ -537,7 +537,11 @@ mod code {
 
     impl From<&str> for Code {
         fn from(s: &str) -> Self {
-            let t: Vec<u32> = s.splitn(2, ' ').map(|v| u32::from_str_radix(v, 16).unwrap()).collect();
+            let t: Vec<u32> = s
+                .splitn(2, ' ')
+                .map(|v| u32::from_str_radix(v, 16).expect("invalid code format"))
+                .collect();
+
             Self(t[0], t[1])
         }
     }
