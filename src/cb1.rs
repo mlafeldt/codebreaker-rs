@@ -97,8 +97,10 @@ const SEEDS: [[u32; 16]; 3] = [
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::code::{assert_equal, Code};
+    use crate::code::Code;
     use crate::std_alloc::{vec, Vec};
+    #[cfg(feature = "std")]
+    use pretty_assertions::assert_eq;
 
     struct Test {
         decrypted: Code,
@@ -137,7 +139,8 @@ mod tests {
     #[test]
     fn test_encrypt_code() {
         for t in tests().iter() {
-            assert_equal(encrypt_code(t.decrypted.0, t.decrypted.1), t.encrypted);
+            let result: Code = encrypt_code(t.decrypted.0, t.decrypted.1).into();
+            assert_eq!(result, t.encrypted);
         }
     }
 
@@ -146,14 +149,15 @@ mod tests {
         for t in tests().iter() {
             let mut code = t.decrypted;
             encrypt_code_mut(&mut code.0, &mut code.1);
-            assert_equal(code, t.encrypted);
+            assert_eq!(code, t.encrypted);
         }
     }
 
     #[test]
     fn test_decrypt_code() {
         for t in tests().iter() {
-            assert_equal(decrypt_code(t.encrypted.0, t.encrypted.1), t.decrypted);
+            let result: Code = decrypt_code(t.encrypted.0, t.encrypted.1).into();
+            assert_eq!(result, t.decrypted);
         }
     }
 
@@ -162,7 +166,7 @@ mod tests {
         for t in tests().iter() {
             let mut code = t.encrypted;
             decrypt_code_mut(&mut code.0, &mut code.1);
-            assert_equal(code, t.decrypted);
+            assert_eq!(code, t.decrypted);
         }
     }
 }

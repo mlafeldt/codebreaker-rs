@@ -315,8 +315,10 @@ const fn num_code_lines(addr: u32) -> usize {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::code::{assert_equal, Code};
+    use crate::code::Code;
     use crate::std_alloc::{vec, Vec};
+    #[cfg(feature = "std")]
+    use pretty_assertions::assert_eq;
 
     struct Test {
         cb: Codebreaker,
@@ -372,8 +374,8 @@ mod tests {
     fn test_encrypt_code() {
         for t in tests().iter_mut() {
             for (i, &code) in t.decrypted.iter().enumerate() {
-                let result = t.cb.encrypt_code(code.0, code.1);
-                assert_equal(result, t.encrypted[i]);
+                let result: Code = t.cb.encrypt_code(code.0, code.1).into();
+                assert_eq!(result, t.encrypted[i]);
             }
         }
     }
@@ -383,7 +385,7 @@ mod tests {
         for t in tests().iter_mut() {
             for (i, code) in t.decrypted.iter_mut().enumerate() {
                 t.cb.encrypt_code_mut(&mut code.0, &mut code.1);
-                assert_equal(*code, t.encrypted[i]);
+                assert_eq!(*code, t.encrypted[i]);
             }
         }
     }
@@ -392,8 +394,8 @@ mod tests {
     fn test_decrypt_code() {
         for t in tests().iter_mut() {
             for (i, &code) in t.encrypted.iter().enumerate() {
-                let result = t.cb.decrypt_code(code.0, code.1);
-                assert_equal(result, t.decrypted[i]);
+                let result: Code = t.cb.decrypt_code(code.0, code.1).into();
+                assert_eq!(result, t.decrypted[i]);
             }
         }
     }
@@ -403,7 +405,7 @@ mod tests {
         for t in tests().iter_mut() {
             for (i, code) in t.encrypted.iter_mut().enumerate() {
                 t.cb.decrypt_code_mut(&mut code.0, &mut code.1);
-                assert_equal(*code, t.decrypted[i]);
+                assert_eq!(*code, t.decrypted[i]);
             }
         }
     }
@@ -494,8 +496,8 @@ mod tests {
         for t in auto_tests().iter_mut() {
             let mut cb = Codebreaker::new();
             for (i, &code) in t.input.iter().enumerate() {
-                let result = cb.auto_decrypt_code(code.0, code.1);
-                assert_equal(result, t.output[i]);
+                let result: Code = cb.auto_decrypt_code(code.0, code.1).into();
+                assert_eq!(result, t.output[i]);
             }
         }
     }
@@ -506,7 +508,7 @@ mod tests {
             let mut cb = Codebreaker::new();
             for (i, code) in t.input.iter_mut().enumerate() {
                 cb.auto_decrypt_code_mut(&mut code.0, &mut code.1);
-                assert_equal(*code, t.output[i]);
+                assert_eq!(*code, t.output[i]);
             }
         }
     }
@@ -516,7 +518,7 @@ mod tests {
 mod code {
     use crate::std_alloc::{fmt, ToString, Vec};
 
-    #[derive(Debug, Copy, Clone)]
+    #[derive(Copy, Clone, PartialEq)]
     pub struct Code(pub u32, pub u32);
 
     impl From<(u32, u32)> for Code {
@@ -536,15 +538,17 @@ mod code {
         }
     }
 
+    // Implements ToString
     impl fmt::Display for Code {
         fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
             write!(f, "{:08X} {:08X}", self.0, self.1)
         }
     }
 
-    pub fn assert_equal(a: impl Into<Code>, b: impl Into<Code>) {
-        #[cfg(feature = "std")]
-        use pretty_assertions::assert_eq;
-        assert_eq!(a.into().to_string(), b.into().to_string());
+    // Used by assert_eq!
+    impl fmt::Debug for Code {
+        fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+            write!(f, "{}", self.to_string())
+        }
     }
 }

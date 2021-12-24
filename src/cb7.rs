@@ -445,7 +445,7 @@ const SEEDS: [[u8; 256]; 5] = [
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::code::{assert_equal, Code};
+    use crate::code::Code;
     use crate::std_alloc::{vec, Vec};
     #[cfg(feature = "std")]
     use pretty_assertions::assert_eq;
@@ -593,8 +593,8 @@ mod tests {
             cb7.beefcode(t.beefcode.0, t.beefcode.1);
 
             for (i, &code) in t.decrypted.iter().enumerate() {
-                let result = cb7.encrypt_code(code.0, code.1);
-                assert_equal(result, t.encrypted[i]);
+                let result: Code = cb7.encrypt_code(code.0, code.1).into();
+                assert_eq!(result, t.encrypted[i]);
 
                 if is_beefcode(code.0) {
                     cb7.beefcode(code.0, code.1)
@@ -610,12 +610,12 @@ mod tests {
             cb7.beefcode(t.beefcode.0, t.beefcode.1);
 
             for (i, code) in t.decrypted.iter_mut().enumerate() {
-                let oldcode = *code;
+                let raw = *code;
                 cb7.encrypt_code_mut(&mut code.0, &mut code.1);
-                assert_equal(*code, t.encrypted[i]);
+                assert_eq!(*code, t.encrypted[i]);
 
-                if is_beefcode(oldcode.0) {
-                    cb7.beefcode(oldcode.0, oldcode.1)
+                if is_beefcode(raw.0) {
+                    cb7.beefcode(raw.0, raw.1)
                 }
             }
         }
@@ -628,8 +628,8 @@ mod tests {
             cb7.beefcode(t.beefcode.0, t.beefcode.1);
 
             for (i, &code) in t.encrypted.iter().enumerate() {
-                let result = cb7.decrypt_code(code.0, code.1);
-                assert_equal(result, t.decrypted[i]);
+                let result: Code = cb7.decrypt_code(code.0, code.1).into();
+                assert_eq!(result, t.decrypted[i]);
 
                 if is_beefcode(result.0) {
                     cb7.beefcode(result.0, result.1)
@@ -646,7 +646,7 @@ mod tests {
 
             for (i, code) in t.encrypted.iter_mut().enumerate() {
                 cb7.decrypt_code_mut(&mut code.0, &mut code.1);
-                assert_equal(*code, t.decrypted[i]);
+                assert_eq!(*code, t.decrypted[i]);
 
                 if is_beefcode(code.0) {
                     cb7.beefcode(code.0, code.1)
