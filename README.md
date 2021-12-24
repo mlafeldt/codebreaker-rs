@@ -16,7 +16,7 @@ Add the crate as a dependency to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-codebreaker = "0.2"
+codebreaker = "0.3"
 ```
 
 Now you can start decrypting some codes:
@@ -51,7 +51,7 @@ The `codebreaker` crate has a Cargo feature named "std" that is enabled by defau
 
 ```toml
 [dependencies]
-codebreaker = { version = "0.2", default-features = false }
+codebreaker = { version = "0.3", default-features = false }
 ```
 
 ## License
