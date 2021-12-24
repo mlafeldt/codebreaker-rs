@@ -40,18 +40,22 @@ cfg_if::cfg_if! {
     if #[cfg(feature = "std")] {
         extern crate std;
         mod std_alloc {
-            pub use std::format;
-            pub use std::string::String;
-            pub use std::vec;
-            pub use std::vec::Vec;
+            pub use std::{
+                fmt,
+                string::{String, ToString},
+                vec,
+                vec::Vec,
+            };
         }
     } else {
         extern crate alloc;
         mod std_alloc {
-            pub use alloc::format;
-            pub use alloc::string::String;
-            pub use alloc::vec;
-            pub use alloc::vec::Vec;
+            pub use alloc::{
+                fmt,
+                string::{String, ToString},
+                vec,
+                vec::Vec,
+            };
         }
     }
 }
@@ -311,56 +315,56 @@ const fn num_code_lines(addr: u32) -> usize {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::code::Code;
     use crate::std_alloc::{vec, Vec};
     #[cfg(feature = "std")]
     use pretty_assertions::assert_eq;
 
     struct Test {
         cb: Codebreaker,
-        decrypted: Vec<&'static str>,
-        encrypted: Vec<&'static str>,
+        decrypted: Vec<Code>,
+        encrypted: Vec<Code>,
     }
 
-    #[rustfmt::skip]
     fn tests() -> Vec<Test> {
         vec![
             Test {
                 cb: Codebreaker::new(),
                 decrypted: vec![
-                    "2043AFCC 2411FFFF",
-                    "BEEFC0DE 00000000",
-                    "2096F5B8 000000BE",
+                    "2043AFCC 2411FFFF".into(),
+                    "BEEFC0DE 00000000".into(),
+                    "2096F5B8 000000BE".into(),
                 ],
                 encrypted: vec![
-                    "2AFF014C 2411FFFF",
-                    "B4336FA9 4DFEFB79",
-                    "973E0B2A A7D4AF10",
+                    "2AFF014C 2411FFFF".into(),
+                    "B4336FA9 4DFEFB79".into(),
+                    "973E0B2A A7D4AF10".into(),
                 ],
             },
             Test {
                 cb: Codebreaker::new_v7(),
                 decrypted: vec![
-                    "9029BEAC 0C0A9225",
-                    "201F6024 00000000",
-                    "2096F5B8 000000BE",
+                    "9029BEAC 0C0A9225".into(),
+                    "201F6024 00000000".into(),
+                    "2096F5B8 000000BE".into(),
                 ],
                 encrypted: vec![
-                    "D08F3A49 00078A53",
-                    "3818DDE5 E72B2B16",
-                    "973E0B2A A7D4AF10",
+                    "D08F3A49 00078A53".into(),
+                    "3818DDE5 E72B2B16".into(),
+                    "973E0B2A A7D4AF10".into(),
                 ],
             },
             Test {
                 cb: Codebreaker::default(),
                 decrypted: vec![
-                    "9029BEAC 0C0A9225",
-                    "201F6024 00000000",
-                    "2096F5B8 000000BE",
+                    "9029BEAC 0C0A9225".into(),
+                    "201F6024 00000000".into(),
+                    "2096F5B8 000000BE".into(),
                 ],
                 encrypted: vec![
-                    "9A545CC6 188CBCFB",
-                    "2A973DBD 00000000",
-                    "2A03B60A 000000BE",
+                    "9A545CC6 188CBCFB".into(),
+                    "2A973DBD 00000000".into(),
+                    "2A03B60A 000000BE".into(),
                 ],
             },
         ]
@@ -369,10 +373,9 @@ mod tests {
     #[test]
     fn test_encrypt_code() {
         for t in tests().iter_mut() {
-            for (i, line) in t.decrypted.iter().enumerate() {
-                let code = code::parse(line);
-                let result = t.cb.encrypt_code(code.0, code.1);
-                assert_eq!(code::format(result), t.encrypted[i]);
+            for (i, &code) in t.decrypted.iter().enumerate() {
+                let result: Code = t.cb.encrypt_code(code.0, code.1).into();
+                assert_eq!(result, t.encrypted[i]);
             }
         }
     }
@@ -380,10 +383,9 @@ mod tests {
     #[test]
     fn test_encrypt_code_mut() {
         for t in tests().iter_mut() {
-            for (i, line) in t.decrypted.iter().enumerate() {
-                let mut code = code::parse(line);
+            for (i, code) in t.decrypted.iter_mut().enumerate() {
                 t.cb.encrypt_code_mut(&mut code.0, &mut code.1);
-                assert_eq!(code::format(code), t.encrypted[i]);
+                assert_eq!(*code, t.encrypted[i]);
             }
         }
     }
@@ -391,10 +393,9 @@ mod tests {
     #[test]
     fn test_decrypt_code() {
         for t in tests().iter_mut() {
-            for (i, line) in t.encrypted.iter().enumerate() {
-                let code = code::parse(line);
-                let result = t.cb.decrypt_code(code.0, code.1);
-                assert_eq!(code::format(result), t.decrypted[i]);
+            for (i, &code) in t.encrypted.iter().enumerate() {
+                let result: Code = t.cb.decrypt_code(code.0, code.1).into();
+                assert_eq!(result, t.decrypted[i]);
             }
         }
     }
@@ -402,91 +403,89 @@ mod tests {
     #[test]
     fn test_decrypt_code_mut() {
         for t in tests().iter_mut() {
-            for (i, line) in t.encrypted.iter().enumerate() {
-                let mut code = code::parse(line);
+            for (i, code) in t.encrypted.iter_mut().enumerate() {
                 t.cb.decrypt_code_mut(&mut code.0, &mut code.1);
-                assert_eq!(code::format(code), t.decrypted[i]);
+                assert_eq!(*code, t.decrypted[i]);
             }
         }
     }
 
     struct AutoTest {
-        input: Vec<&'static str>,
-        output: Vec<&'static str>,
+        input: Vec<Code>,
+        output: Vec<Code>,
     }
 
-    #[rustfmt::skip]
     fn auto_tests() -> Vec<AutoTest> {
         vec![
             AutoTest {
                 // raw
                 input: vec![
-                    "9029BEAC 0C0A9225",
-                    "201F6024 00000000",
-                    "2096F5B8 000000BE",
+                    "9029BEAC 0C0A9225".into(),
+                    "201F6024 00000000".into(),
+                    "2096F5B8 000000BE".into(),
                 ],
                 output: vec![
-                    "9029BEAC 0C0A9225",
-                    "201F6024 00000000",
-                    "2096F5B8 000000BE",
+                    "9029BEAC 0C0A9225".into(),
+                    "201F6024 00000000".into(),
+                    "2096F5B8 000000BE".into(),
                 ],
             },
             AutoTest {
                 // v1 encrypted
                 input: vec![
-                    "9A545CC6 188CBCFB",
-                    "2A973DBD 00000000",
-                    "2A03B60A 000000BE",
+                    "9A545CC6 188CBCFB".into(),
+                    "2A973DBD 00000000".into(),
+                    "2A03B60A 000000BE".into(),
                 ],
                 output: vec![
-                    "9029BEAC 0C0A9225",
-                    "201F6024 00000000",
-                    "2096F5B8 000000BE",
+                    "9029BEAC 0C0A9225".into(),
+                    "201F6024 00000000".into(),
+                    "2096F5B8 000000BE".into(),
                 ],
             },
             AutoTest {
                 // v7 encrypted
                 input: vec![
-                    "B4336FA9 4DFEFB79",
-                    "D08F3A49 00078A53",
-                    "3818DDE5 E72B2B16",
-                    "973E0B2A A7D4AF10",
+                    "B4336FA9 4DFEFB79".into(),
+                    "D08F3A49 00078A53".into(),
+                    "3818DDE5 E72B2B16".into(),
+                    "973E0B2A A7D4AF10".into(),
                 ],
                 output: vec![
-                    "BEEFC0DE 00000000",
-                    "9029BEAC 0C0A9225",
-                    "201F6024 00000000",
-                    "2096F5B8 000000BE",
+                    "BEEFC0DE 00000000".into(),
+                    "9029BEAC 0C0A9225".into(),
+                    "201F6024 00000000".into(),
+                    "2096F5B8 000000BE".into(),
                 ],
             },
             AutoTest {
                 // v1 and v7 encrypted
                 input: vec![
-                    "9A545CC6 188CBCFB",
-                    "2A973DBD 00000000",
-                    "B4336FA9 4DFEFB79",
-                    "973E0B2A A7D4AF10",
+                    "9A545CC6 188CBCFB".into(),
+                    "2A973DBD 00000000".into(),
+                    "B4336FA9 4DFEFB79".into(),
+                    "973E0B2A A7D4AF10".into(),
                 ],
                 output: vec![
-                    "9029BEAC 0C0A9225",
-                    "201F6024 00000000",
-                    "BEEFC0DE 00000000",
-                    "2096F5B8 000000BE",
+                    "9029BEAC 0C0A9225".into(),
+                    "201F6024 00000000".into(),
+                    "BEEFC0DE 00000000".into(),
+                    "2096F5B8 000000BE".into(),
                 ],
             },
             AutoTest {
                 // raw, v1, and v7 encrypted
                 input: vec![
-                    "9029BEAC 0C0A9225",
-                    "2A973DBD 00000000",
-                    "B4336FA9 4DFEFB79",
-                    "973E0B2A A7D4AF10",
+                    "9029BEAC 0C0A9225".into(),
+                    "2A973DBD 00000000".into(),
+                    "B4336FA9 4DFEFB79".into(),
+                    "973E0B2A A7D4AF10".into(),
                 ],
                 output: vec![
-                    "9029BEAC 0C0A9225",
-                    "201F6024 00000000",
-                    "BEEFC0DE 00000000",
-                    "2096F5B8 000000BE",
+                    "9029BEAC 0C0A9225".into(),
+                    "201F6024 00000000".into(),
+                    "BEEFC0DE 00000000".into(),
+                    "2096F5B8 000000BE".into(),
                 ],
             },
         ]
@@ -496,10 +495,9 @@ mod tests {
     fn test_auto_decrypt_code() {
         for t in auto_tests().iter_mut() {
             let mut cb = Codebreaker::new();
-            for (i, line) in t.input.iter().enumerate() {
-                let code = code::parse(line);
-                let result = cb.auto_decrypt_code(code.0, code.1);
-                assert_eq!(code::format(result), t.output[i]);
+            for (i, &code) in t.input.iter().enumerate() {
+                let result: Code = cb.auto_decrypt_code(code.0, code.1).into();
+                assert_eq!(result, t.output[i]);
             }
         }
     }
@@ -508,10 +506,9 @@ mod tests {
     fn test_auto_decrypt_code_mut() {
         for t in auto_tests().iter_mut() {
             let mut cb = Codebreaker::new();
-            for (i, line) in t.input.iter().enumerate() {
-                let mut code = code::parse(line);
+            for (i, code) in t.input.iter_mut().enumerate() {
                 cb.auto_decrypt_code_mut(&mut code.0, &mut code.1);
-                assert_eq!(code::format(code), t.output[i]);
+                assert_eq!(*code, t.output[i]);
             }
         }
     }
@@ -519,17 +516,39 @@ mod tests {
 
 #[cfg(test)]
 mod code {
-    use crate::std_alloc::{format, String, Vec};
+    use crate::std_alloc::{fmt, ToString, Vec};
 
-    pub fn parse(line: &str) -> (u32, u32) {
-        let code: Vec<u32> = line
-            .splitn(2, ' ')
-            .map(|v| u32::from_str_radix(v, 16).unwrap())
-            .collect();
-        (code[0], code[1])
+    #[derive(Copy, Clone, PartialEq)]
+    pub struct Code(pub u32, pub u32);
+
+    impl From<(u32, u32)> for Code {
+        fn from(t: (u32, u32)) -> Self {
+            Self(t.0, t.1)
+        }
     }
 
-    pub fn format(code: (u32, u32)) -> String {
-        format!("{:08X} {:08X}", code.0, code.1)
+    impl From<&str> for Code {
+        fn from(s: &str) -> Self {
+            let t: Vec<u32> = s
+                .splitn(2, ' ')
+                .map(|v| u32::from_str_radix(v, 16).expect("invalid code format"))
+                .collect();
+
+            Self(t[0], t[1])
+        }
+    }
+
+    // Implements ToString
+    impl fmt::Display for Code {
+        fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+            write!(f, "{:08X} {:08X}", self.0, self.1)
+        }
+    }
+
+    // Used by assert_eq!
+    impl fmt::Debug for Code {
+        fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+            write!(f, "{}", self.to_string())
+        }
     }
 }
