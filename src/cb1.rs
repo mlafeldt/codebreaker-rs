@@ -101,35 +101,35 @@ mod tests {
     use crate::std_alloc::{vec, Vec};
 
     struct Test {
-        decrypted: &'static str,
-        encrypted: &'static str,
+        decrypted: Code,
+        encrypted: Code,
     }
 
     fn tests() -> Vec<Test> {
         vec![
             Test {
-                decrypted: "0031789A 00000063",
-                encrypted: "0AC93A95 00000063",
+                decrypted: "0031789A 00000063".into(),
+                encrypted: "0AC93A95 00000063".into(),
             },
             Test {
-                decrypted: "1031A028 0000FFFF",
-                encrypted: "1A613D30 0000FFFF",
+                decrypted: "1031A028 0000FFFF".into(),
+                encrypted: "1A613D30 0000FFFF".into(),
             },
             Test {
-                decrypted: "201F6024 00000000",
-                encrypted: "2A973DBD 00000000",
+                decrypted: "201F6024 00000000".into(),
+                encrypted: "2A973DBD 00000000".into(),
             },
             Test {
-                decrypted: "902DB32C 0C0BAFF1",
-                encrypted: "9AD420D3 180DDEDA",
+                decrypted: "902DB32C 0C0BAFF1".into(),
+                encrypted: "9AD420D3 180DDEDA".into(),
             },
             Test {
-                decrypted: "A008060C 08028007",
-                encrypted: "AAE071C0 ACA684DD",
+                decrypted: "A008060C 08028007".into(),
+                encrypted: "AAE071C0 ACA684DD".into(),
             },
             Test {
-                decrypted: "BEEFC0DE 00000000",
-                encrypted: "B4336FA9 4DFEFB79",
+                decrypted: "BEEFC0DE 00000000".into(),
+                encrypted: "B4336FA9 4DFEFB79".into(),
             },
         ]
     }
@@ -137,15 +137,14 @@ mod tests {
     #[test]
     fn test_encrypt_code() {
         for t in tests().iter() {
-            let code = Code::from(t.decrypted);
-            assert_equal(encrypt_code(code.0, code.1), t.encrypted);
+            assert_equal(encrypt_code(t.decrypted.0, t.decrypted.1), t.encrypted);
         }
     }
 
     #[test]
     fn test_encrypt_code_mut() {
         for t in tests().iter() {
-            let mut code = Code::from(t.decrypted);
+            let mut code = t.decrypted;
             encrypt_code_mut(&mut code.0, &mut code.1);
             assert_equal(code, t.encrypted);
         }
@@ -154,15 +153,14 @@ mod tests {
     #[test]
     fn test_decrypt_code() {
         for t in tests().iter() {
-            let code = Code::from(t.encrypted);
-            assert_equal(decrypt_code(code.0, code.1), t.decrypted);
+            assert_equal(decrypt_code(t.encrypted.0, t.encrypted.1), t.decrypted);
         }
     }
 
     #[test]
     fn test_decrypt_code_mut() {
         for t in tests().iter() {
-            let mut code = Code::from(t.encrypted);
+            let mut code = t.encrypted;
             decrypt_code_mut(&mut code.0, &mut code.1);
             assert_equal(code, t.decrypted);
         }

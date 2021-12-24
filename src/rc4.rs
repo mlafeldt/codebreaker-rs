@@ -48,7 +48,6 @@ mod tests {
         output: Vec<u8>,
     }
 
-    #[rustfmt::skip]
     fn wikipedia_tests() -> Vec<Test> {
         vec![
             Test {
@@ -64,8 +63,8 @@ mod tests {
             Test {
                 key: "Secret",
                 input: "Attack at dawn",
-                output: vec![0x45, 0xa0, 0x1f, 0x64, 0x5f, 0xc3, 0x5b,
-                             0x38, 0x35, 0x52, 0x54, 0x4b, 0x9b, 0xf5,
+                output: vec![
+                    0x45, 0xa0, 0x1f, 0x64, 0x5f, 0xc3, 0x5b, 0x38, 0x35, 0x52, 0x54, 0x4b, 0x9b, 0xf5,
                 ],
             },
         ]

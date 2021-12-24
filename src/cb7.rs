@@ -498,90 +498,89 @@ mod tests {
     }
 
     struct Test {
-        beefcode: &'static str,
-        decrypted: Vec<&'static str>,
-        encrypted: Vec<&'static str>,
+        beefcode: Code,
+        decrypted: Vec<Code>,
+        encrypted: Vec<Code>,
     }
 
-    #[rustfmt::skip]
     fn tests() -> Vec<Test> {
         vec![
             Test {
                 // default BEEFC0DE
-                beefcode: "BEEFC0DE 00000000",
+                beefcode: "BEEFC0DE 00000000".into(),
                 decrypted: vec![
-                    "9029BEAC 0C0A9225",
-                    "201F6024 00000000",
-                    "2096F5B8 000000BE",
+                    "9029BEAC 0C0A9225".into(),
+                    "201F6024 00000000".into(),
+                    "2096F5B8 000000BE".into(),
                 ],
                 encrypted: vec![
-                    "D08F3A49 00078A53",
-                    "3818DDE5 E72B2B16",
-                    "973E0B2A A7D4AF10",
+                    "D08F3A49 00078A53".into(),
+                    "3818DDE5 E72B2B16".into(),
+                    "973E0B2A A7D4AF10".into(),
                 ],
             },
             Test {
                 // non-default BEEFC0DE
-                beefcode: "BEEFC0DE DEADFACE",
+                beefcode: "BEEFC0DE DEADFACE".into(),
                 decrypted: vec![
-                    "9029BEAC 0C0A9225",
-                    "201F6024 00000000",
-                    "2096F5B8 000000BE",
+                    "9029BEAC 0C0A9225".into(),
+                    "201F6024 00000000".into(),
+                    "2096F5B8 000000BE".into(),
                 ],
                 encrypted: vec![
-                    "E65B5422 B12543CF",
-                    "D14F5E52 FE26C9ED",
-                    "DD9BB6F0 F5DF87F7",
+                    "E65B5422 B12543CF".into(),
+                    "D14F5E52 FE26C9ED".into(),
+                    "DD9BB6F0 F5DF87F7".into(),
                 ],
             },
             Test {
                 // BEEFC0DF
-                beefcode: "BEEFC0DF B16B00B5",
+                beefcode: "BEEFC0DF B16B00B5".into(),
                 decrypted: vec![
-                    "01234567 89ABCDEF",
-                    "9029BEAC 0C0A9225",
-                    "201F6024 00000000",
-                    "2096F5B8 000000BE",
+                    "01234567 89ABCDEF".into(),
+                    "9029BEAC 0C0A9225".into(),
+                    "201F6024 00000000".into(),
+                    "2096F5B8 000000BE".into(),
                 ],
                 encrypted: vec![
-                    "862316AB C59C5FB1",
-                    "06133B66 95444FF1",
-                    "565FD08D 9154AFF4",
-                    "4EF412FE D03E4E13",
+                    "862316AB C59C5FB1".into(),
+                    "06133B66 95444FF1".into(),
+                    "565FD08D 9154AFF4".into(),
+                    "4EF412FE D03E4E13".into(),
                 ],
             },
             Test {
                 // BEEFC0DE & BEEFC0DF
-                beefcode: "BEEFC0DE 00000000",
+                beefcode: "BEEFC0DE 00000000".into(),
                 decrypted: vec![
-                    "BEEFC0DF B16B00B5",
-                    "01234567 89ABCDEF",
-                    "9029BEAC 0C0A9225",
-                    "201F6024 00000000",
-                    "2096F5B8 000000BE",
+                    "BEEFC0DF B16B00B5".into(),
+                    "01234567 89ABCDEF".into(),
+                    "9029BEAC 0C0A9225".into(),
+                    "201F6024 00000000".into(),
+                    "2096F5B8 000000BE".into(),
                 ],
                 encrypted: vec![
-                    "FE8B8601 C7C6F6CE",
-                    "2195D855 63FA11A7",
-                    "0CA31760 A6F7E88A",
-                    "679DC392 FA43E30B",
-                    "1CD9CCC3 6AF74E36",
+                    "FE8B8601 C7C6F6CE".into(),
+                    "2195D855 63FA11A7".into(),
+                    "0CA31760 A6F7E88A".into(),
+                    "679DC392 FA43E30B".into(),
+                    "1CD9CCC3 6AF74E36".into(),
                 ],
             },
             Test {
                 // 2x default BEEFC0DE
-                beefcode: "BEEFC0DE 00000000",
+                beefcode: "BEEFC0DE 00000000".into(),
                 decrypted: vec![
-                    "BEEFC0DE 00000000",
-                    "9029BEAC 0C0A9225",
-                    "201F6024 00000000",
-                    "2096F5B8 000000BE",
+                    "BEEFC0DE 00000000".into(),
+                    "9029BEAC 0C0A9225".into(),
+                    "201F6024 00000000".into(),
+                    "2096F5B8 000000BE".into(),
                 ],
                 encrypted: vec![
-                    "8787C575 1AC4C1B4",
-                    "02210430 184C16E8",
-                    "32E2A916 7E6017BA",
-                    "CBB720FD D61505E0",
+                    "8787C575 1AC4C1B4".into(),
+                    "02210430 184C16E8".into(),
+                    "32E2A916 7E6017BA".into(),
+                    "CBB720FD D61505E0".into(),
                 ],
             },
         ]
@@ -590,12 +589,10 @@ mod tests {
     #[test]
     fn test_encrypt_code() {
         for t in tests().iter() {
-            let code = Code::from(t.beefcode);
             let mut cb7 = Cb7::new();
-            cb7.beefcode(code.0, code.1);
+            cb7.beefcode(t.beefcode.0, t.beefcode.1);
 
-            for (i, &line) in t.decrypted.iter().enumerate() {
-                let code = Code::from(line);
+            for (i, &code) in t.decrypted.iter().enumerate() {
                 let result = cb7.encrypt_code(code.0, code.1);
                 assert_equal(result, t.encrypted[i]);
 
@@ -608,16 +605,14 @@ mod tests {
 
     #[test]
     fn test_encrypt_code_mut() {
-        for t in tests().iter() {
-            let code = Code::from(t.beefcode);
+        for t in tests().iter_mut() {
             let mut cb7 = Cb7::new();
-            cb7.beefcode(code.0, code.1);
+            cb7.beefcode(t.beefcode.0, t.beefcode.1);
 
-            for (i, &line) in t.decrypted.iter().enumerate() {
-                let mut code = Code::from(line);
-                let oldcode = code;
+            for (i, code) in t.decrypted.iter_mut().enumerate() {
+                let oldcode = *code;
                 cb7.encrypt_code_mut(&mut code.0, &mut code.1);
-                assert_equal(code, t.encrypted[i]);
+                assert_equal(*code, t.encrypted[i]);
 
                 if is_beefcode(oldcode.0) {
                     cb7.beefcode(oldcode.0, oldcode.1)
@@ -629,12 +624,10 @@ mod tests {
     #[test]
     fn test_decrypt_code() {
         for t in tests().iter() {
-            let code = Code::from(t.beefcode);
             let mut cb7 = Cb7::new();
-            cb7.beefcode(code.0, code.1);
+            cb7.beefcode(t.beefcode.0, t.beefcode.1);
 
-            for (i, &line) in t.encrypted.iter().enumerate() {
-                let code = Code::from(line);
+            for (i, &code) in t.encrypted.iter().enumerate() {
                 let result = cb7.decrypt_code(code.0, code.1);
                 assert_equal(result, t.decrypted[i]);
 
@@ -647,15 +640,13 @@ mod tests {
 
     #[test]
     fn test_decrypt_code_mut() {
-        for t in tests().iter() {
-            let code = Code::from(t.beefcode);
+        for t in tests().iter_mut() {
             let mut cb7 = Cb7::new();
-            cb7.beefcode(code.0, code.1);
+            cb7.beefcode(t.beefcode.0, t.beefcode.1);
 
-            for (i, &line) in t.encrypted.iter().enumerate() {
-                let mut code = Code::from(line);
+            for (i, code) in t.encrypted.iter_mut().enumerate() {
                 cb7.decrypt_code_mut(&mut code.0, &mut code.1);
-                assert_equal(code, t.decrypted[i]);
+                assert_equal(*code, t.decrypted[i]);
 
                 if is_beefcode(code.0) {
                     cb7.beefcode(code.0, code.1)
