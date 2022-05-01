@@ -42,7 +42,7 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: clippy
-          args: ${{ matrix.features }} -- -D warnings
+          args: ${{ matrix.features }} --all-targets -- -D warnings
 
       - name: Test
         uses: actions-rs/cargo@v1
