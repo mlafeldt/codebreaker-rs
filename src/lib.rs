@@ -516,7 +516,7 @@ mod tests {
 
 #[cfg(test)]
 mod code {
-    use crate::std_alloc::{fmt, ToString, Vec};
+    use crate::std_alloc::{fmt, Vec};
 
     #[derive(Copy, Clone, PartialEq)]
     pub struct Code(pub u32, pub u32);
@@ -548,7 +548,7 @@ mod code {
     // Used by assert_eq!
     impl fmt::Debug for Code {
         fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-            write!(f, "{}", self.to_string())
+            write!(f, "{}", self)
         }
     }
 }
