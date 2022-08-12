@@ -66,7 +66,7 @@ mod rc4;
 
 use cb7::{is_beefcode, Cb7};
 
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum Scheme {
     Raw,
     V1,
@@ -518,7 +518,7 @@ mod tests {
 mod code {
     use crate::std_alloc::{fmt, Vec};
 
-    #[derive(Copy, Clone, PartialEq)]
+    #[derive(Copy, Clone, PartialEq, Eq)]
     pub struct Code(pub u32, pub u32);
 
     impl From<(u32, u32)> for Code {
