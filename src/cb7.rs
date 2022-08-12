@@ -72,6 +72,10 @@ impl Cb7 {
     /// let mut cb7 = Cb7::new();
     /// cb7.beefcode(0xBEEFC0DE, 0x00000000);
     /// ```
+    ///
+    /// # Panics
+    ///
+    /// Panics if the passed code is not a "beefcode".
     pub fn beefcode(&mut self, addr: u32, val: u32) {
         assert!(is_beefcode(addr));
 
@@ -465,14 +469,14 @@ mod tests {
 
     #[test]
     fn test_mul_encrypt() {
-        for t in mul_tests().iter() {
+        for t in &mul_tests() {
             assert_eq!(mul_encrypt(t.2, t.1), t.0);
         }
     }
 
     #[test]
     fn test_mul_decrypt() {
-        for t in mul_tests().iter() {
+        for t in &mul_tests() {
             assert_eq!(mul_decrypt(t.0, t.1), t.2);
         }
     }
@@ -492,7 +496,7 @@ mod tests {
             (0x0000_0001, 0x0000_0001),
             (0xffff_ffff, 0xffff_ffff),
         ];
-        for t in tests.iter() {
+        for t in &tests {
             assert_eq!(mod_inverse(t.0), t.1);
         }
     }
@@ -588,7 +592,7 @@ mod tests {
 
     #[test]
     fn test_encrypt_code() {
-        for t in tests().iter() {
+        for t in &tests() {
             let mut cb7 = Cb7::new();
             cb7.beefcode(t.beefcode.0, t.beefcode.1);
 
@@ -597,7 +601,7 @@ mod tests {
                 assert_eq!(result, t.encrypted[i]);
 
                 if is_beefcode(code.0) {
-                    cb7.beefcode(code.0, code.1)
+                    cb7.beefcode(code.0, code.1);
                 }
             }
         }
@@ -605,7 +609,7 @@ mod tests {
 
     #[test]
     fn test_encrypt_code_mut() {
-        for t in tests().iter_mut() {
+        for t in &mut tests() {
             let mut cb7 = Cb7::new();
             cb7.beefcode(t.beefcode.0, t.beefcode.1);
 
@@ -615,7 +619,7 @@ mod tests {
                 assert_eq!(*code, t.encrypted[i]);
 
                 if is_beefcode(raw.0) {
-                    cb7.beefcode(raw.0, raw.1)
+                    cb7.beefcode(raw.0, raw.1);
                 }
             }
         }
@@ -623,7 +627,7 @@ mod tests {
 
     #[test]
     fn test_decrypt_code() {
-        for t in tests().iter() {
+        for t in &tests() {
             let mut cb7 = Cb7::new();
             cb7.beefcode(t.beefcode.0, t.beefcode.1);
 
@@ -632,7 +636,7 @@ mod tests {
                 assert_eq!(result, t.decrypted[i]);
 
                 if is_beefcode(result.0) {
-                    cb7.beefcode(result.0, result.1)
+                    cb7.beefcode(result.0, result.1);
                 }
             }
         }
@@ -640,7 +644,7 @@ mod tests {
 
     #[test]
     fn test_decrypt_code_mut() {
-        for t in tests().iter_mut() {
+        for t in &mut tests() {
             let mut cb7 = Cb7::new();
             cb7.beefcode(t.beefcode.0, t.beefcode.1);
 
@@ -649,7 +653,7 @@ mod tests {
                 assert_eq!(*code, t.decrypted[i]);
 
                 if is_beefcode(code.0) {
-                    cb7.beefcode(code.0, code.1)
+                    cb7.beefcode(code.0, code.1);
                 }
             }
         }

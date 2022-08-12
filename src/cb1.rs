@@ -138,7 +138,7 @@ mod tests {
 
     #[test]
     fn test_encrypt_code() {
-        for t in tests().iter() {
+        for t in &tests() {
             let result: Code = encrypt_code(t.decrypted.0, t.decrypted.1).into();
             assert_eq!(result, t.encrypted);
         }
@@ -146,7 +146,7 @@ mod tests {
 
     #[test]
     fn test_encrypt_code_mut() {
-        for t in tests().iter() {
+        for t in &tests() {
             let mut code = t.decrypted;
             encrypt_code_mut(&mut code.0, &mut code.1);
             assert_eq!(code, t.encrypted);
@@ -155,7 +155,7 @@ mod tests {
 
     #[test]
     fn test_decrypt_code() {
-        for t in tests().iter() {
+        for t in &tests() {
             let result: Code = decrypt_code(t.encrypted.0, t.encrypted.1).into();
             assert_eq!(result, t.decrypted);
         }
@@ -163,7 +163,7 @@ mod tests {
 
     #[test]
     fn test_decrypt_code_mut() {
-        for t in tests().iter() {
+        for t in &tests() {
             let mut code = t.encrypted;
             decrypt_code_mut(&mut code.0, &mut code.1);
             assert_eq!(code, t.decrypted);

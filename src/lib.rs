@@ -259,11 +259,10 @@ impl Codebreaker {
                         // ignore raw beefcode
                         self.code_lines -= 1;
                         return;
-                    } else {
-                        self.scheme = Scheme::V1;
-                        self.code_lines -= 1;
-                        cb1::decrypt_code_mut(addr, val);
                     }
+                    self.scheme = Scheme::V1;
+                    self.code_lines -= 1;
+                    cb1::decrypt_code_mut(addr, val);
                 } else {
                     self.scheme = Scheme::Raw;
                     self.code_lines -= 1;
@@ -372,7 +371,7 @@ mod tests {
 
     #[test]
     fn test_encrypt_code() {
-        for t in tests().iter_mut() {
+        for t in &mut tests() {
             for (i, &code) in t.decrypted.iter().enumerate() {
                 let result: Code = t.cb.encrypt_code(code.0, code.1).into();
                 assert_eq!(result, t.encrypted[i]);
@@ -382,7 +381,7 @@ mod tests {
 
     #[test]
     fn test_encrypt_code_mut() {
-        for t in tests().iter_mut() {
+        for t in &mut tests() {
             for (i, code) in t.decrypted.iter_mut().enumerate() {
                 t.cb.encrypt_code_mut(&mut code.0, &mut code.1);
                 assert_eq!(*code, t.encrypted[i]);
@@ -392,7 +391,7 @@ mod tests {
 
     #[test]
     fn test_decrypt_code() {
-        for t in tests().iter_mut() {
+        for t in &mut tests() {
             for (i, &code) in t.encrypted.iter().enumerate() {
                 let result: Code = t.cb.decrypt_code(code.0, code.1).into();
                 assert_eq!(result, t.decrypted[i]);
@@ -402,7 +401,7 @@ mod tests {
 
     #[test]
     fn test_decrypt_code_mut() {
-        for t in tests().iter_mut() {
+        for t in &mut tests() {
             for (i, code) in t.encrypted.iter_mut().enumerate() {
                 t.cb.decrypt_code_mut(&mut code.0, &mut code.1);
                 assert_eq!(*code, t.decrypted[i]);
@@ -493,7 +492,7 @@ mod tests {
 
     #[test]
     fn test_auto_decrypt_code() {
-        for t in auto_tests().iter_mut() {
+        for t in &mut auto_tests() {
             let mut cb = Codebreaker::new();
             for (i, &code) in t.input.iter().enumerate() {
                 let result: Code = cb.auto_decrypt_code(code.0, code.1).into();
@@ -504,7 +503,7 @@ mod tests {
 
     #[test]
     fn test_auto_decrypt_code_mut() {
-        for t in auto_tests().iter_mut() {
+        for t in &mut auto_tests() {
             let mut cb = Codebreaker::new();
             for (i, code) in t.input.iter_mut().enumerate() {
                 cb.auto_decrypt_code_mut(&mut code.0, &mut code.1);

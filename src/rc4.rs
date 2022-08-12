@@ -14,7 +14,7 @@ impl Rc4 {
         assert!(!key.is_empty() && key.len() <= 256);
         let mut state = [0; 256];
         for i in 0..256 {
-            state[i] = i as u8
+            state[i] = i as u8;
         }
         let mut j: u8 = 0;
         for i in 0..256 {
@@ -72,7 +72,7 @@ mod tests {
 
     #[test]
     fn test_crypt() {
-        for t in wikipedia_tests().iter() {
+        for t in &wikipedia_tests() {
             let mut rc4 = Rc4::new(t.key.as_bytes());
             let mut buf = t.input.as_bytes().to_vec();
             rc4.crypt(&mut buf);
