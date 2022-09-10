@@ -1,6 +1,6 @@
 [package]
 name = "codebreaker"
-version = "0.3.0"
+version = "0.3.1"
 description = "Decrypt & encrypt any cheat code for CodeBreaker PS2"
 authors = ["Mathias Lafeldt <mathias.lafeldt@gmail.com>"]
 license = "MIT OR Apache-2.0"
