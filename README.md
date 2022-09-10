@@ -2,7 +2,7 @@
 
 [![Latest version](https://img.shields.io/crates/v/codebreaker.svg)](https://crates.io/crates/codebreaker)
 [![Documentation](https://docs.rs/codebreaker/badge.svg)](https://docs.rs/codebreaker)
-[![CI](https://github.com/mlafeldt/codebreaker-rs/workflows/Rust/badge.svg)](https://github.com/mlafeldt/codebreaker-rs/actions)
+[![CI](https://github.com/mlafeldt/codebreaker-rs/workflows/CI/badge.svg)](https://github.com/mlafeldt/codebreaker-rs/actions)
 
 A Rust library to decrypt & encrypt any cheat code for CodeBreaker PS2.
 
