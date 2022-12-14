@@ -38,32 +38,31 @@ impl Rc4 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::std_alloc::{vec, Vec};
     #[cfg(feature = "std")]
     use pretty_assertions::assert_eq;
 
     struct Test {
         key: &'static str,
         input: &'static str,
-        output: Vec<u8>,
+        output: &'static [u8],
     }
 
-    fn wikipedia_tests() -> Vec<Test> {
-        vec![
+    const fn wikipedia_tests() -> &'static [Test] {
+        &[
             Test {
                 key: "Key",
                 input: "Plaintext",
-                output: vec![0xbb, 0xf3, 0x16, 0xe8, 0xd9, 0x40, 0xaf, 0x0a, 0xd3],
+                output: &[0xbb, 0xf3, 0x16, 0xe8, 0xd9, 0x40, 0xaf, 0x0a, 0xd3],
             },
             Test {
                 key: "Wiki",
                 input: "pedia",
-                output: vec![0x10, 0x21, 0xbf, 0x04, 0x20],
+                output: &[0x10, 0x21, 0xbf, 0x04, 0x20],
             },
             Test {
                 key: "Secret",
                 input: "Attack at dawn",
-                output: vec![
+                output: &[
                     0x45, 0xa0, 0x1f, 0x64, 0x5f, 0xc3, 0x5b, 0x38, 0x35, 0x52, 0x54, 0x4b, 0x9b, 0xf5,
                 ],
             },
@@ -72,7 +71,7 @@ mod tests {
 
     #[test]
     fn test_crypt() {
-        for t in &wikipedia_tests() {
+        for t in wikipedia_tests() {
             let mut rc4 = Rc4::new(t.key.as_bytes());
             let mut buf = t.input.as_bytes().to_vec();
             rc4.crypt(&mut buf);

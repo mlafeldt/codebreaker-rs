@@ -454,8 +454,8 @@ mod tests {
     #[cfg(feature = "std")]
     use pretty_assertions::assert_eq;
 
-    fn mul_tests() -> Vec<(u32, u32, u32)> {
-        vec![
+    const fn mul_tests() -> &'static [(u32, u32, u32)] {
+        &[
             (0x0000_0000, 0xa686_d3b6, 0x0000_0000),
             (0x000e_0000, 0xa686_d3b6, 0xac62_0000),
             (0x0067_bd20, 0x4fd9_31ff, 0x2008_02e0),
@@ -469,21 +469,21 @@ mod tests {
 
     #[test]
     fn test_mul_encrypt() {
-        for t in &mul_tests() {
+        for t in mul_tests() {
             assert_eq!(mul_encrypt(t.2, t.1), t.0);
         }
     }
 
     #[test]
     fn test_mul_decrypt() {
-        for t in &mul_tests() {
+        for t in mul_tests() {
             assert_eq!(mul_decrypt(t.0, t.1), t.2);
         }
     }
 
     #[test]
     fn test_mod_inverse() {
-        let tests = vec![
+        let tests = &[
             (0x0d31_3243, 0x6c7b_2a6b),
             (0x0efd_8231, 0xd4c0_96d1),
             (0x2912_dedd, 0xe09d_e975),
@@ -496,7 +496,7 @@ mod tests {
             (0x0000_0001, 0x0000_0001),
             (0xffff_ffff, 0xffff_ffff),
         ];
-        for t in &tests {
+        for t in tests {
             assert_eq!(mod_inverse(t.0), t.1);
         }
     }
