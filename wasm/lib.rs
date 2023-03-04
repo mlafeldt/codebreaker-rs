@@ -1,3 +1,6 @@
+#![allow(clippy::new_without_default)]
+#![allow(clippy::inherent_to_string)]
+
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen(js_name = Codebreaker)]
@@ -29,6 +32,10 @@ impl JsCode {
         Self { addr, val }
     }
 
+    pub fn parse(s: &str) -> Result<JsCode, JsError> {
+        Ok(s.try_into()?)
+    }
+
     #[wasm_bindgen(js_name = toString)]
     pub fn to_string(&self) -> String {
         format!("{:08X} {:08X}", self.addr, self.val)
@@ -41,5 +48,18 @@ impl From<(u32, u32)> for JsCode {
             addr: code.0,
             val: code.1,
         }
+    }
+}
+
+impl TryFrom<&str> for JsCode {
+    type Error = std::num::ParseIntError;
+
+    fn try_from(s: &str) -> Result<Self, Self::Error> {
+        let t = s
+            .splitn(2, ' ')
+            .map(|v| u32::from_str_radix(v, 16))
+            .collect::<Result<Vec<_>, std::num::ParseIntError>>()?;
+
+        Ok(Self { addr: t[0], val: t[1] })
     }
 }
