@@ -1,0 +1,12 @@
+[package]
+name = "codebreaker-wasm"
+version = "0.0.0"
+edition = "2021"
+
+[lib]
+path = "lib.rs"
+crate-type = ["cdylib"]
+
+[dependencies]
+codebreaker = { path = ".." }
+wasm-bindgen = "0.2"
