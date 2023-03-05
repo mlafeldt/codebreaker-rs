@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
-  <head>
+
+<head>
     <meta charset="UTF-8" />
     <title>Codebreaker</title>
     <script type="module">
@@ -8,16 +9,58 @@
 
         await init("http://localhost:8080/pkg/codebreaker_wasm_bg.wasm");
 
-        const cb = new Codebreaker();
+        // const cb = new Codebreaker();
 
-        const code = Code.parse("B4336FA9 4DFEFB79");
-        console.log(code.toString())
+        // const code = Code.parse("B4336FA9 4DFEFB79");
+        // console.log(code.toString())
 
-        const result = cb.autoDecryptCode(code).toString()
-        console.log(result)
+        // const result = cb.autoDecryptCode(code).toString()
+        // console.log(result)
 
-        document.body.textContent = `Result: ${result}`;
+        // document.body.textContent = `Result: ${result}`;
     </script>
-  </head>
-  <body></body>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/6.65.7/codemirror.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/6.65.7/codemirror.min.css" />
+    <script type="module">
+        import { Code, Codebreaker } from "http://localhost:8080/pkg/codebreaker_wasm.js";
+
+        let editor
+
+        window.onload = () => {
+            editor = CodeMirror(document.body, {
+                lineNumbers: true,
+                lineWrapping: true,
+                autoFocus: true,
+                value: "Infinite Health\n2AFF014C 2411FFFF\nB4336FA9 4DFEFB79\n973E0B2A A7D4AF10\n",
+                extraKeys: {
+                    'Cmd-Enter': (cm) => {
+                        const cb = new Codebreaker();
+                        let result = []
+                        cm.eachLine((line) => {
+                            if (line.text.length === 0) return;
+                            try {
+                                const code = Code.parse(line.text);                                
+                                result.push(cb.autoDecryptCode(code).toString())
+                            } catch (err) {
+                                // console.error(err)                               
+                                result.push(line.text)
+                            }
+                        })
+                        console.log(result)
+                        cm.setValue(result.join("\n") + "\n")
+                    },
+                },
+            })
+        }
+        const timer = setInterval(() => {
+            editor.focus();
+            if(editor.hasFocus) clearInterval(timer);
+        }, 500);
+    </script>
+
+
+</head>
+
+<body></body>
+
 </html>
