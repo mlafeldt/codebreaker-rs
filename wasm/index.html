@@ -5,6 +5,7 @@
     <meta charset="UTF-8" />
     <title>Codebreaker</title>
     <script type="module">
+        // deno run -A npm:http-server -p 8080 --cors
         import init, { Code, Codebreaker } from "http://localhost:8080/pkg/codebreaker_wasm.js";
 
         await init("http://localhost:8080/pkg/codebreaker_wasm_bg.wasm");
