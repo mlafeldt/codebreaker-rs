@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Codebreaker</title>
+    <script type="module">
+        import init, { Code, Codebreaker } from "http://localhost:8080/pkg/codebreaker_wasm.js";
+
+        await init("http://localhost:8080/pkg/codebreaker_wasm_bg.wasm");
+
+        const cb = new Codebreaker();
+
+        const code = Code.parse("B4336FA9 4DFEFB79");
+        console.log(code.toString())
+
+        const result = cb.autoDecryptCode(code).toString()
+        console.log(result)
+
+        document.body.textContent = `Result: ${result}`;
+    </script>
+  </head>
+  <body></body>
+</html>
