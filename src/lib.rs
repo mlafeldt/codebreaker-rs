@@ -36,33 +36,20 @@
 #[cfg(doctest)]
 doc_comment::doctest!("../README.md", readme);
 
-cfg_if::cfg_if! {
-    if #[cfg(feature = "std")] {
-        extern crate std;
-        mod std_alloc {
-            pub use std::{
-                fmt,
-                string::{String, ToString},
-                vec,
-                vec::Vec,
-            };
-        }
-    } else {
-        extern crate alloc;
-        mod std_alloc {
-            pub use alloc::{
-                fmt,
-                string::{String, ToString},
-                vec,
-                vec::Vec,
-            };
-        }
-    }
-}
-
 pub mod cb1;
 pub mod cb7;
 mod rc4;
+
+#[cfg(test)]
+mod std_alloc {
+    #[cfg(feature = "std")]
+    extern crate std as alloc;
+
+    #[cfg(not(feature = "std"))]
+    extern crate alloc;
+
+    pub use alloc::{fmt, vec, vec::Vec};
+}
 
 use cb7::{is_beefcode, Cb7};
 

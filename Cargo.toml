@@ -17,7 +17,6 @@ name = "codebreaker"
 
 [dependencies]
 bytemuck = "1"
-cfg-if = "1"
 num-bigint = "0.4"
 
 [dev-dependencies]
