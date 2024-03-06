@@ -56,6 +56,6 @@ codebreaker = { version = "0.3", default-features = false }
 
 ## License
 
-Copyright (c) 2020-2022 Mathias Lafeldt
+Copyright (c) 2020-2024 Mathias Lafeldt
 
 Licensed under the [Apache License, Version 2.0](LICENSE-APACHE) or the [MIT license](LICENSE-MIT), at your option.
