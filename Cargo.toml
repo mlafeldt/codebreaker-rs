@@ -10,7 +10,7 @@ documentation = "https://docs.rs/codebreaker/"
 homepage = "https://crates.io/crates/codebreaker"
 keywords = ["codebreaker", "ps2", "gamehacking", "homebrew"]
 categories = ["algorithms", "cryptography", "no-std"]
-edition = "2021"
+edition = "2024"
 
 [lib]
 name = "codebreaker"

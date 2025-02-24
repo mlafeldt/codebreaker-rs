@@ -51,7 +51,7 @@ mod std_alloc {
     pub use alloc::{fmt, vec, vec::Vec};
 }
 
-use cb7::{is_beefcode, Cb7};
+use cb7::{Cb7, is_beefcode};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum Scheme {
@@ -288,11 +288,7 @@ const fn num_code_lines(addr: u32) -> usize {
     if cmd < 3 || cmd > 6 {
         1
     } else if cmd == 3 {
-        if addr & 0x0040_0000 != 0 {
-            2
-        } else {
-            1
-        }
+        if addr & 0x0040_0000 != 0 { 2 } else { 1 }
     } else {
         2
     }
@@ -302,7 +298,7 @@ const fn num_code_lines(addr: u32) -> usize {
 mod tests {
     use super::*;
     use crate::code::Code;
-    use crate::std_alloc::{vec, Vec};
+    use crate::std_alloc::{Vec, vec};
     #[cfg(feature = "std")]
     use pretty_assertions::assert_eq;
 
@@ -502,7 +498,7 @@ mod tests {
 
 #[cfg(test)]
 mod code {
-    use crate::std_alloc::{fmt, Vec};
+    use crate::std_alloc::{Vec, fmt};
 
     #[derive(Copy, Clone, PartialEq, Eq)]
     pub struct Code(pub u32, pub u32);

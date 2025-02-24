@@ -93,9 +93,9 @@ impl Cb7 {
             if val != 0 {
                 self.seeds.copy_from_slice(&SEEDS);
                 for i in 0..4 {
-                    self.key[i] = u32::from(self.seeds[(i + 3) % 4][idx[3]]) << 24
-                        | u32::from(self.seeds[(i + 2) % 4][idx[2]]) << 16
-                        | u32::from(self.seeds[(i + 1) % 4][idx[1]]) << 8
+                    self.key[i] = (u32::from(self.seeds[(i + 3) % 4][idx[3]]) << 24)
+                        | (u32::from(self.seeds[(i + 2) % 4][idx[2]]) << 16)
+                        | (u32::from(self.seeds[(i + 1) % 4][idx[1]]) << 8)
                         | u32::from(self.seeds[i % 4][idx[0]]);
                 }
             } else {
@@ -105,9 +105,9 @@ impl Cb7 {
             self.initialized = true;
         } else if val != 0 {
             for i in 0..4 {
-                self.key[i] = u32::from(self.seeds[(i + 3) % 4][idx[3]]) << 24
-                    | u32::from(self.seeds[(i + 2) % 4][idx[2]]) << 16
-                    | u32::from(self.seeds[(i + 1) % 4][idx[1]]) << 8
+                self.key[i] = (u32::from(self.seeds[(i + 3) % 4][idx[3]]) << 24)
+                    | (u32::from(self.seeds[(i + 2) % 4][idx[2]]) << 16)
+                    | (u32::from(self.seeds[(i + 1) % 4][idx[1]]) << 8)
                     | u32::from(self.seeds[i % 4][idx[0]]);
             }
         } else {
@@ -450,7 +450,7 @@ const SEEDS: [[u8; 256]; 5] = [
 mod tests {
     use super::*;
     use crate::code::Code;
-    use crate::std_alloc::{vec, Vec};
+    use crate::std_alloc::{Vec, vec};
     #[cfg(feature = "std")]
     use pretty_assertions::assert_eq;
 
