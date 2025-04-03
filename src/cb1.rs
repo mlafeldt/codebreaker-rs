@@ -30,7 +30,7 @@ pub const fn encrypt_code(mut addr: u32, mut val: u32) -> (u32, u32) {
 /// cb1::encrypt_code_mut(&mut code.0, &mut code.1);
 /// assert_eq!(code, (0x1A11330E, 0x000003E7));
 /// ```
-pub fn encrypt_code_mut(addr: &mut u32, val: &mut u32) {
+pub const fn encrypt_code_mut(addr: &mut u32, val: &mut u32) {
     let code = encrypt_code(*addr, *val);
     *addr = code.0;
     *val = code.1;
@@ -66,7 +66,7 @@ pub const fn decrypt_code(mut addr: u32, mut val: u32) -> (u32, u32) {
 /// cb1::decrypt_code_mut(&mut code.0, &mut code.1);
 /// assert_eq!(code, (0x1023CED8, 0x000003E7));
 /// ```
-pub fn decrypt_code_mut(addr: &mut u32, val: &mut u32) {
+pub const fn decrypt_code_mut(addr: &mut u32, val: &mut u32) {
     let code = decrypt_code(*addr, *val);
     *addr = code.0;
     *val = code.1;
