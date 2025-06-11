@@ -1,7 +1,0 @@
-{
-  "extends": [
-    "config:recommended",
-    "group:allNonMajor",
-    "schedule:monthly"
-  ]
-}
