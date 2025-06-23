@@ -17,7 +17,7 @@ name = "codebreaker"
 
 [dependencies]
 bytemuck = "1"
-num-bigint = "0.4"
+num-bigint = "0.4.2"
 
 [dev-dependencies]
 doc-comment = "0.3"
