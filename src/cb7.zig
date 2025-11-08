@@ -177,22 +177,20 @@ pub const Cb7 = struct {
     key: [5]u32,
     beefcodf: bool,
     initialized: bool,
-    allocator: std.mem.Allocator,
 
     /// Returns a new processor for encrypting and decrypting CB v7+ codes.
-    pub fn init(allocator: std.mem.Allocator) Cb7 {
+    pub fn init() Cb7 {
         return Cb7{
             .seeds = ZERO_SEEDS,
             .key = [_]u32{0} ** 5,
             .beefcodf = false,
             .initialized = false,
-            .allocator = allocator,
         };
     }
 
     /// Returns a new processor with default CB v7 encryption (CMGSCCC.com).
-    pub fn initDefault(allocator: std.mem.Allocator) Cb7 {
-        var cb7 = init(allocator);
+    pub fn default() Cb7 {
+        var cb7 = init();
         cb7.beefcode(BEEFCODE, 0);
         return cb7;
     }
@@ -402,19 +400,19 @@ test "CB7 - mul encrypt/decrypt" {
 }
 
 test "CB7 - decrypt code with default beefcode" {
-    const beefcode = try Code.fromHex("BEEFC0DE 00000000");
+    const beefcode = try Code.parse("BEEFC0DE 00000000");
     const encrypted = [_]Code{
-        try Code.fromHex("D08F3A49 00078A53"),
-        try Code.fromHex("3818DDE5 E72B2B16"),
-        try Code.fromHex("973E0B2A A7D4AF10"),
+        try Code.parse("D08F3A49 00078A53"),
+        try Code.parse("3818DDE5 E72B2B16"),
+        try Code.parse("973E0B2A A7D4AF10"),
     };
     const decrypted = [_]Code{
-        try Code.fromHex("9029BEAC 0C0A9225"),
-        try Code.fromHex("201F6024 00000000"),
-        try Code.fromHex("2096F5B8 000000BE"),
+        try Code.parse("9029BEAC 0C0A9225"),
+        try Code.parse("201F6024 00000000"),
+        try Code.parse("2096F5B8 000000BE"),
     };
 
-    var cb7 = Cb7.init(testing.allocator);
+    var cb7 = Cb7.init();
     cb7.beefcode(beefcode.addr, beefcode.val);
 
     for (encrypted, decrypted) |enc, dec| {

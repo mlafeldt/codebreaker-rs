@@ -24,27 +24,24 @@ pub const Codebreaker = struct {
     scheme: Scheme,
     cb7_ctx: Cb7,
     code_lines: usize,
-    allocator: std.mem.Allocator,
 
     /// Returns a new processor for encrypting and decrypting a list of CB v1
     /// and v7 codes.
-    pub fn init(allocator: std.mem.Allocator) Codebreaker {
+    pub fn init() Codebreaker {
         return Codebreaker{
             .scheme = .raw,
-            .cb7_ctx = Cb7.init(allocator),
+            .cb7_ctx = Cb7.init(),
             .code_lines = 0,
-            .allocator = allocator,
         };
     }
 
     /// Returns a new processor for all CB v7 codes published on CMGSCCC.com.
     /// Lets you omit `B4336FA9 4DFEFB79` as the first code in the list.
-    pub fn initV7(allocator: std.mem.Allocator) Codebreaker {
+    pub fn initV7() Codebreaker {
         return Codebreaker{
             .scheme = .v7,
-            .cb7_ctx = Cb7.initDefault(allocator),
+            .cb7_ctx = Cb7.default(),
             .code_lines = 0,
-            .allocator = allocator,
         };
     }
 
@@ -165,17 +162,17 @@ fn numCodeLines(addr: u32) usize {
 
 test "Codebreaker - encrypt code" {
     const decrypted = [_]Code{
-        try Code.fromHex("2043AFCC 2411FFFF"),
-        try Code.fromHex("BEEFC0DE 00000000"),
-        try Code.fromHex("2096F5B8 000000BE"),
+        try Code.parse("2043AFCC 2411FFFF"),
+        try Code.parse("BEEFC0DE 00000000"),
+        try Code.parse("2096F5B8 000000BE"),
     };
     const encrypted = [_]Code{
-        try Code.fromHex("2AFF014C 2411FFFF"),
-        try Code.fromHex("B4336FA9 4DFEFB79"),
-        try Code.fromHex("973E0B2A A7D4AF10"),
+        try Code.parse("2AFF014C 2411FFFF"),
+        try Code.parse("B4336FA9 4DFEFB79"),
+        try Code.parse("973E0B2A A7D4AF10"),
     };
 
-    var cb = Codebreaker.init(testing.allocator);
+    var cb = Codebreaker.init();
     for (decrypted, encrypted) |dec, enc| {
         const result = cb.encryptCode(dec.addr, dec.val);
         try testing.expectEqual(enc, result);
@@ -184,17 +181,17 @@ test "Codebreaker - encrypt code" {
 
 test "Codebreaker - encrypt code mut" {
     const decrypted = [_]Code{
-        try Code.fromHex("2043AFCC 2411FFFF"),
-        try Code.fromHex("BEEFC0DE 00000000"),
-        try Code.fromHex("2096F5B8 000000BE"),
+        try Code.parse("2043AFCC 2411FFFF"),
+        try Code.parse("BEEFC0DE 00000000"),
+        try Code.parse("2096F5B8 000000BE"),
     };
     const encrypted = [_]Code{
-        try Code.fromHex("2AFF014C 2411FFFF"),
-        try Code.fromHex("B4336FA9 4DFEFB79"),
-        try Code.fromHex("973E0B2A A7D4AF10"),
+        try Code.parse("2AFF014C 2411FFFF"),
+        try Code.parse("B4336FA9 4DFEFB79"),
+        try Code.parse("973E0B2A A7D4AF10"),
     };
 
-    var cb = Codebreaker.init(testing.allocator);
+    var cb = Codebreaker.init();
     for (decrypted, encrypted) |dec, enc| {
         var addr = dec.addr;
         var val = dec.val;
@@ -206,17 +203,17 @@ test "Codebreaker - encrypt code mut" {
 
 test "Codebreaker - decrypt code" {
     const decrypted = [_]Code{
-        try Code.fromHex("2043AFCC 2411FFFF"),
-        try Code.fromHex("BEEFC0DE 00000000"),
-        try Code.fromHex("2096F5B8 000000BE"),
+        try Code.parse("2043AFCC 2411FFFF"),
+        try Code.parse("BEEFC0DE 00000000"),
+        try Code.parse("2096F5B8 000000BE"),
     };
     const encrypted = [_]Code{
-        try Code.fromHex("2AFF014C 2411FFFF"),
-        try Code.fromHex("B4336FA9 4DFEFB79"),
-        try Code.fromHex("973E0B2A A7D4AF10"),
+        try Code.parse("2AFF014C 2411FFFF"),
+        try Code.parse("B4336FA9 4DFEFB79"),
+        try Code.parse("973E0B2A A7D4AF10"),
     };
 
-    var cb = Codebreaker.init(testing.allocator);
+    var cb = Codebreaker.init();
     for (encrypted, decrypted) |enc, dec| {
         const result = cb.decryptCode(enc.addr, enc.val);
         try testing.expectEqual(dec, result);
@@ -225,17 +222,17 @@ test "Codebreaker - decrypt code" {
 
 test "Codebreaker - decrypt code mut" {
     const decrypted = [_]Code{
-        try Code.fromHex("2043AFCC 2411FFFF"),
-        try Code.fromHex("BEEFC0DE 00000000"),
-        try Code.fromHex("2096F5B8 000000BE"),
+        try Code.parse("2043AFCC 2411FFFF"),
+        try Code.parse("BEEFC0DE 00000000"),
+        try Code.parse("2096F5B8 000000BE"),
     };
     const encrypted = [_]Code{
-        try Code.fromHex("2AFF014C 2411FFFF"),
-        try Code.fromHex("B4336FA9 4DFEFB79"),
-        try Code.fromHex("973E0B2A A7D4AF10"),
+        try Code.parse("2AFF014C 2411FFFF"),
+        try Code.parse("B4336FA9 4DFEFB79"),
+        try Code.parse("973E0B2A A7D4AF10"),
     };
 
-    var cb = Codebreaker.init(testing.allocator);
+    var cb = Codebreaker.init();
     for (encrypted, decrypted) |enc, dec| {
         var addr = enc.addr;
         var val = enc.val;
@@ -247,17 +244,17 @@ test "Codebreaker - decrypt code mut" {
 
 test "Codebreaker - auto decrypt code - raw" {
     const input = [_]Code{
-        try Code.fromHex("9029BEAC 0C0A9225"),
-        try Code.fromHex("201F6024 00000000"),
-        try Code.fromHex("2096F5B8 000000BE"),
+        try Code.parse("9029BEAC 0C0A9225"),
+        try Code.parse("201F6024 00000000"),
+        try Code.parse("2096F5B8 000000BE"),
     };
     const output = [_]Code{
-        try Code.fromHex("9029BEAC 0C0A9225"),
-        try Code.fromHex("201F6024 00000000"),
-        try Code.fromHex("2096F5B8 000000BE"),
+        try Code.parse("9029BEAC 0C0A9225"),
+        try Code.parse("201F6024 00000000"),
+        try Code.parse("2096F5B8 000000BE"),
     };
 
-    var cb = Codebreaker.init(testing.allocator);
+    var cb = Codebreaker.init();
     for (input, output) |inp, out| {
         const result = cb.autoDecryptCode(inp.addr, inp.val);
         try testing.expectEqual(out, result);
@@ -266,17 +263,17 @@ test "Codebreaker - auto decrypt code - raw" {
 
 test "Codebreaker - auto decrypt code - v1 encrypted" {
     const input = [_]Code{
-        try Code.fromHex("9A545CC6 188CBCFB"),
-        try Code.fromHex("2A973DBD 00000000"),
-        try Code.fromHex("2A03B60A 000000BE"),
+        try Code.parse("9A545CC6 188CBCFB"),
+        try Code.parse("2A973DBD 00000000"),
+        try Code.parse("2A03B60A 000000BE"),
     };
     const output = [_]Code{
-        try Code.fromHex("9029BEAC 0C0A9225"),
-        try Code.fromHex("201F6024 00000000"),
-        try Code.fromHex("2096F5B8 000000BE"),
+        try Code.parse("9029BEAC 0C0A9225"),
+        try Code.parse("201F6024 00000000"),
+        try Code.parse("2096F5B8 000000BE"),
     };
 
-    var cb = Codebreaker.init(testing.allocator);
+    var cb = Codebreaker.init();
     for (input, output) |inp, out| {
         const result = cb.autoDecryptCode(inp.addr, inp.val);
         try testing.expectEqual(out, result);
@@ -285,19 +282,19 @@ test "Codebreaker - auto decrypt code - v1 encrypted" {
 
 test "Codebreaker - auto decrypt code - v7 encrypted" {
     const input = [_]Code{
-        try Code.fromHex("B4336FA9 4DFEFB79"),
-        try Code.fromHex("D08F3A49 00078A53"),
-        try Code.fromHex("3818DDE5 E72B2B16"),
-        try Code.fromHex("973E0B2A A7D4AF10"),
+        try Code.parse("B4336FA9 4DFEFB79"),
+        try Code.parse("D08F3A49 00078A53"),
+        try Code.parse("3818DDE5 E72B2B16"),
+        try Code.parse("973E0B2A A7D4AF10"),
     };
     const output = [_]Code{
-        try Code.fromHex("BEEFC0DE 00000000"),
-        try Code.fromHex("9029BEAC 0C0A9225"),
-        try Code.fromHex("201F6024 00000000"),
-        try Code.fromHex("2096F5B8 000000BE"),
+        try Code.parse("BEEFC0DE 00000000"),
+        try Code.parse("9029BEAC 0C0A9225"),
+        try Code.parse("201F6024 00000000"),
+        try Code.parse("2096F5B8 000000BE"),
     };
 
-    var cb = Codebreaker.init(testing.allocator);
+    var cb = Codebreaker.init();
     for (input, output) |inp, out| {
         const result = cb.autoDecryptCode(inp.addr, inp.val);
         try testing.expectEqual(out, result);
@@ -306,19 +303,19 @@ test "Codebreaker - auto decrypt code - v7 encrypted" {
 
 test "Codebreaker - auto decrypt code - v1 and v7 encrypted" {
     const input = [_]Code{
-        try Code.fromHex("9A545CC6 188CBCFB"),
-        try Code.fromHex("2A973DBD 00000000"),
-        try Code.fromHex("B4336FA9 4DFEFB79"),
-        try Code.fromHex("973E0B2A A7D4AF10"),
+        try Code.parse("9A545CC6 188CBCFB"),
+        try Code.parse("2A973DBD 00000000"),
+        try Code.parse("B4336FA9 4DFEFB79"),
+        try Code.parse("973E0B2A A7D4AF10"),
     };
     const output = [_]Code{
-        try Code.fromHex("9029BEAC 0C0A9225"),
-        try Code.fromHex("201F6024 00000000"),
-        try Code.fromHex("BEEFC0DE 00000000"),
-        try Code.fromHex("2096F5B8 000000BE"),
+        try Code.parse("9029BEAC 0C0A9225"),
+        try Code.parse("201F6024 00000000"),
+        try Code.parse("BEEFC0DE 00000000"),
+        try Code.parse("2096F5B8 000000BE"),
     };
 
-    var cb = Codebreaker.init(testing.allocator);
+    var cb = Codebreaker.init();
     for (input, output) |inp, out| {
         const result = cb.autoDecryptCode(inp.addr, inp.val);
         try testing.expectEqual(out, result);
@@ -327,19 +324,19 @@ test "Codebreaker - auto decrypt code - v1 and v7 encrypted" {
 
 test "Codebreaker - auto decrypt code - raw, v1, and v7 encrypted" {
     const input = [_]Code{
-        try Code.fromHex("9029BEAC 0C0A9225"),
-        try Code.fromHex("2A973DBD 00000000"),
-        try Code.fromHex("B4336FA9 4DFEFB79"),
-        try Code.fromHex("973E0B2A A7D4AF10"),
+        try Code.parse("9029BEAC 0C0A9225"),
+        try Code.parse("2A973DBD 00000000"),
+        try Code.parse("B4336FA9 4DFEFB79"),
+        try Code.parse("973E0B2A A7D4AF10"),
     };
     const output = [_]Code{
-        try Code.fromHex("9029BEAC 0C0A9225"),
-        try Code.fromHex("201F6024 00000000"),
-        try Code.fromHex("BEEFC0DE 00000000"),
-        try Code.fromHex("2096F5B8 000000BE"),
+        try Code.parse("9029BEAC 0C0A9225"),
+        try Code.parse("201F6024 00000000"),
+        try Code.parse("BEEFC0DE 00000000"),
+        try Code.parse("2096F5B8 000000BE"),
     };
 
-    var cb = Codebreaker.init(testing.allocator);
+    var cb = Codebreaker.init();
     for (input, output) |inp, out| {
         const result = cb.autoDecryptCode(inp.addr, inp.val);
         try testing.expectEqual(out, result);
@@ -348,17 +345,17 @@ test "Codebreaker - auto decrypt code - raw, v1, and v7 encrypted" {
 
 test "Codebreaker v7 - encrypt code" {
     const decrypted = [_]Code{
-        try Code.fromHex("9029BEAC 0C0A9225"),
-        try Code.fromHex("201F6024 00000000"),
-        try Code.fromHex("2096F5B8 000000BE"),
+        try Code.parse("9029BEAC 0C0A9225"),
+        try Code.parse("201F6024 00000000"),
+        try Code.parse("2096F5B8 000000BE"),
     };
     const encrypted = [_]Code{
-        try Code.fromHex("D08F3A49 00078A53"),
-        try Code.fromHex("3818DDE5 E72B2B16"),
-        try Code.fromHex("973E0B2A A7D4AF10"),
+        try Code.parse("D08F3A49 00078A53"),
+        try Code.parse("3818DDE5 E72B2B16"),
+        try Code.parse("973E0B2A A7D4AF10"),
     };
 
-    var cb = Codebreaker.initV7(testing.allocator);
+    var cb = Codebreaker.initV7();
     for (decrypted, encrypted) |dec, enc| {
         const result = cb.encryptCode(dec.addr, dec.val);
         try testing.expectEqual(enc, result);
@@ -367,17 +364,17 @@ test "Codebreaker v7 - encrypt code" {
 
 test "Codebreaker v7 - decrypt code" {
     const decrypted = [_]Code{
-        try Code.fromHex("9029BEAC 0C0A9225"),
-        try Code.fromHex("201F6024 00000000"),
-        try Code.fromHex("2096F5B8 000000BE"),
+        try Code.parse("9029BEAC 0C0A9225"),
+        try Code.parse("201F6024 00000000"),
+        try Code.parse("2096F5B8 000000BE"),
     };
     const encrypted = [_]Code{
-        try Code.fromHex("D08F3A49 00078A53"),
-        try Code.fromHex("3818DDE5 E72B2B16"),
-        try Code.fromHex("973E0B2A A7D4AF10"),
+        try Code.parse("D08F3A49 00078A53"),
+        try Code.parse("3818DDE5 E72B2B16"),
+        try Code.parse("973E0B2A A7D4AF10"),
     };
 
-    var cb = Codebreaker.initV7(testing.allocator);
+    var cb = Codebreaker.initV7();
     for (encrypted, decrypted) |enc, dec| {
         const result = cb.decryptCode(enc.addr, enc.val);
         try testing.expectEqual(dec, result);

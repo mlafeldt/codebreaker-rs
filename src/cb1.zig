@@ -81,28 +81,28 @@ test "CB1 - encrypt code" {
 
     const test_cases = [_]TestCase{
         .{
-            .decrypted = try Code.fromHex("0031789A 00000063"),
-            .encrypted = try Code.fromHex("0AC93A95 00000063"),
+            .decrypted = try Code.parse("0031789A 00000063"),
+            .encrypted = try Code.parse("0AC93A95 00000063"),
         },
         .{
-            .decrypted = try Code.fromHex("1031A028 0000FFFF"),
-            .encrypted = try Code.fromHex("1A613D30 0000FFFF"),
+            .decrypted = try Code.parse("1031A028 0000FFFF"),
+            .encrypted = try Code.parse("1A613D30 0000FFFF"),
         },
         .{
-            .decrypted = try Code.fromHex("201F6024 00000000"),
-            .encrypted = try Code.fromHex("2A973DBD 00000000"),
+            .decrypted = try Code.parse("201F6024 00000000"),
+            .encrypted = try Code.parse("2A973DBD 00000000"),
         },
         .{
-            .decrypted = try Code.fromHex("902DB32C 0C0BAFF1"),
-            .encrypted = try Code.fromHex("9AD420D3 180DDEDA"),
+            .decrypted = try Code.parse("902DB32C 0C0BAFF1"),
+            .encrypted = try Code.parse("9AD420D3 180DDEDA"),
         },
         .{
-            .decrypted = try Code.fromHex("A008060C 08028007"),
-            .encrypted = try Code.fromHex("AAE071C0 ACA684DD"),
+            .decrypted = try Code.parse("A008060C 08028007"),
+            .encrypted = try Code.parse("AAE071C0 ACA684DD"),
         },
         .{
-            .decrypted = try Code.fromHex("BEEFC0DE 00000000"),
-            .encrypted = try Code.fromHex("B4336FA9 4DFEFB79"),
+            .decrypted = try Code.parse("BEEFC0DE 00000000"),
+            .encrypted = try Code.parse("B4336FA9 4DFEFB79"),
         },
     };
 
@@ -120,12 +120,12 @@ test "CB1 - encrypt code mut" {
 
     const test_cases = [_]TestCase{
         .{
-            .decrypted = try Code.fromHex("0031789A 00000063"),
-            .encrypted = try Code.fromHex("0AC93A95 00000063"),
+            .decrypted = try Code.parse("0031789A 00000063"),
+            .encrypted = try Code.parse("0AC93A95 00000063"),
         },
         .{
-            .decrypted = try Code.fromHex("201F6024 00000000"),
-            .encrypted = try Code.fromHex("2A973DBD 00000000"),
+            .decrypted = try Code.parse("201F6024 00000000"),
+            .encrypted = try Code.parse("2A973DBD 00000000"),
         },
     };
 
@@ -146,28 +146,28 @@ test "CB1 - decrypt code" {
 
     const test_cases = [_]TestCase{
         .{
-            .decrypted = try Code.fromHex("0031789A 00000063"),
-            .encrypted = try Code.fromHex("0AC93A95 00000063"),
+            .decrypted = try Code.parse("0031789A 00000063"),
+            .encrypted = try Code.parse("0AC93A95 00000063"),
         },
         .{
-            .decrypted = try Code.fromHex("1031A028 0000FFFF"),
-            .encrypted = try Code.fromHex("1A613D30 0000FFFF"),
+            .decrypted = try Code.parse("1031A028 0000FFFF"),
+            .encrypted = try Code.parse("1A613D30 0000FFFF"),
         },
         .{
-            .decrypted = try Code.fromHex("201F6024 00000000"),
-            .encrypted = try Code.fromHex("2A973DBD 00000000"),
+            .decrypted = try Code.parse("201F6024 00000000"),
+            .encrypted = try Code.parse("2A973DBD 00000000"),
         },
         .{
-            .decrypted = try Code.fromHex("902DB32C 0C0BAFF1"),
-            .encrypted = try Code.fromHex("9AD420D3 180DDEDA"),
+            .decrypted = try Code.parse("902DB32C 0C0BAFF1"),
+            .encrypted = try Code.parse("9AD420D3 180DDEDA"),
         },
         .{
-            .decrypted = try Code.fromHex("A008060C 08028007"),
-            .encrypted = try Code.fromHex("AAE071C0 ACA684DD"),
+            .decrypted = try Code.parse("A008060C 08028007"),
+            .encrypted = try Code.parse("AAE071C0 ACA684DD"),
         },
         .{
-            .decrypted = try Code.fromHex("BEEFC0DE 00000000"),
-            .encrypted = try Code.fromHex("B4336FA9 4DFEFB79"),
+            .decrypted = try Code.parse("BEEFC0DE 00000000"),
+            .encrypted = try Code.parse("B4336FA9 4DFEFB79"),
         },
     };
 
@@ -185,12 +185,12 @@ test "CB1 - decrypt code mut" {
 
     const test_cases = [_]TestCase{
         .{
-            .decrypted = try Code.fromHex("0031789A 00000063"),
-            .encrypted = try Code.fromHex("0AC93A95 00000063"),
+            .decrypted = try Code.parse("0031789A 00000063"),
+            .encrypted = try Code.parse("0AC93A95 00000063"),
         },
         .{
-            .decrypted = try Code.fromHex("201F6024 00000000"),
-            .encrypted = try Code.fromHex("2A973DBD 00000000"),
+            .decrypted = try Code.parse("201F6024 00000000"),
+            .encrypted = try Code.parse("2A973DBD 00000000"),
         },
     };
 
