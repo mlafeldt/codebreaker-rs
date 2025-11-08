@@ -4,6 +4,8 @@ const std = @import("std");
 const testing = std.testing;
 const Rc4 = @import("rc4.zig").Rc4;
 
+pub const Code = @import("code.zig").Code;
+
 const BEEFCODE: u32 = 0xbeef_c0de;
 
 const RC4_KEY = [5]u32{
@@ -145,8 +147,7 @@ inline fn mulMod(a: u64, b: u64, m: u64) u64 {
 
 /// RSA encryption/decryption using modular exponentiation
 /// Implements: result = base^exp mod modulus using square-and-multiply
-fn rsaCrypt(addr: *u32, val: *u32, rsakey: u64, modulus: u64, allocator: std.mem.Allocator) !void {
-    _ = allocator; // no longer needed
+fn rsaCrypt(addr: *u32, val: *u32, rsakey: u64, modulus: u64) void {
 
     // Setup base = (addr << 32) | val
     const base_val: u64 = (@as(u64, addr.*) << 32) | val.*;
@@ -190,14 +191,14 @@ pub const Cb7 = struct {
     }
 
     /// Returns a new processor with default CB v7 encryption (CMGSCCC.com).
-    pub fn initDefault(allocator: std.mem.Allocator) !Cb7 {
+    pub fn initDefault(allocator: std.mem.Allocator) Cb7 {
         var cb7 = init(allocator);
-        try cb7.beefcode(BEEFCODE, 0);
+        cb7.beefcode(BEEFCODE, 0);
         return cb7;
     }
 
     /// Generates or changes the encryption key and seeds.
-    pub fn beefcode(self: *Cb7, addr: u32, val: u32) !void {
+    pub fn beefcode(self: *Cb7, addr: u32, val: u32) void {
         std.debug.assert(isBeefcode(addr));
 
         // Easily access all bytes of val as indices into seeds
@@ -259,15 +260,15 @@ pub const Cb7 = struct {
     }
 
     /// Encrypts a code and returns the result.
-    pub fn encryptCode(self: *Cb7, addr: u32, val: u32) !struct { u32, u32 } {
+    pub fn encryptCode(self: *Cb7, addr: u32, val: u32) Code {
         var new_addr = addr;
         var new_val = val;
-        try self.encryptCodeMut(&new_addr, &new_val);
-        return .{ new_addr, new_val };
+        self.encryptCodeMut(&new_addr, &new_val);
+        return .{ .addr = new_addr, .val = new_val };
     }
 
     /// Encrypts a code directly.
-    pub fn encryptCodeMut(self: *Cb7, addr: *u32, val: *u32) !void {
+    pub fn encryptCodeMut(self: *Cb7, addr: *u32, val: *u32) void {
         const oldaddr = addr.*;
         const oldval = val.*;
 
@@ -284,7 +285,7 @@ pub const Cb7 = struct {
         val.* = code[1];
 
         // Step 3: RSA
-        try rsaCrypt(addr, val, RSA_ENC_KEY, RSA_MODULUS, self.allocator);
+        rsaCrypt(addr, val, RSA_ENC_KEY, RSA_MODULUS);
 
         // Step 4: Encryption loop of 64 cycles, using the generated seeds
         const s = std.mem.bytesAsSlice(u32, std.mem.sliceAsBytes(&self.seeds));
@@ -295,7 +296,7 @@ pub const Cb7 = struct {
 
         // BEEFC0DE
         if (isBeefcode(oldaddr)) {
-            try self.beefcode(oldaddr, oldval);
+            self.beefcode(oldaddr, oldval);
             return;
         }
 
@@ -310,15 +311,15 @@ pub const Cb7 = struct {
     }
 
     /// Decrypts a code and returns the result.
-    pub fn decryptCode(self: *Cb7, addr: u32, val: u32) !struct { u32, u32 } {
+    pub fn decryptCode(self: *Cb7, addr: u32, val: u32) Code {
         var new_addr = addr;
         var new_val = val;
-        try self.decryptCodeMut(&new_addr, &new_val);
-        return .{ new_addr, new_val };
+        self.decryptCodeMut(&new_addr, &new_val);
+        return .{ .addr = new_addr, .val = new_val };
     }
 
     /// Decrypts a code directly.
-    pub fn decryptCodeMut(self: *Cb7, addr: *u32, val: *u32) !void {
+    pub fn decryptCodeMut(self: *Cb7, addr: *u32, val: *u32) void {
         // Step 1: Decryption loop of 64 cycles, using the generated seeds
         const s = std.mem.bytesAsSlice(u32, std.mem.sliceAsBytes(&self.seeds));
         var i: usize = 64;
@@ -329,7 +330,7 @@ pub const Cb7 = struct {
         }
 
         // Step 2: RSA
-        try rsaCrypt(addr, val, RSA_DEC_KEY, RSA_MODULUS, self.allocator);
+        rsaCrypt(addr, val, RSA_DEC_KEY, RSA_MODULUS);
 
         // Step 3: RC4
         var code = [2]u32{ addr.*, val.* };
@@ -355,30 +356,12 @@ pub const Cb7 = struct {
 
         // BEEFC0DE
         if (isBeefcode(addr.*)) {
-            try self.beefcode(addr.*, val.*);
+            self.beefcode(addr.*, val.*);
         }
     }
 };
 
 // Tests
-const Code = struct {
-    addr: u32,
-    val: u32,
-
-    fn fromHex(s: []const u8) !Code {
-        var it = std.mem.splitScalar(u8, s, ' ');
-        const addr_str = it.next() orelse return error.InvalidFormat;
-        const val_str = it.next() orelse return error.InvalidFormat;
-        return Code{
-            .addr = try std.fmt.parseInt(u32, addr_str, 16),
-            .val = try std.fmt.parseInt(u32, val_str, 16),
-        };
-    }
-
-    fn eql(self: Code, other: Code) bool {
-        return self.addr == other.addr and self.val == other.val;
-    }
-};
 
 test "CB7 - mod inverse" {
     const test_cases = [_]struct { u32, u32 }{
@@ -432,11 +415,10 @@ test "CB7 - decrypt code with default beefcode" {
     };
 
     var cb7 = Cb7.init(testing.allocator);
-    try cb7.beefcode(beefcode.addr, beefcode.val);
+    cb7.beefcode(beefcode.addr, beefcode.val);
 
     for (encrypted, decrypted) |enc, dec| {
-        const result = try cb7.decryptCode(enc.addr, enc.val);
-        const result_code = Code{ .addr = result[0], .val = result[1] };
-        try testing.expect(result_code.eql(dec));
+        const result = cb7.decryptCode(enc.addr, enc.val);
+        try testing.expectEqual(dec, result);
     }
 }

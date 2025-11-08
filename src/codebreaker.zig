@@ -10,6 +10,9 @@ pub const rc4 = @import("rc4.zig");
 const Cb7 = cb7.Cb7;
 const isBeefcode = cb7.isBeefcode;
 
+/// Result of encryption/decryption operation
+pub const Code = cb1.Code;
+
 const Scheme = enum {
     raw,
     v1,
@@ -36,72 +39,72 @@ pub const Codebreaker = struct {
 
     /// Returns a new processor for all CB v7 codes published on CMGSCCC.com.
     /// Lets you omit `B4336FA9 4DFEFB79` as the first code in the list.
-    pub fn initV7(allocator: std.mem.Allocator) !Codebreaker {
+    pub fn initV7(allocator: std.mem.Allocator) Codebreaker {
         return Codebreaker{
             .scheme = .v7,
-            .cb7_ctx = try Cb7.initDefault(allocator),
+            .cb7_ctx = Cb7.initDefault(allocator),
             .code_lines = 0,
             .allocator = allocator,
         };
     }
 
     /// Encrypts a code and returns the result.
-    pub fn encryptCode(self: *Codebreaker, addr: u32, val: u32) !struct { u32, u32 } {
+    pub fn encryptCode(self: *Codebreaker, addr: u32, val: u32) Code {
         var new_addr = addr;
         var new_val = val;
-        try self.encryptCodeMut(&new_addr, &new_val);
-        return .{ new_addr, new_val };
+        self.encryptCodeMut(&new_addr, &new_val);
+        return .{ .addr = new_addr, .val = new_val };
     }
 
     /// Encrypts a code directly.
-    pub fn encryptCodeMut(self: *Codebreaker, addr: *u32, val: *u32) !void {
+    pub fn encryptCodeMut(self: *Codebreaker, addr: *u32, val: *u32) void {
         const oldaddr = addr.*;
         const oldval = val.*;
 
         if (self.scheme == .v7) {
-            try self.cb7_ctx.encryptCodeMut(addr, val);
+            self.cb7_ctx.encryptCodeMut(addr, val);
         } else {
             cb1.encryptCodeMut(addr, val);
         }
 
         if (isBeefcode(oldaddr)) {
-            try self.cb7_ctx.beefcode(oldaddr, oldval);
+            self.cb7_ctx.beefcode(oldaddr, oldval);
             self.scheme = .v7;
         }
     }
 
     /// Decrypts a code and returns the result.
-    pub fn decryptCode(self: *Codebreaker, addr: u32, val: u32) !struct { u32, u32 } {
+    pub fn decryptCode(self: *Codebreaker, addr: u32, val: u32) Code {
         var new_addr = addr;
         var new_val = val;
-        try self.decryptCodeMut(&new_addr, &new_val);
-        return .{ new_addr, new_val };
+        self.decryptCodeMut(&new_addr, &new_val);
+        return .{ .addr = new_addr, .val = new_val };
     }
 
     /// Decrypts a code directly.
-    pub fn decryptCodeMut(self: *Codebreaker, addr: *u32, val: *u32) !void {
+    pub fn decryptCodeMut(self: *Codebreaker, addr: *u32, val: *u32) void {
         if (self.scheme == .v7) {
-            try self.cb7_ctx.decryptCodeMut(addr, val);
+            self.cb7_ctx.decryptCodeMut(addr, val);
         } else {
             cb1.decryptCodeMut(addr, val);
         }
 
         if (isBeefcode(addr.*)) {
-            try self.cb7_ctx.beefcode(addr.*, val.*);
+            self.cb7_ctx.beefcode(addr.*, val.*);
             self.scheme = .v7;
         }
     }
 
     /// Smart version of `decryptCode` that detects if and how a code needs to be decrypted.
-    pub fn autoDecryptCode(self: *Codebreaker, addr: u32, val: u32) !struct { u32, u32 } {
+    pub fn autoDecryptCode(self: *Codebreaker, addr: u32, val: u32) Code {
         var new_addr = addr;
         var new_val = val;
-        try self.autoDecryptCodeMut(&new_addr, &new_val);
-        return .{ new_addr, new_val };
+        self.autoDecryptCodeMut(&new_addr, &new_val);
+        return .{ .addr = new_addr, .val = new_val };
     }
 
     /// Smart version of `decryptCodeMut` that detects if and how a code needs to be decrypted.
-    pub fn autoDecryptCodeMut(self: *Codebreaker, addr: *u32, val: *u32) !void {
+    pub fn autoDecryptCodeMut(self: *Codebreaker, addr: *u32, val: *u32) void {
         if (self.scheme != .v7) {
             if (self.code_lines == 0) {
                 self.code_lines = numCodeLines(addr.*);
@@ -126,7 +129,7 @@ pub const Codebreaker = struct {
                 cb1.decryptCodeMut(addr, val);
             }
         } else {
-            try self.cb7_ctx.decryptCodeMut(addr, val);
+            self.cb7_ctx.decryptCodeMut(addr, val);
             if (self.code_lines == 0) {
                 self.code_lines = numCodeLines(addr.*);
                 if (self.code_lines == 1 and addr.* == 0xffff_ffff) {
@@ -139,7 +142,7 @@ pub const Codebreaker = struct {
         }
 
         if (isBeefcode(addr.*)) {
-            try self.cb7_ctx.beefcode(addr.*, val.*);
+            self.cb7_ctx.beefcode(addr.*, val.*);
             self.scheme = .v7;
             self.code_lines = 1;
         }
@@ -159,24 +162,6 @@ fn numCodeLines(addr: u32) usize {
 }
 
 // Tests
-const Code = struct {
-    addr: u32,
-    val: u32,
-
-    fn fromHex(s: []const u8) !Code {
-        var it = std.mem.splitScalar(u8, s, ' ');
-        const addr_str = it.next() orelse return error.InvalidFormat;
-        const val_str = it.next() orelse return error.InvalidFormat;
-        return Code{
-            .addr = try std.fmt.parseInt(u32, addr_str, 16),
-            .val = try std.fmt.parseInt(u32, val_str, 16),
-        };
-    }
-
-    fn eql(self: Code, other: Code) bool {
-        return self.addr == other.addr and self.val == other.val;
-    }
-};
 
 test "Codebreaker - encrypt code" {
     const decrypted = [_]Code{
@@ -192,9 +177,8 @@ test "Codebreaker - encrypt code" {
 
     var cb = Codebreaker.init(testing.allocator);
     for (decrypted, encrypted) |dec, enc| {
-        const result = try cb.encryptCode(dec.addr, dec.val);
-        const result_code = Code{ .addr = result[0], .val = result[1] };
-        try testing.expect(result_code.eql(enc));
+        const result = cb.encryptCode(dec.addr, dec.val);
+        try testing.expectEqual(enc, result);
     }
 }
 
@@ -214,7 +198,7 @@ test "Codebreaker - encrypt code mut" {
     for (decrypted, encrypted) |dec, enc| {
         var addr = dec.addr;
         var val = dec.val;
-        try cb.encryptCodeMut(&addr, &val);
+        cb.encryptCodeMut(&addr, &val);
         try testing.expectEqual(enc.addr, addr);
         try testing.expectEqual(enc.val, val);
     }
@@ -234,9 +218,8 @@ test "Codebreaker - decrypt code" {
 
     var cb = Codebreaker.init(testing.allocator);
     for (encrypted, decrypted) |enc, dec| {
-        const result = try cb.decryptCode(enc.addr, enc.val);
-        const result_code = Code{ .addr = result[0], .val = result[1] };
-        try testing.expect(result_code.eql(dec));
+        const result = cb.decryptCode(enc.addr, enc.val);
+        try testing.expectEqual(dec, result);
     }
 }
 
@@ -256,7 +239,7 @@ test "Codebreaker - decrypt code mut" {
     for (encrypted, decrypted) |enc, dec| {
         var addr = enc.addr;
         var val = enc.val;
-        try cb.decryptCodeMut(&addr, &val);
+        cb.decryptCodeMut(&addr, &val);
         try testing.expectEqual(dec.addr, addr);
         try testing.expectEqual(dec.val, val);
     }
@@ -276,9 +259,8 @@ test "Codebreaker - auto decrypt code - raw" {
 
     var cb = Codebreaker.init(testing.allocator);
     for (input, output) |inp, out| {
-        const result = try cb.autoDecryptCode(inp.addr, inp.val);
-        const result_code = Code{ .addr = result[0], .val = result[1] };
-        try testing.expect(result_code.eql(out));
+        const result = cb.autoDecryptCode(inp.addr, inp.val);
+        try testing.expectEqual(out, result);
     }
 }
 
@@ -296,9 +278,8 @@ test "Codebreaker - auto decrypt code - v1 encrypted" {
 
     var cb = Codebreaker.init(testing.allocator);
     for (input, output) |inp, out| {
-        const result = try cb.autoDecryptCode(inp.addr, inp.val);
-        const result_code = Code{ .addr = result[0], .val = result[1] };
-        try testing.expect(result_code.eql(out));
+        const result = cb.autoDecryptCode(inp.addr, inp.val);
+        try testing.expectEqual(out, result);
     }
 }
 
@@ -318,9 +299,8 @@ test "Codebreaker - auto decrypt code - v7 encrypted" {
 
     var cb = Codebreaker.init(testing.allocator);
     for (input, output) |inp, out| {
-        const result = try cb.autoDecryptCode(inp.addr, inp.val);
-        const result_code = Code{ .addr = result[0], .val = result[1] };
-        try testing.expect(result_code.eql(out));
+        const result = cb.autoDecryptCode(inp.addr, inp.val);
+        try testing.expectEqual(out, result);
     }
 }
 
@@ -340,9 +320,8 @@ test "Codebreaker - auto decrypt code - v1 and v7 encrypted" {
 
     var cb = Codebreaker.init(testing.allocator);
     for (input, output) |inp, out| {
-        const result = try cb.autoDecryptCode(inp.addr, inp.val);
-        const result_code = Code{ .addr = result[0], .val = result[1] };
-        try testing.expect(result_code.eql(out));
+        const result = cb.autoDecryptCode(inp.addr, inp.val);
+        try testing.expectEqual(out, result);
     }
 }
 
@@ -362,9 +341,8 @@ test "Codebreaker - auto decrypt code - raw, v1, and v7 encrypted" {
 
     var cb = Codebreaker.init(testing.allocator);
     for (input, output) |inp, out| {
-        const result = try cb.autoDecryptCode(inp.addr, inp.val);
-        const result_code = Code{ .addr = result[0], .val = result[1] };
-        try testing.expect(result_code.eql(out));
+        const result = cb.autoDecryptCode(inp.addr, inp.val);
+        try testing.expectEqual(out, result);
     }
 }
 
@@ -380,11 +358,10 @@ test "Codebreaker v7 - encrypt code" {
         try Code.fromHex("973E0B2A A7D4AF10"),
     };
 
-    var cb = try Codebreaker.initV7(testing.allocator);
+    var cb = Codebreaker.initV7(testing.allocator);
     for (decrypted, encrypted) |dec, enc| {
-        const result = try cb.encryptCode(dec.addr, dec.val);
-        const result_code = Code{ .addr = result[0], .val = result[1] };
-        try testing.expect(result_code.eql(enc));
+        const result = cb.encryptCode(dec.addr, dec.val);
+        try testing.expectEqual(enc, result);
     }
 }
 
@@ -400,10 +377,9 @@ test "Codebreaker v7 - decrypt code" {
         try Code.fromHex("973E0B2A A7D4AF10"),
     };
 
-    var cb = try Codebreaker.initV7(testing.allocator);
+    var cb = Codebreaker.initV7(testing.allocator);
     for (encrypted, decrypted) |enc, dec| {
-        const result = try cb.decryptCode(enc.addr, enc.val);
-        const result_code = Code{ .addr = result[0], .val = result[1] };
-        try testing.expect(result_code.eql(dec));
+        const result = cb.decryptCode(enc.addr, enc.val);
+        try testing.expectEqual(dec, result);
     }
 }

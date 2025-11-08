@@ -3,6 +3,8 @@
 const std = @import("std");
 const testing = std.testing;
 
+pub const Code = @import("code.zig").Code;
+
 const SEEDS = [3][16]u32{
     [16]u32{
         0x0a0b_8d9b, 0x0a01_33f8, 0x0af7_33ec, 0x0a15_c574,
@@ -25,7 +27,7 @@ const SEEDS = [3][16]u32{
 };
 
 /// Encrypts a code and returns the result.
-pub fn encryptCode(addr: u32, val: u32) struct { u32, u32 } {
+pub fn encryptCode(addr: u32, val: u32) Code {
     const cmd: usize = @intCast(addr >> 28);
     const tmp = addr & 0xff00_0000;
     var new_addr = ((addr & 0xff) << 16) | ((addr >> 8) & 0xffff);
@@ -36,18 +38,18 @@ pub fn encryptCode(addr: u32, val: u32) struct { u32, u32 } {
         new_val = new_addr ^ (val +% SEEDS[2][cmd]);
     }
 
-    return .{ new_addr, new_val };
+    return .{ .addr = new_addr, .val = new_val };
 }
 
 /// Encrypts a code directly.
 pub fn encryptCodeMut(addr: *u32, val: *u32) void {
     const result = encryptCode(addr.*, val.*);
-    addr.* = result[0];
-    val.* = result[1];
+    addr.* = result.addr;
+    val.* = result.val;
 }
 
 /// Decrypts a code and returns the result.
-pub fn decryptCode(addr: u32, val: u32) struct { u32, u32 } {
+pub fn decryptCode(addr: u32, val: u32) Code {
     const cmd: usize = @intCast(addr >> 28);
 
     var new_val = val;
@@ -59,35 +61,17 @@ pub fn decryptCode(addr: u32, val: u32) struct { u32, u32 } {
     var new_addr = tmp -% SEEDS[1][cmd];
     new_addr = (tmp & 0xff00_0000) | ((new_addr & 0xffff) << 8) | ((new_addr >> 16) & 0xff);
 
-    return .{ new_addr, new_val };
+    return .{ .addr = new_addr, .val = new_val };
 }
 
 /// Decrypts a code directly.
 pub fn decryptCodeMut(addr: *u32, val: *u32) void {
     const result = decryptCode(addr.*, val.*);
-    addr.* = result[0];
-    val.* = result[1];
+    addr.* = result.addr;
+    val.* = result.val;
 }
 
 // Tests
-const Code = struct {
-    addr: u32,
-    val: u32,
-
-    fn fromHex(s: []const u8) !Code {
-        var it = std.mem.splitScalar(u8, s, ' ');
-        const addr_str = it.next() orelse return error.InvalidFormat;
-        const val_str = it.next() orelse return error.InvalidFormat;
-        return Code{
-            .addr = try std.fmt.parseInt(u32, addr_str, 16),
-            .val = try std.fmt.parseInt(u32, val_str, 16),
-        };
-    }
-
-    fn eql(self: Code, other: Code) bool {
-        return self.addr == other.addr and self.val == other.val;
-    }
-};
 
 test "CB1 - encrypt code" {
     const TestCase = struct {
@@ -124,8 +108,7 @@ test "CB1 - encrypt code" {
 
     for (test_cases) |tc| {
         const result = encryptCode(tc.decrypted.addr, tc.decrypted.val);
-        const result_code = Code{ .addr = result[0], .val = result[1] };
-        try testing.expect(result_code.eql(tc.encrypted));
+        try testing.expectEqual(tc.encrypted, result);
     }
 }
 
@@ -190,8 +173,7 @@ test "CB1 - decrypt code" {
 
     for (test_cases) |tc| {
         const result = decryptCode(tc.encrypted.addr, tc.encrypted.val);
-        const result_code = Code{ .addr = result[0], .val = result[1] };
-        try testing.expect(result_code.eql(tc.decrypted));
+        try testing.expectEqual(tc.decrypted, result);
     }
 }
 
