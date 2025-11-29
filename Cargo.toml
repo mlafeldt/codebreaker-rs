@@ -17,7 +17,6 @@ name = "codebreaker"
 
 [dependencies]
 bytemuck = "1"
-num-bigint = "0.4.2"
 
 [dev-dependencies]
 doc-comment = "0.3"
@@ -25,4 +24,4 @@ pretty_assertions = "1"
 
 [features]
 default = ["std"]
-std = ["num-bigint/std"]
+std = []

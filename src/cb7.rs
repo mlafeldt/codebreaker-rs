@@ -29,7 +29,7 @@ impl Default for Cb7 {
 impl fmt::Debug for Cb7 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("Cb7")
-            .field("seeds[0][0..16]", &self.seeds[0][0..16].to_vec())
+            .field("seeds[0][0..16]", &&self.seeds[0][0..16])
             .field("key", &self.key)
             .field("beefcodf", &self.beefcodf)
             .field("initialized", &self.initialized)
@@ -310,17 +310,43 @@ const fn mod_inverse(x: u32) -> u32 {
 
 // RSA encryption/decryption
 fn rsa_crypt(addr: &mut u32, val: &mut u32, rsakey: u64, modulus: u64) {
-    use num_bigint::BigUint;
-
-    let code = BigUint::from_slice(&[*val, *addr]);
-    let m = BigUint::from(modulus);
+    let code = u64::from(*val) | (u64::from(*addr) << 32);
 
     // Exponentiation is only invertible if code < modulus
-    if code < m {
-        let digits = code.modpow(&BigUint::from(rsakey), &m).to_u32_digits();
-        *addr = digits[1];
-        *val = digits[0];
+    if code >= modulus {
+        return;
     }
+
+    let result = mod_pow(code, rsakey, modulus);
+    *addr = (result >> 32) as u32;
+    *val = result as u32;
+}
+
+// Fast modular exponentiation for 64-bit values
+#[inline]
+const fn mod_pow(mut base: u64, mut exp: u64, modulus: u64) -> u64 {
+    if modulus == 1 {
+        return 0;
+    }
+
+    let mut result = 1u64;
+    base %= modulus;
+
+    while exp > 0 {
+        if exp & 1 == 1 {
+            result = mul_mod(result, base, modulus);
+        }
+        exp >>= 1;
+        base = mul_mod(base, base, modulus);
+    }
+
+    result
+}
+
+// Computes (a * b) % modulus using 128-bit intermediates to avoid overflow
+#[inline]
+const fn mul_mod(a: u64, b: u64, modulus: u64) -> u64 {
+    ((a as u128 * b as u128) % modulus as u128) as u64
 }
 
 const BEEFCODE: u32 = 0xbeef_c0de;
