@@ -240,20 +240,17 @@ impl Codebreaker {
     pub fn auto_decrypt_code_mut(&mut self, addr: &mut u32, val: &mut u32) {
         if self.scheme != Scheme::V7 {
             if self.code_lines == 0 {
-                self.code_lines = num_code_lines(*addr);
                 if (*addr >> 24) & 0x0e != 0 {
                     if is_beefcode(*addr) {
                         // ignore raw beefcode
-                        self.code_lines -= 1;
                         return;
                     }
                     self.scheme = Scheme::V1;
-                    self.code_lines -= 1;
                     cb1::decrypt_code_mut(addr, val);
                 } else {
                     self.scheme = Scheme::Raw;
-                    self.code_lines -= 1;
                 }
+                self.code_lines = num_code_lines(*addr) - 1;
             } else {
                 self.code_lines -= 1;
                 if self.scheme == Scheme::Raw {
@@ -454,6 +451,11 @@ mod tests {
                     "BEEFC0DE 00000000".into(),
                     "2096F5B8 000000BE".into(),
                 ],
+            },
+            AutoTest {
+                // v1-encrypted cmd 3 with bit22 flip, followed by raw code
+                input: vec!["3A550D56 9267D8DE".into(), "0029BEAC 0C0A9225".into()],
+                output: vec!["30000035 12345678".into(), "0029BEAC 0C0A9225".into()],
             },
             AutoTest {
                 // raw, v1, and v7 encrypted
