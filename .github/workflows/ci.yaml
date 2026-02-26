@@ -25,3 +25,4 @@ jobs:
       - run: cargo hack build --each-feature --all-targets
       - run: cargo hack clippy --each-feature --all-targets -- -D warnings
       - run: cargo hack nextest run --each-feature
+      - run: cargo test --doc
