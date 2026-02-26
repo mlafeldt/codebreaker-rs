@@ -61,7 +61,7 @@ enum Scheme {
 }
 
 /// A processor for CB v1 and v7 codes.
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone)]
 pub struct Codebreaker {
     scheme: Scheme,
     cb7: Cb7,
