@@ -131,11 +131,11 @@ impl Codebreaker {
             self.cb7.encrypt_code_mut(addr, val);
         } else {
             cb1::encrypt_code_mut(addr, val);
-        }
 
-        if is_beefcode(oldaddr) {
-            self.cb7.beefcode(oldaddr, oldval);
-            self.scheme = Scheme::V7;
+            if is_beefcode(oldaddr) {
+                self.cb7.beefcode(oldaddr, oldval);
+                self.scheme = Scheme::V7;
+            }
         }
     }
 
@@ -196,11 +196,11 @@ impl Codebreaker {
             self.cb7.decrypt_code_mut(addr, val);
         } else {
             cb1::decrypt_code_mut(addr, val);
-        }
 
-        if is_beefcode(*addr) {
-            self.cb7.beefcode(*addr, *val);
-            self.scheme = Scheme::V7;
+            if is_beefcode(*addr) {
+                self.cb7.beefcode(*addr, *val);
+                self.scheme = Scheme::V7;
+            }
         }
     }
 
@@ -258,6 +258,12 @@ impl Codebreaker {
                 }
                 cb1::decrypt_code_mut(addr, val);
             }
+
+            if is_beefcode(*addr) {
+                self.cb7.beefcode(*addr, *val);
+                self.scheme = Scheme::V7;
+                self.code_lines = 1;
+            }
         } else {
             self.cb7.decrypt_code_mut(addr, val);
             if self.code_lines == 0 {
@@ -269,12 +275,10 @@ impl Codebreaker {
                 }
             }
             self.code_lines -= 1;
-        }
 
-        if is_beefcode(*addr) {
-            self.cb7.beefcode(*addr, *val);
-            self.scheme = Scheme::V7;
-            self.code_lines = 1;
+            if is_beefcode(*addr) {
+                self.code_lines = 1;
+            }
         }
     }
 }
@@ -331,6 +335,21 @@ mod tests {
                     "D08F3A49 00078A53".into(),
                     "3818DDE5 E72B2B16".into(),
                     "973E0B2A A7D4AF10".into(),
+                ],
+            },
+            Test {
+                cb: Codebreaker::new_v7(),
+                decrypted: vec![
+                    "BEEFC0DE 00000000".into(),
+                    "9029BEAC 0C0A9225".into(),
+                    "201F6024 00000000".into(),
+                    "2096F5B8 000000BE".into(),
+                ],
+                encrypted: vec![
+                    "8787C575 1AC4C1B4".into(),
+                    "E8C99F89 14B426D6".into(),
+                    "CA64CBFA CD67C364".into(),
+                    "4FE0642D 3EBDE7D4".into(),
                 ],
             },
             Test {
