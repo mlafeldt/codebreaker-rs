@@ -293,14 +293,10 @@ impl Codebreaker {
 }
 
 const fn num_code_lines(addr: u32) -> usize {
-    let cmd = addr >> 28;
-
-    if cmd < 3 || cmd > 6 {
-        1
-    } else if cmd == 3 {
-        if addr & 0x0040_0000 != 0 { 2 } else { 1 }
-    } else {
-        2
+    match addr >> 28 {
+        3 if addr & 0x0040_0000 != 0 => 2,
+        4..=6 => 2,
+        _ => 1,
     }
 }
 
