@@ -80,43 +80,23 @@ impl Cb7 {
         assert!(is_beefcode(addr));
 
         // Easily access all bytes of val as indices into seeds
-        let mut idx = [0; 4];
-        val.to_le_bytes()
-            .iter()
-            .zip(&mut idx)
-            .for_each(|(b, i)| *i = *b as usize);
+        let idx = val.to_le_bytes().map(usize::from);
 
         // Set up key and seeds
         if !self.initialized {
             self.key.copy_from_slice(&RC4_KEY);
-
-            if val != 0 {
-                self.seeds.copy_from_slice(&SEEDS);
-                for i in 0..4 {
-                    self.key[i] = (u32::from(self.seeds[(i + 3) % 4][idx[3]]) << 24)
-                        | (u32::from(self.seeds[(i + 2) % 4][idx[2]]) << 16)
-                        | (u32::from(self.seeds[(i + 1) % 4][idx[1]]) << 8)
-                        | u32::from(self.seeds[i % 4][idx[0]]);
-                }
-            } else {
-                self.seeds.copy_from_slice(&ZERO_SEEDS);
-            }
-
+            self.seeds.copy_from_slice(if val != 0 { &SEEDS } else { &ZERO_SEEDS });
             self.initialized = true;
-        } else if val != 0 {
-            for i in 0..4 {
-                self.key[i] = (u32::from(self.seeds[(i + 3) % 4][idx[3]]) << 24)
-                    | (u32::from(self.seeds[(i + 2) % 4][idx[2]]) << 16)
-                    | (u32::from(self.seeds[(i + 1) % 4][idx[1]]) << 8)
-                    | u32::from(self.seeds[i % 4][idx[0]]);
-            }
-        } else {
+        } else if val == 0 {
             // Special case for 2x BEEFC0DE 00000000 in a row
             self.seeds.copy_from_slice(&ZERO_SEEDS);
-            self.key[0] = 0;
-            self.key[1] = 0;
-            self.key[2] = 0;
-            self.key[3] = 0;
+            self.key[..4].fill(0);
+        }
+
+        if val != 0 {
+            for (i, k) in self.key[..4].iter_mut().enumerate() {
+                *k = u32::from_le_bytes(core::array::from_fn(|j| self.seeds[(i + j) % 4][idx[j]]));
+            }
         }
 
         // Use key to encrypt seeds with RC4
