@@ -26,6 +26,12 @@
 //!     assert_eq!(cb.auto_decrypt_code(code.0, code.1), output[i]);
 //! }
 //! ```
+//!
+//! # Platform support
+//!
+//! This crate is `no_std` and currently supports little-endian targets only.
+//! The CB v7 implementation intentionally preserves byte-level behavior from
+//! the original C code.
 
 #![deny(clippy::all, clippy::nursery)]
 #![deny(nonstandard_style, rust_2018_idioms)]
@@ -33,23 +39,17 @@
 #![forbid(unsafe_code)]
 #![no_std]
 
+// Unit tests use Vec and vec!, but no_std keeps std out of scope unless we
+// reintroduce it explicitly for test builds.
+#[cfg(test)]
+extern crate std;
+
 #[cfg(doctest)]
 doc_comment::doctest!("../README.md", readme);
 
 pub mod cb1;
 pub mod cb7;
 mod rc4;
-
-#[cfg(test)]
-mod std_alloc {
-    #[cfg(feature = "std")]
-    extern crate std as alloc;
-
-    #[cfg(not(feature = "std"))]
-    extern crate alloc;
-
-    pub use alloc::{fmt, vec, vec::Vec};
-}
 
 use cb7::{Cb7, is_beefcode};
 
@@ -299,9 +299,8 @@ const fn num_code_lines(addr: u32) -> usize {
 mod tests {
     use super::*;
     use crate::code::Code;
-    use crate::std_alloc::{Vec, vec};
-    #[cfg(feature = "std")]
     use pretty_assertions::assert_eq;
+    use std::{vec, vec::Vec};
 
     struct Test {
         cb: Codebreaker,
@@ -519,7 +518,8 @@ mod tests {
 
 #[cfg(test)]
 mod code {
-    use crate::std_alloc::{Vec, fmt};
+    use core::fmt;
+    use std::vec::Vec;
 
     #[derive(Copy, Clone, PartialEq, Eq)]
     pub struct Code(pub u32, pub u32);

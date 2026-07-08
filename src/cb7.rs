@@ -456,9 +456,8 @@ const SEEDS: [[u8; 256]; 5] = [
 mod tests {
     use super::*;
     use crate::code::Code;
-    use crate::std_alloc::{Vec, vec};
-    #[cfg(feature = "std")]
     use pretty_assertions::assert_eq;
+    use std::{vec, vec::Vec};
 
     const fn mul_tests() -> &'static [(u32, u32, u32)] {
         &[

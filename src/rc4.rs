@@ -38,7 +38,6 @@ impl Rc4 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    #[cfg(feature = "std")]
     use pretty_assertions::assert_eq;
 
     struct Test {
