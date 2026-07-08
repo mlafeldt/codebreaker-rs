@@ -63,8 +63,15 @@ enum Scheme {
 /// A processor for CB v1 and v7 codes.
 #[derive(Debug, Clone)]
 pub struct Codebreaker {
+    // Explicit encrypt/decrypt calls use this as a Raw/V7 toggle. Auto-decrypt
+    // also uses V1 while following detected CB v1-encrypted blocks.
     scheme: Scheme,
+
+    // CB v7 cipher state, activated by new_v7 or after a beefcode transition.
     cb7: Cb7,
+
+    // Remaining continuation lines in the current auto-decrypt block. Plain
+    // encrypt/decrypt ignores this field.
     code_lines: usize,
 }
 
