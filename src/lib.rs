@@ -133,8 +133,7 @@ impl Codebreaker {
             cb1::encrypt_code_mut(addr, val);
 
             if is_beefcode(oldaddr) {
-                self.cb7.beefcode(oldaddr, oldval);
-                self.scheme = Scheme::V7;
+                self.enter_v7(oldaddr, oldval);
             }
         }
     }
@@ -198,8 +197,7 @@ impl Codebreaker {
             cb1::decrypt_code_mut(addr, val);
 
             if is_beefcode(*addr) {
-                self.cb7.beefcode(*addr, *val);
-                self.scheme = Scheme::V7;
+                self.enter_v7(*addr, *val);
             }
         }
     }
@@ -238,48 +236,59 @@ impl Codebreaker {
     /// Smart version of [`decrypt_code_mut`](#method.decrypt_code_mut) that
     /// detects if and how a code needs to be decrypted.
     pub fn auto_decrypt_code_mut(&mut self, addr: &mut u32, val: &mut u32) {
-        if self.scheme != Scheme::V7 {
-            if self.code_lines == 0 {
-                if (*addr >> 24) & 0x0e != 0 {
-                    if is_beefcode(*addr) {
-                        // ignore raw beefcode
-                        return;
-                    }
-                    self.scheme = Scheme::V1;
-                    cb1::decrypt_code_mut(addr, val);
-                } else {
-                    self.scheme = Scheme::Raw;
-                }
-                self.code_lines = num_code_lines(*addr) - 1;
-            } else {
-                self.code_lines -= 1;
-                if self.scheme == Scheme::Raw {
+        match self.scheme {
+            Scheme::V7 => self.auto_decrypt_v7(addr, val),
+            Scheme::Raw | Scheme::V1 => self.auto_decrypt_v1_or_raw(addr, val),
+        }
+    }
+
+    fn auto_decrypt_v1_or_raw(&mut self, addr: &mut u32, val: &mut u32) {
+        if self.code_lines == 0 {
+            if (*addr >> 24) & 0x0e != 0 {
+                if is_beefcode(*addr) {
+                    // ignore raw beefcode
                     return;
                 }
+                self.scheme = Scheme::V1;
                 cb1::decrypt_code_mut(addr, val);
+            } else {
+                self.scheme = Scheme::Raw;
             }
-
-            if is_beefcode(*addr) {
-                self.cb7.beefcode(*addr, *val);
-                self.scheme = Scheme::V7;
-                self.code_lines = 1;
-            }
+            self.code_lines = num_code_lines(*addr) - 1;
         } else {
-            self.cb7.decrypt_code_mut(addr, val);
-            if self.code_lines == 0 {
-                self.code_lines = num_code_lines(*addr);
-                if self.code_lines == 1 && *addr == 0xffff_ffff {
-                    // XXX: changing encryption via "FFFFFFFF 000xnnnn" is not supported
-                    self.code_lines = 0;
-                    return;
-                }
-            }
             self.code_lines -= 1;
+            if self.scheme == Scheme::Raw {
+                return;
+            }
+            cb1::decrypt_code_mut(addr, val);
+        }
 
-            if is_beefcode(*addr) {
-                self.code_lines = 1;
+        if is_beefcode(*addr) {
+            self.enter_v7(*addr, *val);
+            self.code_lines = 1;
+        }
+    }
+
+    fn auto_decrypt_v7(&mut self, addr: &mut u32, val: &mut u32) {
+        self.cb7.decrypt_code_mut(addr, val);
+        if self.code_lines == 0 {
+            self.code_lines = num_code_lines(*addr);
+            if self.code_lines == 1 && *addr == 0xffff_ffff {
+                // XXX: changing encryption via "FFFFFFFF 000xnnnn" is not supported
+                self.code_lines = 0;
+                return;
             }
         }
+        self.code_lines -= 1;
+
+        if is_beefcode(*addr) {
+            self.code_lines = 1;
+        }
+    }
+
+    fn enter_v7(&mut self, addr: u32, val: u32) {
+        self.cb7.beefcode(addr, val);
+        self.scheme = Scheme::V7;
     }
 }
 
