@@ -7,6 +7,7 @@ use core::fmt;
 use bytemuck::{bytes_of, bytes_of_mut, cast_slice};
 
 /// A processor for CB v7+ codes.
+#[repr(C)]
 #[derive(Clone)]
 pub struct Cb7 {
     seeds: [[u8; 256]; 5],
