@@ -9,13 +9,9 @@ pub struct Rc4 {
 }
 
 impl Rc4 {
-    #[allow(clippy::needless_range_loop)]
     pub fn new(key: &[u8]) -> Self {
         assert!(!key.is_empty() && key.len() <= 256);
-        let mut state = [0; 256];
-        for i in 0..256 {
-            state[i] = i as u8;
-        }
+        let mut state = core::array::from_fn(|i| i as u8);
         let mut j: u8 = 0;
         for i in 0..256 {
             j = j.wrapping_add(state[i]).wrapping_add(key[i % key.len()]);
@@ -25,12 +21,12 @@ impl Rc4 {
     }
 
     pub fn crypt(&mut self, buf: &mut [u8]) {
-        for i in buf.iter_mut() {
+        for b in buf.iter_mut() {
             self.i = self.i.wrapping_add(1);
             self.j = self.j.wrapping_add(self.state[self.i as usize]);
             self.state.swap(self.i as usize, self.j as usize);
             let j = self.state[self.i as usize].wrapping_add(self.state[self.j as usize]);
-            *i ^= self.state[j as usize];
+            *b ^= self.state[j as usize];
         }
     }
 }
