@@ -17,7 +17,7 @@ Add the crate as a dependency to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-codebreaker = "0.3"
+codebreaker = "0.4"
 ```
 
 Now you can start decrypting some codes:
