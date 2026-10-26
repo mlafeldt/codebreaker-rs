@@ -167,18 +167,19 @@ impl Cb7 {
             *val = (val.wrapping_sub(s[3 * 64 + i]) ^ s[64 + i]).wrapping_add(*addr ^ s[4 * 64 + i]);
         }
 
-        // BEEFC0DE
-        if is_beefcode(oldaddr) {
-            self.beefcode(oldaddr, oldval);
-            return;
-        }
-
         // BEEFC0DF uses two codes. If the previous code was the first of the
-        // two, use the current one to encrypt the seeds.
+        // two, use the current one to encrypt the seeds, even if it's a
+        // beefcode itself. Same order as in decrypt_code_mut.
         if self.beefcodf {
             let mut rc4 = Rc4::new(bytes_of(&[oldaddr, oldval]));
             rc4.crypt(bytes_of_mut(&mut self.seeds));
             self.beefcodf = false;
+            return;
+        }
+
+        // BEEFC0DE
+        if is_beefcode(oldaddr) {
+            self.beefcode(oldaddr, oldval);
         }
     }
 
@@ -575,6 +576,22 @@ mod tests {
                     "0CA31760 A6F7E88A".into(),
                     "679DC392 FA43E30B".into(),
                     "1CD9CCC3 6AF74E36".into(),
+                ],
+            },
+            Test {
+                // BEEFC0DF followed by a beefcode as its extra seed code
+                beefcode: "BEEFC0DE 00000000".into(),
+                decrypted: vec![
+                    "BEEFC0DF 00000000".into(),
+                    "BEEFC0DE 12345678".into(),
+                    "01234567 89ABCDEF".into(),
+                    "9029BEAC 0C0A9225".into(),
+                ],
+                encrypted: vec![
+                    "EF3A41A5 8F460BA4".into(),
+                    "3B070C70 52BA8DBD".into(),
+                    "00DDD0A3 3EE4EC6F".into(),
+                    "3B91B1FA 3D12C0B1".into(),
                 ],
             },
             Test {

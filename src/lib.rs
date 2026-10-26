@@ -391,6 +391,23 @@ mod tests {
                 ],
             },
             Test {
+                cb: Codebreaker::new(),
+                decrypted: vec![
+                    "BEEFC0DE 00000000".into(),
+                    "BEEFC0DF 00000000".into(),
+                    "BEEFC0DE 12345678".into(),
+                    "01234567 89ABCDEF".into(),
+                    "9029BEAC 0C0A9225".into(),
+                ],
+                encrypted: vec![
+                    "B4336FA9 4DFEFB79".into(),
+                    "EF3A41A5 8F460BA4".into(),
+                    "3B070C70 52BA8DBD".into(),
+                    "00DDD0A3 3EE4EC6F".into(),
+                    "3B91B1FA 3D12C0B1".into(),
+                ],
+            },
+            Test {
                 cb: Codebreaker::default(),
                 decrypted: vec![
                     "9029BEAC 0C0A9225".into(),
