@@ -256,7 +256,10 @@ impl Codebreaker {
             self.code_lines = num_code_lines(*addr) - 1;
             if (*addr >> 24) & 0x0e != 0 {
                 if is_beefcode(*addr) {
-                    // ignore raw beefcode
+                    // Like CodeBreaker, ignore a raw beefcode and pass the
+                    // next two lines through unchanged
+                    self.scheme = Scheme::Raw;
+                    self.code_lines = 2;
                     return;
                 }
                 self.scheme = Scheme::V1;
@@ -530,6 +533,21 @@ mod tests {
                 // address, so the next line belongs to it and gets decrypted
                 input: vec!["3A550D56 9267D8DE".into(), "0029BEAC 0C0A9225".into()],
                 output: vec!["30000035 12345678".into(), "0AADA1F9 0C0A9225".into()],
+            },
+            AutoTest {
+                // raw beefcode, two raw lines, then v1 encrypted
+                input: vec![
+                    "BEEFC0DE 00000000".into(),
+                    "2A973DBD 00000000".into(),
+                    "2A03B60A 000000BE".into(),
+                    "2A973DBD 00000000".into(),
+                ],
+                output: vec![
+                    "BEEFC0DE 00000000".into(),
+                    "2A973DBD 00000000".into(),
+                    "2A03B60A 000000BE".into(),
+                    "201F6024 00000000".into(),
+                ],
             },
             AutoTest {
                 // raw, v1, and v7 encrypted
