@@ -1,0 +1,4 @@
+# Copyrighted CodeBreaker binaries and output derived from them
+elf/
+compare/target/
+compare/Cargo.lock

@@ -1,0 +1,10 @@
+[package]
+name = "compare"
+version = "0.0.0"
+edition = "2024"
+publish = false
+
+[dependencies]
+v032 = { package = "codebreaker", version = "=0.3.2" }
+v040 = { package = "codebreaker", version = "=0.4.0" }
+head = { package = "codebreaker", path = "../.." }
