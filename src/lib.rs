@@ -138,10 +138,10 @@ impl Codebreaker {
             self.cb7.encrypt_code_mut(addr, val);
         } else {
             cb1::encrypt_code_mut(addr, val);
+        }
 
-            if is_beefcode(oldaddr) {
-                self.enter_v7(oldaddr, oldval);
-            }
+        if is_beefcode(oldaddr) {
+            self.enter_v7(oldaddr, oldval);
         }
     }
 
@@ -202,10 +202,10 @@ impl Codebreaker {
             self.cb7.decrypt_code_mut(addr, val);
         } else {
             cb1::decrypt_code_mut(addr, val);
+        }
 
-            if is_beefcode(*addr) {
-                self.enter_v7(*addr, *val);
-            }
+        if is_beefcode(*addr) {
+            self.enter_v7(*addr, *val);
         }
     }
 
@@ -289,10 +289,13 @@ impl Codebreaker {
         self.code_lines -= 1;
 
         if is_beefcode(*addr) {
+            self.enter_v7(*addr, *val);
             self.code_lines = 1;
         }
     }
 
+    // In V7 mode, Cb7 has already applied the beefcode at this point.
+    // CodeBreaker v9.2 applies it a second time, and so do we.
     fn enter_v7(&mut self, addr: u32, val: u32) {
         self.cb7.beefcode(addr, val);
         self.scheme = Scheme::V7;
@@ -358,9 +361,28 @@ mod tests {
                 ],
                 encrypted: vec![
                     "8787C575 1AC4C1B4".into(),
-                    "E8C99F89 14B426D6".into(),
-                    "CA64CBFA CD67C364".into(),
-                    "4FE0642D 3EBDE7D4".into(),
+                    "02210430 184C16E8".into(),
+                    "32E2A916 7E6017BA".into(),
+                    "CBB720FD D61505E0".into(),
+                ],
+            },
+            Test {
+                cb: Codebreaker::new(),
+                decrypted: vec![
+                    "BEEFC0DE 00000000".into(),
+                    "BEEFC0DF B16B00B5".into(),
+                    "01234567 89ABCDEF".into(),
+                    "9029BEAC 0C0A9225".into(),
+                    "201F6024 00000000".into(),
+                    "2096F5B8 000000BE".into(),
+                ],
+                encrypted: vec![
+                    "B4336FA9 4DFEFB79".into(),
+                    "FE8B8601 C7C6F6CE".into(),
+                    "2195D855 63FA11A7".into(),
+                    "0CA31760 A6F7E88A".into(),
+                    "679DC392 FA43E30B".into(),
+                    "1CD9CCC3 6AF74E36".into(),
                 ],
             },
             Test {
@@ -462,6 +484,25 @@ mod tests {
                 ],
                 output: vec![
                     "BEEFC0DE 00000000".into(),
+                    "9029BEAC 0C0A9225".into(),
+                    "201F6024 00000000".into(),
+                    "2096F5B8 000000BE".into(),
+                ],
+            },
+            AutoTest {
+                // v7 encrypted, re-keyed with v7-encrypted BEEFC0DF
+                input: vec![
+                    "B4336FA9 4DFEFB79".into(),
+                    "FE8B8601 C7C6F6CE".into(),
+                    "2195D855 63FA11A7".into(),
+                    "0CA31760 A6F7E88A".into(),
+                    "679DC392 FA43E30B".into(),
+                    "1CD9CCC3 6AF74E36".into(),
+                ],
+                output: vec![
+                    "BEEFC0DE 00000000".into(),
+                    "BEEFC0DF B16B00B5".into(),
+                    "01234567 89ABCDEF".into(),
                     "9029BEAC 0C0A9225".into(),
                     "201F6024 00000000".into(),
                     "2096F5B8 000000BE".into(),
