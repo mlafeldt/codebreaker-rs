@@ -251,6 +251,9 @@ impl Codebreaker {
 
     fn auto_decrypt_v1_or_raw(&mut self, addr: &mut u32, val: &mut u32) {
         if self.code_lines == 0 {
+            // Like CodeBreaker, count lines before decryption. CB v1 encryption
+            // can flip bit 22 of cmd 3, so this may differ from the plaintext.
+            self.code_lines = num_code_lines(*addr) - 1;
             if (*addr >> 24) & 0x0e != 0 {
                 if is_beefcode(*addr) {
                     // ignore raw beefcode
@@ -261,7 +264,6 @@ impl Codebreaker {
             } else {
                 self.scheme = Scheme::Raw;
             }
-            self.code_lines = num_code_lines(*addr) - 1;
         } else {
             self.code_lines -= 1;
             if self.scheme == Scheme::Raw {
@@ -524,9 +526,10 @@ mod tests {
                 ],
             },
             AutoTest {
-                // v1-encrypted cmd 3 with bit22 flip, followed by raw code
+                // v1-encrypted cmd 3 with bit 22 set only in the encrypted
+                // address, so the next line belongs to it and gets decrypted
                 input: vec!["3A550D56 9267D8DE".into(), "0029BEAC 0C0A9225".into()],
-                output: vec!["30000035 12345678".into(), "0029BEAC 0C0A9225".into()],
+                output: vec!["30000035 12345678".into(), "0AADA1F9 0C0A9225".into()],
             },
             AutoTest {
                 // raw, v1, and v7 encrypted
