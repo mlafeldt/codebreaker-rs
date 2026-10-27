@@ -16,6 +16,10 @@ Ground rules:
   pitfalls, and open findings. Reuse it instead of redoing it, and don't
   re-report issues that git log shows were already fixed.
 - Don't change src/ or commit. Report back first.
+- research/ lives only on the `research` branch, which gets rebased onto main.
+  Fixes to src/ go on main as separate commits, with their own tests and
+  without references to research/. REVERSING.md cites them by their main
+  hash.
 
 Method:
 1. Identify the binary: version strings, hashes, packer, signs of

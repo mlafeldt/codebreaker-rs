@@ -16,13 +16,24 @@ with `src/`. Results:
 | Raw beefcode during auto-detection | firmware passes the next two lines through raw, `src/` re-detected the next line. Fixed in `d9bab13`. |
 | `FFFFFFFF` encryption options | implemented in firmware, not in `src/` (`XXX` in `auto_decrypt_v7`). Spec and vectors in §9.5. **Open.** |
 | RSA step of V7 decrypt | firmware's bignum reduction is buggy near the modulus, `src/` computes exact `x^11 mod n` (§9.4). **Open.** |
-| Encrypting a beefcode as `BEEFC0DF`'s extra seed line | `Cb7::encrypt_code_mut` isn't the inverse of the firmware's decrypt (§9.3). **Open.** |
+| Encrypting a beefcode as `BEEFC0DF`'s extra seed line | `Cb7::encrypt_code_mut` wasn't the inverse of the firmware's decrypt (§9.3). Fixed in `23739ac`. |
 
 §9 adds a second pass that emulates the firmware in Ghidra and diffs it
 against `src/` on about 10,600 lines.
 
 Binaries and raw tool output are in `elf/` (gitignored, copyrighted). Scripts
 are in `tools/` and `compare/`.
+
+**Branches.** `research/` lives only on the `research` branch, which is
+rebased onto `main` from time to time. `main` never sees it:
+
+* Fixes to `src/` that come out of this research go on `main` as normal
+  commits, with their own tests, firmware-verified vectors, and commit
+  messages that cite CodeBreaker v9.2 but not `research/`.
+* This document cites those fixes by their `main` hash. These hashes survive
+  rebases, unlike the hashes of commits on `research`, so don't cite those.
+* After a rebase, `compare/` (`head = ../..`) builds the crate from `main`
+  plus this branch, so rerun the checks there to confirm a fix.
 
 
 ## 1. The ELF
@@ -430,7 +441,8 @@ python3 -I tools/coverage.py elf/calltree.txt /tmp/t.cov
 ```
 
 Inputs, outputs and coverage of every run are in `elf/emu/`. The proposed
-`src/cb7.rs` changes are in `elf/emu/proposed-fixes.patch`.
+`src/cb7.rs` change for §9.4 is in `elf/emu/proposed-fixes.patch`, against
+`23739ac`.
 
 | Run | Lists | Lines | Firmware vs `src/` |
 |---|---|---|---|
@@ -442,7 +454,7 @@ Inputs, outputs and coverage of every run are in `elf/emu/`. The proposed
 | `targeted`: RSA inputs 0, 1, 2, 2³²−1, 2³², n−2, n−1, n, n+1, 2⁶⁴−1 | 10 | 30 | n−2, n−1 differ (§9.4) |
 | `targeted`: 129 primitive calls (`inv`, `mul` on 31 edge/random values, `rsa` on 36) | | | `inv`, `mul` exact; 2 `rsa` differ (§9.4) |
 | `plain`: plain text encrypted by `src/`, decrypted by the firmware | 120 | 2,270 | 12 don't round-trip (§9.3) |
-| same with the §9.3 fix | 120 | 2,270 | all round-trip |
+| same with the §9.3 fix (now `23739ac`) | 120 | 2,270 | all round-trip |
 | `rsa`: 41 calls (n−2^31..n, values whose square lands there, just below) | | | 30 differ from exact math (§9.4) |
 
 `fwmodel.py` matches the emulation on every line and every global (mode,
@@ -460,17 +472,17 @@ remaining differences are the options.
 | `cb7::is_beefcode` | masked compares at `0x104350`, `0x1041f0`, `0x10448c` | identical |
 | `Cb7::beefcode` | `0x1035b0` | identical given the same init decision (§9.6) |
 | `Cb7::decrypt_code_mut` | `0x103f60` | identical except the RSA step (§9.4) and the option paths (key copy, key from line, §9.5) |
-| `Cb7::encrypt_code_mut` | (inverse of `0x103f60`) | **not the inverse** when `BEEFC0DF`'s extra line is a beefcode (§9.3). In ~2⁻³¹ of codes no inverse exists (§9.4). |
+| `Cb7::encrypt_code_mut` | (inverse of `0x103f60`) | was **not the inverse** when `BEEFC0DF`'s extra line is a beefcode (§9.3, fixed in `23739ac`). In ~2⁻³¹ of codes no inverse exists (§9.4). |
 | `mul_decrypt`, `mod_inverse` | `0x103580`, `0x1034e0` | identical on 0, 1, 2, 3, 5, `7fffffff`, `80000000`, `80000001`, `fffffffd`–`ffffffff` and 20 random values (the firmware uses extended Euclid, `src/` Newton) |
 | `rsa_crypt`/`mod_pow` (decrypt) | `0x134020` → `0x133dd0` | **differs** (§9.4) |
 | `Rc4` | `0x132c98`/`0x132d30` | identical (context is re-initialized on every use, no carry-over) |
 | `Codebreaker::auto_decrypt_code_mut` | `0x1042b0` | identical except options (§9.5) and RSA (§9.4) |
 | `Codebreaker::decrypt_code_mut` | none | equals the firmware on lists without raw codes or options (all of `plain`). It differs on 100 of 120 `random` lists, as expected for a non-detecting API. |
-| `Codebreaker::encrypt_code_mut` | none | inverse except §9.3 and §9.4 |
+| `Codebreaker::encrypt_code_mut` | none | inverse except §9.4 (and §9.3 before `23739ac`) |
 | `Codebreaker::new` | reset `0x104548` | identical |
 | `Codebreaker::new_v7`, `Cb7::default` | state after `B4336FA9 4DFEFB79` | same key and seeds. `code_lines` is 0 instead of 1, which only matters with options (§9.6). |
 
-### 9.3 Difference: encrypting a beefcode as `BEEFC0DF`'s extra seed line
+### 9.3 Difference: encrypting a beefcode as `BEEFC0DF`'s extra seed line (fixed in `23739ac`)
 
 The firmware's `0x103f60` checks `beefcodf` first. If it's set, the line is
 the extra seed: it RC4s the seeds and returns, without the inner rekey. Then
@@ -495,10 +507,13 @@ expected cipher text is `FE8B8601 C7C6F6CE`, `E8FF75C2 70A8D7EF`,
 `E632FC5D 087A0038`, `3D945215 5E6BE61F`, `8BAECCD7 54ACADA4`. `src/` gets the
 first two right, then gives `F46A5E09 83F24AEA`.
 
-Fix: in `Cb7::encrypt_code_mut`, handle `beefcodf` first (RC4 the seeds, clear
-it, return), then `is_beefcode`, which is the order `decrypt_code_mut` uses.
-Existing tests pass with it. All 120 `plain` lists round-trip through the
-emulated firmware, and so do both lists above.
+Fix (`23739ac` on `main`): `Cb7::encrypt_code_mut` handles `beefcodf` first
+(RC4 the seeds, clear it, return), then `is_beefcode`, which is the order
+`decrypt_code_mut` uses. The first list above became tests in `src/lib.rs`
+and `src/cb7.rs`; they fail without the change. With it, all 120 `plain`
+lists round-trip through the emulated firmware, and so do both lists above.
+`emucmp encrypt` at `23739ac` gives the same cipher text as the emulated
+patch.
 
 ### 9.4 Difference: the firmware's RSA is wrong near the modulus
 
@@ -548,11 +563,12 @@ Primitive level: `!rsa fffffffffffffff4` gives `04f363dfecae2b57` (exact:
 `fffffffffffffff4`), and `!rsa fffffffffffffff3` gives `24ded67f71ac6020`
 (exact: `fffffffffffff7f5`).
 
-Fix: compute the decryption power with the firmware's arithmetic. The patch
-adds `cb_mod_pow`/`cb_mul_mod`/`cb_mod`, about 50 lines: square-and-multiply,
-and a 5-word reduction that truncates q, subtracts `q·n` from 3 words, adds n
-back once or twice, then does the window and final `> n` corrections. Encryption keeps the exact
-`mod_pow`. It matches `cb_rsa` on 172,140 values (random, the whole bad range,
+Fix: compute the decryption power with the firmware's arithmetic.
+`elf/emu/proposed-fixes.patch` adds `cb_mod_pow`/`cb_mul_mod`/`cb_mod`, about
+50 lines: square-and-multiply, and a 5-word reduction that truncates q,
+subtracts `q·n` from 3 words, adds n back once or twice, then does the window
+and final `> n` corrections. Encryption keeps the exact `mod_pow`. It
+matches `cb_rsa` on 172,140 values (random, the whole bad range,
 n−1..n−2000, the sporadic ones) and fixes both `targeted` RSA lists.
 Encryption can't be fixed in general: for plain text whose exact cipher value
 falls in the bad set, the firmware decrypts something else, and there may be no
