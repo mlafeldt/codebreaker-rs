@@ -1,12 +1,14 @@
 # Model of CodeBreaker v9.2's per-line auto decrypt (0x1042b0 and callees),
 # written from the listings (research/REVERSING.md) and checked against the
-# Ghidra emulation (tools/ghidra/Emu.java). It includes the FFFFFFFF
-# encryption options that src/ lacks, and can encrypt, which gen.py uses to
-# build inputs that reach particular paths.
+# Ghidra emulation (tools/ghidra/Emu.java). It can also encrypt, which gen.py
+# uses to build inputs that reach particular paths.
 #
 # usage: python3 -I fwmodel.py check <unpacked.elf> <emu.out>
 #   replays every list in an Emu.java output file and compares each decrypted
 #   line and the crypto globals after it
+#        python3 -I fwmodel.py run <unpacked.elf> <lists.txt> <out.txt>
+#   decrypts lists like Emu.java does and writes the same format (primitive
+#   calls aren't supported), for emudiff.py without Ghidra
 import struct, sys, zlib
 
 M32 = 0xffffffff
@@ -378,7 +380,28 @@ def check(t, path):
     return bad == 0
 
 
+def run(t, lists, out):
+    with open(out, 'w') as f:
+        for l in open(lists):
+            l = l.strip()
+            if not l or l.startswith('#'):
+                continue
+            if l.startswith('==='):
+                f.write(l + '\n')
+                fw = Fw(t)
+                fw.reset()
+                continue
+            a, v = (int(x, 16) for x in l.split())
+            o = fw.decrypt_line(a, v)
+            s = fw.state()
+            f.write('%08X %08X -> %08X %08X mode=%08X lines=%08X v1=%X bf=%X opt=%X key=%s kc=%s seeds=%08X\n' % (
+                a, v, o[0], o[1], s['mode'], s['lines'], s['v1'], s['bf'], s['opt'],
+                ','.join('%08X' % x for x in s['key']), ','.join('%08X' % x for x in s['kc']), s['seeds']))
+
+
 if __name__ == '__main__':
     t = Tables(Image(sys.argv[2]))
     if sys.argv[1] == 'check':
         sys.exit(0 if check(t, sys.argv[3]) else 1)
+    elif sys.argv[1] == 'run':
+        run(t, sys.argv[3], sys.argv[4])

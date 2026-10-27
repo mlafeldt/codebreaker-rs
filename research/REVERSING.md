@@ -14,7 +14,7 @@ with `src/`. Results:
 | Beefcode in V7 mode (`auto_decrypt`, `decrypt`, `encrypt`) | firmware rekeys **twice**. 0.4.0 (`7691577`) did it once; fixed in `75471b6`. |
 | Line count of V1-encrypted codes (`auto_decrypt`) | firmware counts from the **encrypted** address, `src/` from the decrypted one since `bb95630` (0.4.0). Fixed in `fadd9d9`. |
 | Raw beefcode during auto-detection | firmware passes the next two lines through raw, `src/` re-detected the next line. Fixed in `d9bab13`. |
-| `FFFFFFFF` encryption options | implemented in firmware, not in `src/` (`XXX` in `auto_decrypt_v7`). Spec and vectors in §9.5. **Open.** |
+| `FFFFFFFF` encryption options | firmware switches V7 off and on, counts lines and can take the key from the next line; `src/` ignored them. Bit 16 and the line count since `16299e0`. Bit 17 (key from the next line) is left out on purpose; a full implementation is on `ffffffff-encryption-options` (`fd0e355`). Spec, vectors and decision in §9.5. |
 | RSA step of V7 decrypt | firmware's bignum reduction is buggy near the modulus, `src/` computes exact `x^11 mod n` (§9.4). Kept on purpose, documented at `rsa_crypt` in `105d376`. |
 | Encrypting a beefcode as `BEEFC0DF`'s extra seed line | `Cb7::encrypt_code_mut` wasn't the inverse of the firmware's decrypt (§9.3). Fixed in `23739ac`. |
 
@@ -34,6 +34,9 @@ rebased onto `main` from time to time. `main` never sees it:
   rebases, unlike the hashes of commits on `research`, so don't cite those.
 * After a rebase, `compare/` (`head = ../..`) builds the crate from `main`
   plus this branch, so rerun the checks there to confirm a fix.
+* Verified work that stays off `main` gets its own branch, e.g.
+  `ffffffff-encryption-options` (§9.5). Cite it by hash too, and don't rebase
+  it.
 
 
 ## 1. The ELF
@@ -224,7 +227,9 @@ number mod 2^32.
 The differences don't change any output:
 
 * The firmware's `init` comes from the caller (V7 bit of the mode word). `src/`
-  uses `Cb7::initialized`. Both are fresh per list.
+  uses `Cb7::initialized`. Both are fresh per list. Options can switch V7 off,
+  so since `16299e0`, `Codebreaker::enter_v7` starts from a fresh `Cb7` when
+  V7 is off, which keeps the decision the same.
 * On init the firmware clears `beefcodf` and the option state. `src/` sets
   `beefcodf = addr & 1` at the end.
 * The firmware ends by copying key → key copy (§6.5).
@@ -363,7 +368,7 @@ when `code_lines == 0`, then decrement) all match `src/`.
 that copy. `src/` has only `Cb7::key`. They differ only once the option path
 (§6.6) changes the key.
 
-### 6.6 `FFFFFFFF` encryption options (not in `src/`)
+### 6.6 `FFFFFFFF` encryption options (bit 16 and count in `src/` since `16299e0`, §9.5)
 
 A one-line V7 `FFFFFFFF vvvvvvvv` sets
 `mode = (mode >> 16) << 24 | v & 0xffffff` and
@@ -392,7 +397,8 @@ Only for context. The firmware is the reference.
   firmware's inner assignment (§6.1). Omniconvert (`20f7674`) and codebreaker
   ≤0.3.2 inherit both.
 * cb2util `57f12cb` dropped the separate `oldkey` as "always the same as key".
-  That's true until the option path runs (§6.5).
+  That's true until the option path runs (§6.5). `fd0e355` on
+  `ffffffff-encryption-options` brings it back as `Cb7::mul_key`.
 * `compare/` auto-decrypts cb2util's test fixtures with 0.3.2, 0.4.0 and the
   local crate (`cargo run -- ../../cb2util/test/*/*.{enc,txt}`). At cb2util
   `593ea25`: 53 games, 6,234 lines. Head matches 0.3.2 everywhere, and 0.4.0
@@ -423,8 +429,8 @@ decrypt in Ghidra's emulator and diffed it against `src/` at `d9bab13`.
 |---|---|
 | `tools/ghidra/CallTree.java` | call tree of `0x1042b0`/`0x104548` with blocks and listings, flags EE-only instructions (`elf/calltree.txt`) |
 | `tools/ghidra/Emu.java` | `EmulatorHelper` harness: per list, a fresh image, reset (`0x104548`), then `0x1042b0` per line; prints each output with the globals, and the first list/line to reach each instruction. `!inv`/`!mul`/`!rsa` call the primitives directly. |
-| `tools/fwmodel.py` | Python model of `0x1042b0` and callees, including options and the bignum quirk. It can encrypt. |
-| `tools/gen.py` | input lists: `random`, `targeted`, `plain` (for the encryption check), `report` (§9.3–9.5 vectors) |
+| `tools/fwmodel.py` | Python model of `0x1042b0` and callees, including options and the bignum quirk. It can encrypt. `run` writes `Emu.java`'s output format, so `emudiff.py` also works without Ghidra. |
+| `tools/gen.py` | input lists: `random`, `targeted`, `plain` (for the encryption check), `report` (§9.3–9.5 vectors), `optfuzz` (random lists, a quarter option lines) |
 | `compare/examples/emucmp.rs` | runs the crate (`auto`, `decrypt`, `encrypt`) on the same lists, reading the state from `Debug` |
 | `tools/emudiff.py` | firmware vs crate per list (first differing output, else the first state difference), model vs emulation on every line and global, primitives vs exact math, optional round trip against the plain text |
 | `tools/coverage.py` | block coverage from the `Emu.java` coverage files |
@@ -450,17 +456,27 @@ Inputs, outputs and coverage of every run are in `elf/emu/`. The
 | `targeted`: every command nibble × bit 22 × raw/V1/V7 × raw/V1 follow-up | 192 | 832 | identical |
 | `targeted`: V1 cmd 3 whose bit 22 flips under encryption | 8 | 32 | identical |
 | `targeted`: beefcodes in every mode/encoding/position, `BEEFC0DF` extra-line variants, repeated beefcodes | 76 | 474 | identical |
-| `targeted`: `FFFFFFFF` options (every bit 16/17 combination, counts 0–3 and `ffff`, mixed) | 106 | 1,853 | 52 lists differ, all options (§9.5) |
+| `targeted`: `FFFFFFFF` options (every bit 16/17 combination, counts 0–3 and `ffff`, mixed) | 106 | 1,853 | 52 lists differ, all options (§9.5). With `16299e0`, 38, all after a bit 17 line. Identical with `fd0e355`. |
 | `targeted`: RSA inputs 0, 1, 2, 2³²−1, 2³², n−2, n−1, n, n+1, 2⁶⁴−1 | 10 | 30 | n−2, n−1 differ (§9.4) |
 | `targeted`: 129 primitive calls (`inv`, `mul` on 31 edge/random values, `rsa` on 36) | | | `inv`, `mul` exact; 2 `rsa` differ (§9.4) |
 | `plain`: plain text encrypted by `src/`, decrypted by the firmware | 120 | 2,270 | 12 don't round-trip (§9.3) |
 | same with the §9.3 fix (now `23739ac`) | 120 | 2,270 | all round-trip |
 | `rsa`: 41 calls (n−2^31..n, values whose square lands there, just below) | | | 30 differ from exact math (§9.4) |
+| `report` (§9.3–9.5 vectors, with `opt-key-beef` and `opt-key-2-lines`), against `1670607` | 12 | 76 | the 7 option lists and `rsa-wrong` differ. With `16299e0`, the 4 bit 17 lists and `rsa-wrong`. With `fd0e355`, only `rsa-wrong`. |
+| `cb2crypt`: CB2crypt's readme example (§9.5) | 1 | 6 | the raw code after `FFFFFFFF 00000000` differs before `16299e0`, identical since |
+| `optfuzz` (seed 1): a quarter option lines, in every encoding, among codes of every command, beefcodes and random words, against `1670607` | 100 | 3,378 | 84 lists differ, all options. With `16299e0`, 68, all after a bit 17 line. Identical with `fd0e355`. |
+| `optfuzz16` (seed 1): the same without bit 17, against `16299e0` | 100 | 3,378 | identical, outputs and state |
+| `optfuzz` seeds 1–20 with `fd0e355`, and `optfuzz16` seeds 1–20 with `16299e0`, `fwmodel.py run` instead of the emulator (seed 1 gives the same output as emulated) | 2,000 each | 65,546 each | identical, outputs and state |
 
 `fwmodel.py` matches the emulation on every line and every global (mode,
 `code_lines`, V1 flag, `beefcodf`, `opt`, key, key copy, CRC of the seeds) in
-all of these. With the §9.3 fix and the §9.4 patch applied, the only
-remaining differences are the options.
+all of these. At `16299e0`, the only remaining differences are RSA (§9.4)
+and lists after an option line with bit 17: 38 of `targeted`, as above in
+`report` and `optfuzz`. With the §9.4 patch and `fd0e355`, there are none.
+The `optfuzz` runs reach every option path: option lines (310 emulated), V7
+switched off and back on by the counter, forced lines that become the key
+(141), a beefcode (14) or another option line (42), and forced 2-line codes
+with V7 off (9). Coverage (§9.8) doesn't change.
 
 ### 9.2 Verdict per Rust function
 
@@ -471,16 +487,16 @@ remaining differences are the options.
 | `num_code_lines` | `0x1033c0` | identical |
 | `cb7::is_beefcode` | masked compares at `0x104350`, `0x1041f0`, `0x10448c` | identical |
 | `Cb7::beefcode` | `0x1035b0` | identical given the same init decision (§9.6) |
-| `Cb7::decrypt_code_mut` | `0x103f60` | identical except the RSA step (§9.4) and the option paths (key copy, key from line, §9.5) |
+| `Cb7::decrypt_code_mut` | `0x103f60` | identical except the RSA step (§9.4) and the option paths (key copy, key from line, §9.5), both left out on purpose |
 | `Cb7::encrypt_code_mut` | (inverse of `0x103f60`) | was **not the inverse** when `BEEFC0DF`'s extra line is a beefcode (§9.3, fixed in `23739ac`). In ~2⁻³¹ of codes no inverse exists (§9.4). |
 | `mul_decrypt`, `mod_inverse` | `0x103580`, `0x1034e0` | identical on 0, 1, 2, 3, 5, `7fffffff`, `80000000`, `80000001`, `fffffffd`–`ffffffff` and 20 random values (the firmware uses extended Euclid, `src/` Newton) |
 | `rsa_crypt`/`mod_pow` (decrypt) | `0x134020` → `0x133dd0` | **differs**, on purpose (§9.4) |
 | `Rc4` | `0x132c98`/`0x132d30` | identical (context is re-initialized on every use, no carry-over) |
-| `Codebreaker::auto_decrypt_code_mut` | `0x1042b0` | identical except options (§9.5) and RSA (§9.4) |
+| `Codebreaker::auto_decrypt_code_mut` | `0x1042b0` | identical except option bit 17 (§9.5) and RSA (§9.4), both left out on purpose. Bit 16 and the line count since `16299e0`. |
 | `Codebreaker::decrypt_code_mut` | none | equals the firmware on lists without raw codes or options (all of `plain`). It differs on 100 of 120 `random` lists, as expected for a non-detecting API. |
 | `Codebreaker::encrypt_code_mut` | none | inverse except §9.4 (and §9.3 before `23739ac`) |
 | `Codebreaker::new` | reset `0x104548` | identical |
-| `Codebreaker::new_v7`, `Cb7::default` | state after `B4336FA9 4DFEFB79` | same key and seeds. `code_lines` is 0 instead of 1, which only matters with options (§9.6). |
+| `Codebreaker::new_v7`, `Cb7::default` | state after `B4336FA9 4DFEFB79` | same key and seeds. `code_lines` was 0 instead of 1 until `16299e0`, which only matters with options (§9.6). |
 
 ### 9.3 Difference: encrypting a beefcode as `BEEFC0DF`'s extra seed line (fixed in `23739ac`)
 
@@ -592,7 +608,7 @@ Encryption keeps the exact `mod_pow`. It matches `cb_rsa` on 172,140 values
 (random, the whole bad range, n−1..n−2000, the sporadic ones) and fixes both
 `targeted` RSA lists.
 
-### 9.5 Missing: `FFFFFFFF` encryption options
+### 9.5 `FFFFFFFF` encryption options (bit 16 and count since `16299e0`, bit 17 left out)
 
 Only `0x1042b0` writes `opt` (`0x36e300`) to non-zero (`luirefs.py`: every
 access to `0x289ac8..0x28a0ac`, `0x369000` and `0x36dcc8..0x36e310` is in
@@ -651,10 +667,20 @@ Edge cases from the listing, all reproduced by the model:
   `beefcodf` becomes 1 even for `BEEFC0DE`, and `code_lines` and V7 aren't set.
 * An `FFFFFFFF` forced line is itself an option line.
 * `rekey(0, v)` after a key change keeps the new `key[4]`.
+* If the forced line starts a 2-line code while V7 is off, its 2nd line goes
+  through the raw/V1 path as a continuation, with the V1 flag from before.
+  That flag is always 1 there: V7 mode and forced lines are only reachable
+  through V1-decrypted lines, and the flag only changes at code starts
+  outside V7.
+* The extra seed line clearing `opt` is unreachable. `opt` is only set on the
+  line after an option line, and `beefcodf` is always 0 there: an option line
+  isn't a beefcode, and if `beefcodf` was set, the option line itself was the
+  extra seed line.
 
-Vectors, emulated: cipher text → firmware output, with `src/`'s output where
-it differs. Each list starts with `B4336FA9 4DFEFB79` → `BEEFC0DE 00000000`
-and `D08F3A49 00078A53` → `9029BEAC 0C0A9225`, since the line after a beefcode
+Vectors, emulated: cipher text → firmware output, with the output of `src/`
+before `16299e0` where it differs. Since then, only the bit 17 lists differ.
+Each list starts with `B4336FA9 4DFEFB79` → `BEEFC0DE 00000000` and
+`D08F3A49 00078A53` → `9029BEAC 0C0A9225`, since the line after a beefcode
 can't be an option.
 
 V7 off for 2 counted lines; the raw line in between doesn't count:
@@ -689,7 +715,7 @@ V7 off for good, then a beefcode reinitializes. After `B4336FA9 4DFEFB79`:
 `01234567 89ABCDEF`, `70B21EC6 D6A6D277` → `FFFFFFFF 00000000`,
 `2AFF014C 2411FFFF` → `2043AFCC 2411FFFF` (V1), `B4336FA9 4DFEFB79` →
 `BEEFC0DE 00000000` (default key again), `973E0B2A A7D4AF10` →
-`2096F5B8 000000BE`. From the V1 line on, `src/` outputs `FEE3FFBF 9ECF1A1D`,
+`2096F5B8 000000BE`. From the V1 line on, `src/` output `FEE3FFBF 9ECF1A1D`,
 `B1C7CC7B 02E7432D`, `D7D25E1C 97530D59`.
 
 Not option lines, so firmware = `src/`:
@@ -701,19 +727,59 @@ Line after a beefcode: in `B4336FA9 4DFEFB79`, `460BA690 21E337B9`
 (`4043AFCC 00020001`), `1C65C412 26F27361` (`FFFFFFFF 00000001`), the cmd 4
 line is consumed as the beefcode's continuation. So its 2nd line is a code
 start, here an option line: `2AFF014C 2411FFFF` → `2043AFCC 2411FFFF` (V1),
-while `src/` gives `6234497B B50CFAA5`.
+while `src/` gave `6234497B B50CFAA5`.
 
-Implementing it in `src/` needs:
-* the mode word (or V7 flag, saved byte and counter) and `opt` in
-  `Codebreaker`
-* a multiplication key in `Cb7`, set at the end of `beefcode`
-* a key-from-line hook
-* `Cb7::beefcode`'s init decision taken from "not in V7" instead of
-  `initialized`
-* `new_v7` starting with `code_lines = 1` (§9.6)
+Decision: `16299e0` supports bit 16 and the line count, and leaves out
+bit 17. `1670607` had first left out all options, since cb2util's fixtures
+(53 games, 6,234 lines) have no option line. But CB2crypt's readme (2006,
+"Use of unofficial codes along with official codes") tells users to append
+`FFFFFFFF 00000000` to official V7 lists so raw codes can follow, with this
+example (emulated):
 
-Encryption would also have to track line counts and encode V7-off lines as
-V1. That's a design decision, and the firmware doesn't constrain it.
+| In | Firmware | before `16299e0` |
+|---|---|---|
+| `B4336FA9 4DFEFB79` | `BEEFC0DE 00000000` | same |
+| `410C34B6 663C5B57` | `000FFFFE 0000015A` | same |
+| `1C4D0A53 7FE27DE4` | `000FFFFF 0000015A` | same |
+| `C81AC878 32FCD351` | `903DD9F8 00832021` | same |
+| `0CF49BDF A4E29C32` | `FFFFFFFF 00000000` | same |
+| `204D98B0 3F800000` | `204D98B0 3F800000` (raw) | `F7733C5A 6107ACC8` |
+
+So such lists may exist. The same readme lists options 2 and 3 as "?", and
+no list is known to use bit 17. Supporting it would add a few dozen more
+lines of state machine: a key copy and an option flag shared with `Cb7`, the
+saved mode, and quirks like a key line that turns out to be a beefcode.
+Without bit 17, an option line only occurs in V7 mode, so the saved mode is
+always V7 and only the counter (`Codebreaker::v7_lines`) is needed. Tests in
+`src/lib.rs`: `opt-v7-off-2`, `opt-v7-off-beef`, `ffff-after-beef`,
+`ffff-2nd-line`, `beef-phase` and this example, all emulated, and `new_v7`
+against `new` plus `B4336FA9 4DFEFB79`.
+
+Encryption still ignores options. `encrypt_code` doesn't track lines, so it
+encrypts `FFFFFFFF` like any other code and stays in V7, and since
+`16299e0`, such a list no longer decrypts back: `BEEFC0DE 00000000`,
+`9029BEAC 0C0A9225`, `FFFFFFFF 00000000`, `2043AFCC 2411FFFF` encrypts to
+`B4336FA9 4DFEFB79`, `D08F3A49 00078A53`, `0CF49BDF A4E29C32`,
+`397951B0 41569FE0`, and the last line then decrypts to
+`33CCA260 E2314F40`, on the firmware too. Tracking lines and encoding
+V7-off lines as V1 is a design decision that the firmware doesn't
+constrain.
+
+Bit 17 too: `ffffffff-encryption-options` (`fd0e355`, on top of `105d376`)
+implements all options in auto-decrypt. It matches every run in §9.1 except
+RSA:
+* `Codebreaker::v7` and `v1` replace `scheme`, since the firmware keeps mode
+  bit 16 and the V1 flag apart. `v7_lines` and `v7_restore` are the counter
+  and the saved bit 16. Saved bits 17–23 are never read, so they're not kept.
+* `Cb7::key_from_code` is `opt != 0`, `Cb7::mul_key` the key copy, set at
+  the end of `beefcode`. `Cb7::decrypt_code_mut` takes the key from the line,
+  or sets `beefcodf` after a forced beefcode.
+* `Codebreaker::enter_v7` starts from a fresh `Cb7` when V7 is off. That's
+  `rekey(init = 1)`, which also clears `opt` and `beefcodf`.
+* `new_v7` starts with `code_lines = 1` (§9.6).
+* Tests: the lists above, `opt-key-beef` (forced beefcode) and
+  `opt-key-2-lines` (forced 2-line code with V7 off) from `gen.py report`,
+  all emulated, and `new_v7` against `new` plus `B4336FA9 4DFEFB79`.
 
 ### 9.6 State map
 
@@ -726,16 +792,16 @@ V1. That's a design decision, and the firmware doesn't constrain it.
 | `Cb7::key` | `0x36e2e8` | `rekey`; option key line |
 | none | key copy `0x36e1c8` | end of `rekey` only |
 | `Cb7::beefcodf` | `0x36e2fc` | `rekey(1)` clears; inner beefcode sets 1; outer sets `a & 1`; extra seed line clears |
-| `Cb7::initialized` | none: `rekey`'s `init` is "mode bit 16 clear" | same until options clear bit 16 |
+| `Cb7::initialized` | none: `rekey`'s `init` is "mode bit 16 clear" | same, since `enter_v7` starts from a fresh `Cb7` when V7 is off (`16299e0`) |
 | none | `opt` `0x36e300` | option line sets; forced line, extra seed line and `rekey(1)` clear |
-| none | mode bits 0–15, 24–31 | option line; counter |
+| `Codebreaker::v7_lines` (since `16299e0`) | mode bits 0–15 (24–31: saved mode, always V7 without bit 17) | option line; counter |
 | local `Rc4` | context `0x36e1e0` | re-keyed on every use |
 | local extra seed | `0x36e308` | written and used once |
 
 Only the mode word and `code_lines` are reset per list. Seeds, key,
 `beefcodf` and `opt` survive into the next list, but `0x102e38` runs once per
 game boot, and every list's first beefcode in non-V7 mode reinitializes them.
-`new_v7()` has `code_lines = 0`, while the firmware has 1 after
+`new_v7()` had `code_lines = 0` until `16299e0`, while the firmware has 1 after
 `B4336FA9 4DFEFB79`. Without options that's invisible, because `src/`'s V7
 path only uses `code_lines` for `FFFFFFFF`.
 
@@ -754,10 +820,10 @@ path only uses `code_lines` for `FFFFFFFF`.
 | double rekey in V7 | `0x104204` + `0x1044bc` | implemented (`75471b6`) |
 | `BEEFC0DF` extra seed line | `0x104144`–`0x1041e0` | implemented (encryption: §9.3) |
 | `code_lines = 1` after a beefcode | `0x104514` | implemented |
-| option line, mode switch, counter, saved mode | `0x104400`, `0x104458` | missing (§9.5) |
-| forced V7 line, key from line | `0x1042fc`, `0x104224`, `0x104440` | missing (§9.5) |
-| key copy for the multiplications | `0x103f44`, `0x104108` | missing (only differs with options) |
-| beefcode after V7 was switched off → default key | `0x1044cc` | missing (only with options) |
+| option line, mode switch, counter, saved mode | `0x104400`, `0x104458` | implemented (`16299e0`); the saved mode is always V7 without bit 17 |
+| forced V7 line, key from line | `0x1042fc`, `0x104224`, `0x104440` | left out (bit 17, §9.5) |
+| key copy for the multiplications | `0x103f44`, `0x104108` | left out (only differs with bit 17) |
+| beefcode after V7 was switched off → default key | `0x1044cc` | implemented (`16299e0`) |
 | `val == NULL` beefcode path | `0x1044e4` | dead: the only caller passes a buffer |
 | list conversion to engine format (drops beefcodes, options) | `0x102e38` | out of scope (§6.7) |
 | CBC ("Day1") and loader file crypto | §9.9 | out of scope |
@@ -776,7 +842,8 @@ Union of all runs (`elf/emu/coverage.txt`, blocks from `CallTree.java`):
 | `0x133dd0`, `0x133320`, `0x133670`, `0x133828`, `0x133870`, `0x1333d0`, `0x1338c0`, `0x14cbd8`, `0x14d1a8` | partial | Paths for other operand sizes, zero or multi-word exponents, non-power-of-2 lengths, and `__umoddi3`/`__udivdi3` with large divisors. All dead for the fixed 2-word call from `0x1040a0`, live for the RSA-2048 signature check (§9.9). |
 | memset `0x146358`, memcpy `0x1461b0` | entry | replaced by Java (EE `lq`/`sq`/MMI) |
 
-Nothing reachable is missing from `src/` beyond §9.3–9.5.
+Nothing reachable is missing from `src/` except option bit 17 (§9.5), and
+nothing else differs except RSA (§9.4). Both are left out on purpose.
 
 ### 9.9 Other users of RC4 and the bignum code
 

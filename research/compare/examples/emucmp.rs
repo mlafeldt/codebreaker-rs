@@ -56,9 +56,19 @@ fn state(cb: &Codebreaker) -> String {
         .split(", ")
         .map(|k| format!("{:08X}", k.parse::<u32>().unwrap()))
         .collect();
+    // main has a Scheme, ffffffff-encryption-options separate v7/v1 flags
+    let scheme = if d.contains("scheme: ") {
+        field("scheme")
+    } else if field("v7") == "true" {
+        "V7".into()
+    } else if field("v1") == "true" {
+        "V1".into()
+    } else {
+        "Raw".into()
+    };
     format!(
         "scheme={} lines={:08X} bf={:X} init={:X} key={}",
-        field("scheme"),
+        scheme,
         field("code_lines").parse::<u32>().unwrap(),
         u8::from(field("beefcodf") == "true"),
         u8::from(field("initialized") == "true"),

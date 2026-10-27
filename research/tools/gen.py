@@ -9,6 +9,8 @@
 #          plain     plain text programs for the encryption check (encrypted
 #                    by emucmp.rs, not here)
 #          report    the short lists used as test vectors in REVERSING.md
+#          optfuzz   random lists full of FFFFFFFF option lines
+#          optfuzz16 the same without bit 17
 import os, random, sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from fwmodel import BEEF, M32, N, Fw, Image, Tables, v1_encrypt
@@ -259,6 +261,35 @@ def plain_lists(t, n):
     return '\n'.join(out) + '\n'
 
 
+def optfuzz_lists(t, n, b17=True):
+    """Random lists with many option lines (a quarter of all lines), in every
+    encoding, between codes of every command, beefcodes and random words.
+    Without b17, no option line sets bit 17."""
+    def opt_val():
+        return R.getrandbits(6) << 18 | R.getrandbits(2 if b17 else 1) << 16 | \
+            R.choice([0, 0, 1, 1, 2, 3, 4, 0xffff, R.getrandbits(16)])
+
+    out = []
+    for k in range(n):
+        p = Prog(t, f'optfuzz{k}')
+        enter(p, R.choice(['raw', 'v1', 'v7', 'v7', 'v7']))
+        for _ in range(R.randint(5, 60)):
+            r = R.random()
+            enc = R.choice(['raw', 'v1', 'v1'])
+            if r < 0.25:
+                p.add(M32, opt_val(), enc)
+            elif r < 0.33:
+                p.add(BEEF | R.getrandbits(1), R.choice([0, rw()]), enc)
+            elif r < 0.38:
+                p.add(rw(), rw(), 'cipher')
+            elif r < 0.42:
+                p.add(rw() & 0xf1ffffff, rw(), 'cipher')
+            else:
+                p.add(code(R.choice(range(16)), R.choice([None, 0, 1])), rw(), enc)
+        out.append(p)
+    return out
+
+
 def report_lists(t):
     """Short lists used as test vectors in REVERSING.md."""
     out = []
@@ -298,6 +329,14 @@ def report_lists(t):
     # code, so the code's 2nd line is read as a code start (here: an option)
     prog('beef-phase', [d, (0x4043AFCC, 0x00020001), (M32, 0x00000001), (0x2043AFCC, 0x2411FFFF, 'v1'),
                         (0x201F6024, 0)])
+    # Options: bit 17, but the next line is a beefcode. It's applied once and
+    # takes an extra seed line even though it's BEEFC0DE.
+    prog('opt-key-beef', [d, x, (M32, 0x00030000), (BEEF, 0), (0x01234567, 0x89ABCDEF), (0x2043AFCC, 0x2411FFFF),
+                          (0x201F6024, 0)])
+    # Options: bit 17 with V7 off, and the key line starts a 2-line code. Its
+    # 2nd line is V1-decrypted.
+    prog('opt-key-2-lines', [d, x, (M32, 0x00020000), (0x4043AFCC, 0x00020001), (0x00010003, 0),
+                             (0x2043AFCC, 0x2411FFFF, 'raw'), (BEEF, 0, 'v1'), (0x2096F5B8, 0xBE)])
     # RSA inputs (values after the 64 rounds) that the firmware's bignum code
     # gets wrong: N - 1, the start of the always-wrong range, and a value
     # outside it whose square lands in it
@@ -321,4 +360,8 @@ if __name__ == '__main__':
         text = plain_lists(t, 120)
     elif kind == 'report':
         text = report_lists(t)
+    elif kind == 'optfuzz':
+        text = ''.join(p.text() for p in optfuzz_lists(t, 100))
+    elif kind == 'optfuzz16':
+        text = ''.join(p.text() for p in optfuzz_lists(t, 100, b17=False))
     open(sys.argv[3], 'w').write(text)
