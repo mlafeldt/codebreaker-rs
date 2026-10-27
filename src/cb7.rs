@@ -12,8 +12,14 @@ use bytemuck::{bytes_of, bytes_of_mut, cast_slice};
 pub struct Cb7 {
     seeds: [[u8; 256]; 5],
     key: [u32; 5],
+    // The key as of the last beefcode. The multiplications use it, and it
+    // only differs from key after key_from_code.
+    mul_key: [u32; 5],
     beefcodf: bool,
     initialized: bool,
+    // Set by auto-decrypt for "FFFFFFFF 0002nnnn": the next code becomes the
+    // key, unless it's a beefcode.
+    pub(crate) key_from_code: bool,
 }
 
 /// Implements the default CB v7 encryption used by former CMGSCCC.com.
@@ -32,8 +38,10 @@ impl fmt::Debug for Cb7 {
         f.debug_struct("Cb7")
             .field("seeds[0][0..16]", &&self.seeds[0][0..16])
             .field("key", &self.key)
+            .field("mul_key", &self.mul_key)
             .field("beefcodf", &self.beefcodf)
             .field("initialized", &self.initialized)
+            .field("key_from_code", &self.key_from_code)
             .finish()
     }
 }
@@ -45,8 +53,10 @@ impl Cb7 {
         Self {
             seeds: ZERO_SEEDS,
             key: [0; 5],
+            mul_key: [0; 5],
             beefcodf: false,
             initialized: false,
+            key_from_code: false,
         }
     }
 
@@ -109,6 +119,7 @@ impl Cb7 {
             // Encrypt original key for next round
             rc4.crypt(k);
         }
+        self.mul_key = self.key;
 
         // Since we don't know the extra seed value of BEEFC0DF yet,
         // all we can do is set a flag.
@@ -147,8 +158,8 @@ impl Cb7 {
         let oldval = *val;
 
         // Step 1: Multiplication, modulo (2^32)
-        *addr = mul_encrypt(*addr, self.key[0].wrapping_sub(self.key[1]));
-        *val = mul_encrypt(*val, self.key[2].wrapping_add(self.key[3]));
+        *addr = mul_encrypt(*addr, self.mul_key[0].wrapping_sub(self.mul_key[1]));
+        *val = mul_encrypt(*val, self.mul_key[2].wrapping_add(self.mul_key[3]));
 
         // Step 2: RC4
         let mut code = [*addr, *val];
@@ -229,8 +240,8 @@ impl Cb7 {
         *val = code[1];
 
         // Step 4: Multiplication with multiplicative inverse, modulo (2^32)
-        *addr = mul_decrypt(*addr, self.key[0].wrapping_sub(self.key[1]));
-        *val = mul_decrypt(*val, self.key[2].wrapping_add(self.key[3]));
+        *addr = mul_decrypt(*addr, self.mul_key[0].wrapping_sub(self.mul_key[1]));
+        *val = mul_decrypt(*val, self.mul_key[2].wrapping_add(self.mul_key[3]));
 
         // BEEFC0DF uses two codes. If the previous code was the first of the
         // two, use the current one to decrypt the seeds.
@@ -244,6 +255,18 @@ impl Cb7 {
         // BEEFC0DE
         if is_beefcode(*addr) {
             self.beefcode(*addr, *val);
+            // Like CodeBreaker, expect an extra seed code even for BEEFC0DE
+            // if this code was supposed to become the key
+            self.beefcodf |= self.key_from_code;
+        } else if self.key_from_code {
+            let (a, v, k) = (*addr, *val, self.mul_key);
+            self.key = [
+                a ^ k[0],
+                v ^ k[1],
+                a.wrapping_sub(k[2]),
+                v.wrapping_add(k[3]),
+                a.wrapping_sub(v) ^ k[4],
+            ];
         }
     }
 }

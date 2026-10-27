@@ -53,19 +53,17 @@ mod rc4;
 
 use cb7::{Cb7, is_beefcode};
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum Scheme {
-    Raw,
-    V1,
-    V7,
-}
-
 /// A processor for CB v1 and v7 codes.
 #[derive(Debug, Clone)]
 pub struct Codebreaker {
-    // Explicit encrypt/decrypt calls use this as a Raw/V7 toggle. Auto-decrypt
-    // also uses V1 while following detected CB v1-encrypted blocks.
-    scheme: Scheme,
+    // CB v7 mode, entered with a beefcode. Explicit encrypt/decrypt calls use
+    // CB v1 until then. Auto-decrypt can also leave it again (see
+    // set_options).
+    v7: bool,
+
+    // Auto-decrypt outside of CB v7 mode: whether the current block is CB
+    // v1-encrypted or raw.
+    v1: bool,
 
     // CB v7 cipher state, activated by new_v7 or after a beefcode transition.
     cb7: Cb7,
@@ -73,6 +71,11 @@ pub struct Codebreaker {
     // Remaining continuation lines in the current auto-decrypt block. Plain
     // encrypt/decrypt ignores this field.
     code_lines: usize,
+
+    // Auto-decrypt: after this many more decrypted lines, set v7 back to
+    // v7_restore. 0 means never (see set_options).
+    v7_lines: u16,
+    v7_restore: bool,
 }
 
 /// Does the same as [`new`](#method.new).
@@ -87,9 +90,12 @@ impl Codebreaker {
     /// and v7 codes.
     pub const fn new() -> Self {
         Self {
-            scheme: Scheme::Raw,
+            v7: false,
+            v1: false,
             cb7: Cb7::new(),
             code_lines: 0,
+            v7_lines: 0,
+            v7_restore: false,
         }
     }
 
@@ -97,10 +103,15 @@ impl Codebreaker {
     ///
     /// Lets you omit `B4336FA9 4DFEFB79` as the first code in the list.
     pub fn new_v7() -> Self {
+        // Same state as after auto-decrypting B4336FA9 4DFEFB79, the CB
+        // v1-encrypted BEEFC0DE 00000000
         Self {
-            scheme: Scheme::V7,
+            v7: true,
+            v1: true,
             cb7: Cb7::default(),
-            code_lines: 0,
+            code_lines: 1,
+            v7_lines: 0,
+            v7_restore: false,
         }
     }
 
@@ -134,7 +145,7 @@ impl Codebreaker {
     pub fn encrypt_code_mut(&mut self, addr: &mut u32, val: &mut u32) {
         let (oldaddr, oldval) = (*addr, *val);
 
-        if self.scheme == Scheme::V7 {
+        if self.v7 {
             self.cb7.encrypt_code_mut(addr, val);
         } else {
             cb1::encrypt_code_mut(addr, val);
@@ -198,7 +209,7 @@ impl Codebreaker {
     /// assert_eq!(encrypted, decrypted);
     /// ```
     pub fn decrypt_code_mut(&mut self, addr: &mut u32, val: &mut u32) {
-        if self.scheme == Scheme::V7 {
+        if self.v7 {
             self.cb7.decrypt_code_mut(addr, val);
         } else {
             cb1::decrypt_code_mut(addr, val);
@@ -242,68 +253,108 @@ impl Codebreaker {
 
     /// Smart version of [`decrypt_code_mut`](#method.decrypt_code_mut) that
     /// detects if and how a code needs to be decrypted.
+    ///
+    /// Like CodeBreaker, it also follows `FFFFFFFF 000Xnnnn` at the start of a
+    /// CB v7 code, which changes how the next lines are decrypted:
+    ///
+    /// - X & 1: If set, CB v7 stays on. Otherwise, raw and CB v1 codes are
+    ///   detected again, and the next beefcode starts over with the default
+    ///   key.
+    /// - X & 2: The next code is decrypted with CB v7 in any case and becomes
+    ///   the new key.
+    /// - nnnn: If not 0, the previous mode returns after nnnn more decrypted
+    ///   lines.
     pub fn auto_decrypt_code_mut(&mut self, addr: &mut u32, val: &mut u32) {
-        match self.scheme {
-            Scheme::V7 => self.auto_decrypt_v7(addr, val),
-            Scheme::Raw | Scheme::V1 => self.auto_decrypt_v1_or_raw(addr, val),
+        let counted = if self.v7 || self.cb7.key_from_code {
+            self.auto_decrypt_v7(addr, val)
+        } else {
+            self.auto_decrypt_v1_or_raw(addr, val)
+        };
+        if !counted {
+            return;
+        }
+
+        if self.v7_lines != 0 {
+            self.v7_lines -= 1;
+            if self.v7_lines == 0 {
+                self.v7 = self.v7_restore;
+            }
+        }
+
+        if is_beefcode(*addr) {
+            self.enter_v7(*addr, *val);
+            self.code_lines = 1;
         }
     }
 
-    fn auto_decrypt_v1_or_raw(&mut self, addr: &mut u32, val: &mut u32) {
+    // The auto_decrypt_* helpers return false for lines that CodeBreaker
+    // neither counts for set_options nor checks for a beefcode: raw lines,
+    // option lines, and the code that becomes the key.
+
+    const fn auto_decrypt_v1_or_raw(&mut self, addr: &mut u32, val: &mut u32) -> bool {
         if self.code_lines == 0 {
             // Like CodeBreaker, count lines before decryption. CB v1 encryption
             // can flip bit 22 of cmd 3, so this may differ from the plaintext.
             self.code_lines = num_code_lines(*addr) - 1;
-            if (*addr >> 24) & 0x0e != 0 {
-                if is_beefcode(*addr) {
-                    // Like CodeBreaker, ignore a raw beefcode and pass the
-                    // next two lines through unchanged
-                    self.scheme = Scheme::Raw;
-                    self.code_lines = 2;
-                    return;
-                }
-                self.scheme = Scheme::V1;
-                cb1::decrypt_code_mut(addr, val);
-            } else {
-                self.scheme = Scheme::Raw;
+            if (*addr >> 24) & 0x0e == 0 {
+                self.v1 = false;
+                return false;
             }
+            if is_beefcode(*addr) {
+                // Like CodeBreaker, ignore a raw beefcode and pass the
+                // next two lines through unchanged
+                self.v1 = false;
+                self.code_lines = 2;
+                return false;
+            }
+            self.v1 = true;
         } else {
             self.code_lines -= 1;
-            if self.scheme == Scheme::Raw {
-                return;
+            if !self.v1 {
+                return false;
             }
-            cb1::decrypt_code_mut(addr, val);
         }
-
-        if is_beefcode(*addr) {
-            self.enter_v7(*addr, *val);
-            self.code_lines = 1;
-        }
+        cb1::decrypt_code_mut(addr, val);
+        true
     }
 
-    fn auto_decrypt_v7(&mut self, addr: &mut u32, val: &mut u32) {
+    fn auto_decrypt_v7(&mut self, addr: &mut u32, val: &mut u32) -> bool {
         self.cb7.decrypt_code_mut(addr, val);
         if self.code_lines == 0 {
             self.code_lines = num_code_lines(*addr);
-            if self.code_lines == 1 && *addr == 0xffff_ffff {
-                // XXX: changing encryption via "FFFFFFFF 000xnnnn" is not supported
+            if *addr == 0xffff_ffff {
+                self.set_options(*val);
                 self.code_lines = 0;
-                return;
+                return false;
             }
         }
         self.code_lines -= 1;
 
-        if is_beefcode(*addr) {
-            self.enter_v7(*addr, *val);
-            self.code_lines = 1;
+        // Cb7 has made this code the key, or applied it as a beefcode
+        if self.cb7.key_from_code {
+            self.cb7.key_from_code = false;
+            return false;
         }
+        true
+    }
+
+    // FFFFFFFF 000Xnnnn (see auto_decrypt_code_mut)
+    const fn set_options(&mut self, val: u32) {
+        self.v7_restore = self.v7;
+        self.v7 = val & 0x0001_0000 != 0;
+        self.v7_lines = val as u16;
+        self.cb7.key_from_code = val & 0x0002_0000 != 0;
     }
 
     // In V7 mode, Cb7 has already applied the beefcode at this point.
-    // CodeBreaker v9.2 applies it a second time, and so do we.
+    // CodeBreaker v9.2 applies it a second time, and so do we. Outside of V7
+    // mode, it starts over with the default key and seeds.
     fn enter_v7(&mut self, addr: u32, val: u32) {
+        if !self.v7 {
+            self.cb7 = Cb7::new();
+        }
         self.cb7.beefcode(addr, val);
-        self.scheme = Scheme::V7;
+        self.v7 = true;
     }
 }
 
@@ -581,6 +632,196 @@ mod tests {
                     "2096F5B8 000000BE".into(),
                 ],
             },
+            AutoTest {
+                // FFFFFFFF 00000002: v7 off for two decrypted lines (the raw one
+                // in between doesn't count)
+                input: vec![
+                    "B4336FA9 4DFEFB79".into(),
+                    "D08F3A49 00078A53".into(),
+                    "5B5DF76F E5E4BDCE".into(),
+                    "2AFF014C 2411FFFF".into(),
+                    "0031789A 00000063".into(),
+                    "2A973DBD 00000000".into(),
+                    "973E0B2A A7D4AF10".into(),
+                    "D08F3A49 00078A53".into(),
+                ],
+                output: vec![
+                    "BEEFC0DE 00000000".into(),
+                    "9029BEAC 0C0A9225".into(),
+                    "FFFFFFFF 00000002".into(),
+                    "2043AFCC 2411FFFF".into(),
+                    "0031789A 00000063".into(),
+                    "201F6024 00000000".into(),
+                    "2096F5B8 000000BE".into(),
+                    "9029BEAC 0C0A9225".into(),
+                ],
+            },
+            AutoTest {
+                // FFFFFFFF 00000000: v7 off for good, then a beefcode starts over
+                // with the default key
+                input: vec![
+                    "B4336FA9 4DFEFB79".into(),
+                    "FE8B8601 C7C6F6CE".into(),
+                    "2195D855 63FA11A7".into(),
+                    "70B21EC6 D6A6D277".into(),
+                    "2AFF014C 2411FFFF".into(),
+                    "B4336FA9 4DFEFB79".into(),
+                    "973E0B2A A7D4AF10".into(),
+                ],
+                output: vec![
+                    "BEEFC0DE 00000000".into(),
+                    "BEEFC0DF B16B00B5".into(),
+                    "01234567 89ABCDEF".into(),
+                    "FFFFFFFF 00000000".into(),
+                    "2043AFCC 2411FFFF".into(),
+                    "BEEFC0DE 00000000".into(),
+                    "2096F5B8 000000BE".into(),
+                ],
+            },
+            AutoTest {
+                // FFFFFFFF 00030000: the next code becomes the key, while the
+                // multiplications keep the old one
+                input: vec![
+                    "B4336FA9 4DFEFB79".into(),
+                    "D08F3A49 00078A53".into(),
+                    "4B985E41 9DCCE1A9".into(),
+                    "F968CE47 D8CA4DAA".into(),
+                    "14EE53A7 F77E00B2".into(),
+                    "F7EB2E0B 21498771".into(),
+                    "41AF4716 599689E5".into(),
+                    "06491293 1A477240".into(),
+                ],
+                output: vec![
+                    "BEEFC0DE 00000000".into(),
+                    "9029BEAC 0C0A9225".into(),
+                    "FFFFFFFF 00030000".into(),
+                    "12345678 9ABCDEF0".into(),
+                    "2043AFCC 2411FFFF".into(),
+                    "201F6024 00000000".into(),
+                    "BEEFC0DE 00000000".into(),
+                    "2096F5B8 000000BE".into(),
+                ],
+            },
+            AutoTest {
+                // FFFFFFFF 00020001: the next code becomes the key, then v1 for
+                // one line, then v7 again
+                input: vec![
+                    "B4336FA9 4DFEFB79".into(),
+                    "D08F3A49 00078A53".into(),
+                    "85B57D54 CA8164F2".into(),
+                    "F968CE47 D8CA4DAA".into(),
+                    "2AFF014C 2411FFFF".into(),
+                    "F7EB2E0B 21498771".into(),
+                    "5AB278AC D4FA03C1".into(),
+                ],
+                output: vec![
+                    "BEEFC0DE 00000000".into(),
+                    "9029BEAC 0C0A9225".into(),
+                    "FFFFFFFF 00020001".into(),
+                    "12345678 9ABCDEF0".into(),
+                    "2043AFCC 2411FFFF".into(),
+                    "201F6024 00000000".into(),
+                    "2096F5B8 000000BE".into(),
+                ],
+            },
+            AutoTest {
+                // FFFFFFFF 00030000 followed by a beefcode, which then takes an
+                // extra seed code like BEEFC0DF
+                input: vec![
+                    "B4336FA9 4DFEFB79".into(),
+                    "D08F3A49 00078A53".into(),
+                    "4B985E41 9DCCE1A9".into(),
+                    "8787C575 1AC4C1B4".into(),
+                    "DEDB2F61 DE6E9E11".into(),
+                    "4AE543B4 5B65AAAE".into(),
+                    "2531C0E4 20CFC48A".into(),
+                ],
+                output: vec![
+                    "BEEFC0DE 00000000".into(),
+                    "9029BEAC 0C0A9225".into(),
+                    "FFFFFFFF 00030000".into(),
+                    "BEEFC0DE 00000000".into(),
+                    "01234567 89ABCDEF".into(),
+                    "2043AFCC 2411FFFF".into(),
+                    "201F6024 00000000".into(),
+                ],
+            },
+            AutoTest {
+                // FFFFFFFF 00020000: a 2-line code becomes the key, and its 2nd
+                // line is v1-encrypted since v7 is off
+                input: vec![
+                    "B4336FA9 4DFEFB79".into(),
+                    "D08F3A49 00078A53".into(),
+                    "A3281782 DD1A07E8".into(),
+                    "460BA690 21E337B9".into(),
+                    "0A200B0D 00000000".into(),
+                    "2043AFCC 2411FFFF".into(),
+                    "B4336FA9 4DFEFB79".into(),
+                    "973E0B2A A7D4AF10".into(),
+                ],
+                output: vec![
+                    "BEEFC0DE 00000000".into(),
+                    "9029BEAC 0C0A9225".into(),
+                    "FFFFFFFF 00020000".into(),
+                    "4043AFCC 00020001".into(),
+                    "00010003 00000000".into(),
+                    "2043AFCC 2411FFFF".into(),
+                    "BEEFC0DE 00000000".into(),
+                    "2096F5B8 000000BE".into(),
+                ],
+            },
+            AutoTest {
+                // FFFFFFFF right after a beefcode isn't an option
+                input: vec![
+                    "B4336FA9 4DFEFB79".into(),
+                    "1C65C412 26F27361".into(),
+                    "397951B0 41569FE0".into(),
+                    "3818DDE5 E72B2B16".into(),
+                ],
+                output: vec![
+                    "BEEFC0DE 00000000".into(),
+                    "FFFFFFFF 00000001".into(),
+                    "2043AFCC 2411FFFF".into(),
+                    "201F6024 00000000".into(),
+                ],
+            },
+            AutoTest {
+                // FFFFFFFF as the 2nd line of a code isn't an option
+                input: vec![
+                    "B4336FA9 4DFEFB79".into(),
+                    "D08F3A49 00078A53".into(),
+                    "460BA690 21E337B9".into(),
+                    "1C65C412 26F27361".into(),
+                    "397951B0 41569FE0".into(),
+                    "3818DDE5 E72B2B16".into(),
+                ],
+                output: vec![
+                    "BEEFC0DE 00000000".into(),
+                    "9029BEAC 0C0A9225".into(),
+                    "4043AFCC 00020001".into(),
+                    "FFFFFFFF 00000001".into(),
+                    "2043AFCC 2411FFFF".into(),
+                    "201F6024 00000000".into(),
+                ],
+            },
+            AutoTest {
+                // The line after a beefcode is a continuation even if it starts a
+                // 2-line code, so the 2nd line of that code can be an option
+                input: vec![
+                    "B4336FA9 4DFEFB79".into(),
+                    "460BA690 21E337B9".into(),
+                    "1C65C412 26F27361".into(),
+                    "2AFF014C 2411FFFF".into(),
+                    "3818DDE5 E72B2B16".into(),
+                ],
+                output: vec![
+                    "BEEFC0DE 00000000".into(),
+                    "4043AFCC 00020001".into(),
+                    "FFFFFFFF 00000001".into(),
+                    "2043AFCC 2411FFFF".into(),
+                    "201F6024 00000000".into(),
+                ],
+            },
         ]
     }
 
@@ -602,6 +843,19 @@ mod tests {
             for (i, code) in t.input.iter_mut().enumerate() {
                 cb.auto_decrypt_code_mut(&mut code.0, &mut code.1);
                 assert_eq!(*code, t.output[i]);
+            }
+        }
+    }
+
+    #[test]
+    fn test_auto_decrypt_code_new_v7() {
+        // Same as starting with B4336FA9 4DFEFB79
+        let first = Code::from("B4336FA9 4DFEFB79");
+        for t in auto_tests().iter().filter(|t| t.input[0] == first) {
+            let mut cb = Codebreaker::new_v7();
+            for (i, &code) in t.input.iter().enumerate().skip(1) {
+                let result: Code = cb.auto_decrypt_code(code.0, code.1).into();
+                assert_eq!(result, t.output[i]);
             }
         }
     }
