@@ -291,6 +291,22 @@ const fn mod_inverse(x: u32) -> u32 {
 }
 
 // RSA encryption/decryption
+//
+// This is exact math, which CodeBreaker's own bignum code isn't. Its reduction
+// (at 0x133bbc in v9.2) takes each quotient digit as the low 32 bits of a
+// 64-by-32-bit division and doesn't clamp it to 0xffffffff. The top word of
+// our modulus is 0xffffffff, so the digit wraps whenever the partial
+// remainder's top word is 0xffffffff as well, and the result is wrong. When
+// decrypting, that happens for every input in 0xffff_ffff_8000_0000..modulus
+// and sporadically for others whose intermediate powers hit the same case, an
+// estimated 1 in 10^9 codes. For example, CodeBreaker computes
+// 0xffff_ffff_ffff_fff4^11 mod modulus as 0x04f3_63df_ecae_2b57 instead of
+// 0xffff_ffff_ffff_fff4.
+//
+// We don't replicate this. It would break decrypt(encrypt(x)) == x, and
+// CodeBreaker's result is garbage anyway. Encryption can't avoid it either:
+// for some plain text, no cipher text exists that CodeBreaker decrypts
+// correctly.
 fn rsa_crypt(addr: &mut u32, val: &mut u32, rsakey: u64, modulus: u64) {
     let code = u64::from(*val) | (u64::from(*addr) << 32);
 
