@@ -15,7 +15,7 @@ with `src/`. Results:
 | Line count of V1-encrypted codes (`auto_decrypt`) | firmware counts from the **encrypted** address, `src/` from the decrypted one since `bb95630` (0.4.0). Fixed in `fadd9d9`. |
 | Raw beefcode during auto-detection | firmware passes the next two lines through raw, `src/` re-detected the next line. Fixed in `d9bab13`. |
 | `FFFFFFFF` encryption options | implemented in firmware, not in `src/` (`XXX` in `auto_decrypt_v7`). Spec and vectors in §9.5. **Open.** |
-| RSA step of V7 decrypt | firmware's bignum reduction is buggy near the modulus, `src/` computes exact `x^11 mod n` (§9.4). **Open.** |
+| RSA step of V7 decrypt | firmware's bignum reduction is buggy near the modulus, `src/` computes exact `x^11 mod n` (§9.4). Kept on purpose, documented at `rsa_crypt` in `105d376`. |
 | Encrypting a beefcode as `BEEFC0DF`'s extra seed line | `Cb7::encrypt_code_mut` wasn't the inverse of the firmware's decrypt (§9.3). Fixed in `23739ac`. |
 
 §9 adds a second pass that emulates the firmware in Ghidra and diffs it
@@ -440,9 +440,9 @@ python3 -I tools/emudiff.py elf/CBv92.unpacked.elf /tmp/t.out /tmp/t.crate
 python3 -I tools/coverage.py elf/calltree.txt /tmp/t.cov
 ```
 
-Inputs, outputs and coverage of every run are in `elf/emu/`. The proposed
-`src/cb7.rs` change for §9.4 is in `elf/emu/proposed-fixes.patch`, against
-`23739ac`.
+Inputs, outputs and coverage of every run are in `elf/emu/`. The
+`src/cb7.rs` change that replicates the RSA bug (§9.4, not recommended) is in
+`elf/emu/proposed-fixes.patch`, against `105d376`.
 
 | Run | Lists | Lines | Firmware vs `src/` |
 |---|---|---|---|
@@ -459,7 +459,7 @@ Inputs, outputs and coverage of every run are in `elf/emu/`. The proposed
 
 `fwmodel.py` matches the emulation on every line and every global (mode,
 `code_lines`, V1 flag, `beefcodf`, `opt`, key, key copy, CRC of the seeds) in
-all of these. With both proposed fixes applied (§9.3, §9.4), the only
+all of these. With the §9.3 fix and the §9.4 patch applied, the only
 remaining differences are the options.
 
 ### 9.2 Verdict per Rust function
@@ -474,7 +474,7 @@ remaining differences are the options.
 | `Cb7::decrypt_code_mut` | `0x103f60` | identical except the RSA step (§9.4) and the option paths (key copy, key from line, §9.5) |
 | `Cb7::encrypt_code_mut` | (inverse of `0x103f60`) | was **not the inverse** when `BEEFC0DF`'s extra line is a beefcode (§9.3, fixed in `23739ac`). In ~2⁻³¹ of codes no inverse exists (§9.4). |
 | `mul_decrypt`, `mod_inverse` | `0x103580`, `0x1034e0` | identical on 0, 1, 2, 3, 5, `7fffffff`, `80000000`, `80000001`, `fffffffd`–`ffffffff` and 20 random values (the firmware uses extended Euclid, `src/` Newton) |
-| `rsa_crypt`/`mod_pow` (decrypt) | `0x134020` → `0x133dd0` | **differs** (§9.4) |
+| `rsa_crypt`/`mod_pow` (decrypt) | `0x134020` → `0x133dd0` | **differs**, on purpose (§9.4) |
 | `Rc4` | `0x132c98`/`0x132d30` | identical (context is re-initialized on every use, no carry-over) |
 | `Codebreaker::auto_decrypt_code_mut` | `0x1042b0` | identical except options (§9.5) and RSA (§9.4) |
 | `Codebreaker::decrypt_code_mut` | none | equals the firmware on lists without raw codes or options (all of `plain`). It differs on 100 of 120 `random` lists, as expected for a non-detecting API. |
@@ -515,7 +515,7 @@ lists round-trip through the emulated firmware, and so do both lists above.
 `emucmp encrypt` at `23739ac` gives the same cipher text as the emulated
 patch.
 
-### 9.4 Difference: the firmware's RSA is wrong near the modulus
+### 9.4 Difference: the firmware's RSA is wrong near the modulus (kept, `105d376`)
 
 `0x133dd0` is a generic bignum `modexp` (32-bit limbs) with Karatsuba multiply
 (`0x133670` → `0x133428`) and a Knuth-D style reduction (`0x133948`). The
@@ -563,16 +563,34 @@ Primitive level: `!rsa fffffffffffffff4` gives `04f363dfecae2b57` (exact:
 `fffffffffffffff4`), and `!rsa fffffffffffffff3` gives `24ded67f71ac6020`
 (exact: `fffffffffffff7f5`).
 
-Fix: compute the decryption power with the firmware's arithmetic.
-`elf/emu/proposed-fixes.patch` adds `cb_mod_pow`/`cb_mul_mod`/`cb_mod`, about
-50 lines: square-and-multiply, and a 5-word reduction that truncates q,
-subtracts `q·n` from 3 words, adds n back once or twice, then does the window
-and final `> n` corrections. Encryption keeps the exact `mod_pow`. It
-matches `cb_rsa` on 172,140 values (random, the whole bad range,
-n−1..n−2000, the sporadic ones) and fixes both `targeted` RSA lists.
-Encryption can't be fixed in general: for plain text whose exact cipher value
-falls in the bad set, the firmware decrypts something else, and there may be no
-cipher text at all that decrypts to it. That affects about 2⁻³¹ of codes.
+The cause is certain from the code (the truncation at `0x133bbc`), and two
+independent derivations agree on it: `fwmodel.py`, written from the listing,
+and the emulator. The limits from §8 apply: nothing run on hardware, one
+image only. The rate is the model's estimate, not a measurement.
+
+Decision: `src/` keeps exact math. `105d376` documents the divergence at
+`rsa_crypt`. Replicating the bug would:
+
+* treat the symptom, not the cause. The cause is in the firmware, and only
+  decryption can copy it. For plain text whose exact cipher value falls in the
+  bad set (about 2⁻³¹ of codes), the firmware decrypts something else, and
+  there may be no cipher text at all that decrypts to it.
+* break `decrypt(encrypt(x)) == x`, which holds in `src/` for every x below n.
+* swap a correct answer for the firmware's garbage. A code that hits the bug
+  already misbehaves on a real CodeBreaker. The exact result is what exact
+  encryption (like `src/`'s) started from.
+* cost about 50 lines of subtle bignum code for about 1 in 10⁹ lines.
+
+Unlike §6.1–6.3 and §9.3, which are state machine differences that ordinary
+lists trigger, this is an arithmetic defect at the edges.
+
+Not recommended, but available: `elf/emu/proposed-fixes.patch` replicates the
+bug in decryption with `cb_mod_pow`/`cb_mul_mod`/`cb_mod`: square-and-multiply,
+and a 5-word reduction that truncates q, subtracts `q·n` from 3 words, adds n
+back once or twice, then does the window and final `> n` corrections.
+Encryption keeps the exact `mod_pow`. It matches `cb_rsa` on 172,140 values
+(random, the whole bad range, n−1..n−2000, the sporadic ones) and fixes both
+`targeted` RSA lists.
 
 ### 9.5 Missing: `FFFFFFFF` encryption options
 
