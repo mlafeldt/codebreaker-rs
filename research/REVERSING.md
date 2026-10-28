@@ -1002,34 +1002,58 @@ Stored RC4 key bytes at `0x1010940`:
 `ce67d054 669226d4 65cadff9 d9c3245c 18ffdde8` — but this is not the key used;
 it is XORed with a runtime value (§10.5).
 
-### 10.5 Key schedule (`FUN_01000248`), and why static unpack is blocked
+### 10.5 Key schedule (`FUN_01000248`): decoded, ported, still blocked
 
-The real RC4 key is `stored ⊕ C`, where:
+The real RC4 key is `stored ⊕ C`:
 
 * four `FUN_010009c0(constA, constB)` calls fill a 32-byte seed at `0x1010980`;
 * `A = SHA1(seed, 0x20)` → `0x1012a88`;
 * after `FUN_01000150`, `B = SHA1(0x1010980, 0x14)`;
-* `C = SHA1(A ‖ B)` → `0x1010940` XOR target.
+* `C = SHA1(A ‖ B)`, XORed byte-for-byte into the key at `0x1010940`.
 
-`FUN_010009c0` is R5900 COP1-extension arithmetic on the baked float constants:
-`madd.s` (`0x460d601c`, funct 0x1c), `msub.s` (`0x460c681d`, funct 0x1d) and an
-MMI op (`0x70000c28`, op 0x1c). Ghidra renders these `special2`/`halt_baddata`;
-rizin and llvm show `invalid`. So the seed can't be reconstructed from the
-listing, and Ghidra's own emulator can't execute them either — the same
-R5900-MMI/COP limit noted in §9.10, now on the critical path.
+`FUN_010009c0` is the anti-tamper core, and it is now fully decoded — the
+opcodes Ghidra/rizin/llvm refuse are documented EE instructions, not unknowns.
+The two `invalid` ops are `padduw at/v0, zero, zero` (register clears via
+128-bit MMI). The rest is a 10-round single-precision float bit-mixer:
 
-`FUN_01000150` wraps SIF-RPC scaffolding to the IOP (`FUN_01005ba0` bind,
-server IDs `0x8000059x`); `FUN_010060f8` writes fixed constants
-(`0x1012a88 = 938ca6bf e620cc81 137a84c2 78ae9796 889dca10`, and
-`0x1010980 = 01, 0x39956993, 0x55, 0, 0x05bc0000`) into the key buffer. The
-obvious static reconstructions (A/B from those constants, several SHA-1
-chainings, `tools/cbv10_unpack.py`) were tried; none produces a zlib header
-(`0x78`) after RC4, so the `FUN_010009c0` seed genuinely matters and the
-constants alone are not the whole input.
+```
+madd.s f0, f12, f13          ; f0 = ACC + f12*f13   (ACC stays 0; madd/msub never write it)
+v0 = (v0 | (bits(f0) & 7)) << 3
+f12 = (float)(v0 & 0xffff) - f0 ;  bits(f12) &= 0xcfffffff
+msub.s f0, f13, f12          ; f0 = ACC - f13*f12
+v0 = v0 | (bits(f0) & 7)
+f13 = (float)(v0 & 0xffff) - f0 ;  bits(f13) &= 0xcfffffff
+```
 
-**Conclusion.** A faithful decrypt needs an R5900-accurate emulator (PCSX2) or
-hardware: run the loader and dump EE RAM at `0x100000` (post-inflate) or the
-runtime regions in §10.3. Not done here; §8's limits apply.
+returning the 64-bit `v0`. It keeps only the low 3 bits of each result —
+deliberately, since that is exactly where the EE FPU diverges from IEEE.
+`madd.s`/`msub.s` are EE COP1 extensions (functs 0x1c/0x1d); the EE FPU has no
+NaN/Inf (clamp to ±Fmax), flushes denormals, and `madd` rounds the `fs*ft`
+product to single before adding `ACC`.
+
+`tools/cbv10_unpack.py` ports PCSX2's exact EE FPU (`FPU.cpp`: `fpuDouble` plus
+the add/sub/mul/madd/msub bodies and the overflow/underflow checks), computes
+the seed, and tests every plausible SHA-1 chaining against the zlib oracle
+(correct iff the RC4 output inflates). **None matches.** The pure-constant
+chaining reproduces the earlier miss exactly, so the RC4/zlib plumbing is
+sound; the failure is upstream, in the key. That leaves three causes, not
+separable statically:
+
+1. **`FUN_01000150`'s SIF-RPC read feeds the key.** It binds a real IOP RPC
+   server (`0x8000059x`); the 20 bytes it leaves at `0x1010980` may come from an
+   IOP module, not the `FUN_010060f8` constants
+   (`0x1012a88 = 938ca6bf e620cc81 137a84c2 78ae9796 889dca10`,
+   `0x1010980 = 01, 0x39956993, 0x55, 0, 0x05bc0000`), making the key depend on
+   runtime IOP state.
+2. **EE FPU fidelity beyond PCSX2.** The mixer uses only the low 3 mantissa
+   bits, exactly where PCSX2's software FPU is known to diverge from real EE
+   silicon — so a PCSX2-accurate port (and PCSX2 itself) can still give the
+   wrong seed.
+3. A SHA-1 chaining detail not pinned (least likely; the natural ones are
+   covered).
+
+**Conclusion.** The opcodes are solved; one dynamic observation still finishes
+it (§10.7). §8's limits apply — nothing was run on hardware or PCSX2 here.
 
 ### 10.6 Clean, not cracked
 
@@ -1039,3 +1063,20 @@ obfuscated R5900 key schedule, SIF-RPC to the IOP). It is not the PS2TG "no
 Anti-Modchip" v9.2 carrying misfire's RSA patch (§1, §8). So its signature path
 is presumably unmodified — the opposite problem from v9.2: stock, but unreadable
 until the body is decrypted.
+
+### 10.7 Finishing it: pull the key from a dynamic run
+
+The key at `0x1010940` is final once `FUN_01000248` returns, before RC4 reads
+it. In PCSX2's R5900 debugger:
+
+1. Boot the disc / `BOOT.ELF` and let the loader run.
+2. Set an EE execution breakpoint at `0x010000E0` (`FUN_010000e0`, the RC4
+   wrapper — reached just after key derivation).
+3. On hit, read `0x14` bytes at EE address `0x01010940`: the real RC4 key.
+4. `python3 tools/cbv10_unpack.py BOOT.ELF --key <40 hex>` RC4-decrypts and
+   inflates the body to `CBv10.unpacked.bin`.
+
+Or breakpoint after the inflate (`FUN_01000a58`, called from `FUN_010003a8`) and
+dump EE RAM from `0x00100000` for the inflated length — the decompressed image
+directly; the §10.3 memcpy targets (`0x1d00000`, …) then hold the runtime
+layout.
