@@ -286,7 +286,25 @@ impl Codebreaker {
         if self.code_lines == 0 {
             self.code_lines = num_code_lines(*addr);
             if self.code_lines == 1 && *addr == 0xffff_ffff {
-                // XXX: changing encryption via "FFFFFFFF 000xnnnn" is not supported
+                // CodeBreaker reads "FFFFFFFF 000Xnnnn" at the start of a CB v7
+                // code as options for the next lines:
+                //
+                // - X & 1: If set, CB v7 stays on. Otherwise, raw and CB v1
+                //   codes are detected again, and the next beefcode starts over
+                //   with the default key and seeds.
+                // - X & 2: The next code is decrypted with CB v7 even if it's
+                //   off, and unless it's a beefcode, it becomes the key:
+                //   [a ^ k0, v ^ k1, a - k2, v + k3, (a - v) ^ k4], where k is
+                //   the key as of the last beefcode. The multiplications keep
+                //   using k.
+                // - nnnn: If not 0, the previous mode returns after nnnn more
+                //   decrypted lines, not counting raw lines and the new key.
+                //
+                // We return the line like any other but ignore the options, so
+                // the lines after it decrypt differently than on CodeBreaker. No
+                // code list is known to use them, and supporting them properly
+                // would take a lot more state here and line tracking in
+                // encryption.
                 self.code_lines = 0;
                 return;
             }
