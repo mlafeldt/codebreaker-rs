@@ -60,8 +60,10 @@ It is **not a pristine Pelican build**. Strings in the unpacked image (vaddr
 > bfoos 2008/30/09 ...
 
 `VERSION Code Breaker PS2 V9.2` is at `0x354bcc`. Without a clean image the
-patched bytes can't be diffed out. The code studied here shows no sign of
-patching, and all constants match `src/` (§5).
+patched bytes can't be diffed out. The code-encryption path studied here shows
+no sign of patching, and all constants match `src/` (§5). One mod has since
+been located: the "RSA Patch" in the string above neuters the signature
+verdict (§8, §9.9), so the signature path can't be read as stock.
 
 
 ## 2. Unpacking
@@ -410,7 +412,16 @@ Only for context. The firmware is the reference.
 ## 8. Caveats
 
 * Single image, v9.2, cracked and modded (§1). Behaviour in v7/v8 is assumed
-  to be the same.
+  to be the same. One mod is located: the "RSA Patch ... credits go to
+  misfire" named in the §1 string is the signature verdict in `FUN_00132ed8`
+  (the verifier behind `0x133180`, §9.9). It computes the padded-block compare
+  at `0x14611c` and then throws the result away, forcing the return to 1
+  (`0x132fec`: `addiu v0, zero, 1`). So the signature checks in the §9.9
+  loaders always pass on this image — the PCB firmware-upgrade path would
+  execute any payload. That is the crack, not stock behaviour, so the verify
+  path here says nothing about the real firmware. A genuine forgery question
+  (is the RC4-masked padding scheme sound against `e = 0x10001`?) needs a clean
+  image to study.
 * Nothing run on hardware or in PCSX2. §9 emulates the unpacked image in
   Ghidra, with the R5900-specific instructions hooked.
 * Encryption in `src/` has no firmware counterpart and is only checked as the
