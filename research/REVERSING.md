@@ -755,15 +755,25 @@ always V7 and only the counter (`Codebreaker::v7_lines`) is needed. Tests in
 `ffff-2nd-line`, `beef-phase` and this example, all emulated, and `new_v7`
 against `new` plus `B4336FA9 4DFEFB79`.
 
-Encryption still ignores options. `encrypt_code` doesn't track lines, so it
-encrypts `FFFFFFFF` like any other code and stays in V7, and since
-`16299e0`, such a list no longer decrypts back: `BEEFC0DE 00000000`,
-`9029BEAC 0C0A9225`, `FFFFFFFF 00000000`, `2043AFCC 2411FFFF` encrypts to
-`B4336FA9 4DFEFB79`, `D08F3A49 00078A53`, `0CF49BDF A4E29C32`,
-`397951B0 41569FE0`, and the last line then decrypts to
-`33CCA260 E2314F40`, on the firmware too. Tracking lines and encoding
-V7-off lines as V1 is a design decision that the firmware doesn't
-constrain.
+Encryption ignores options on purpose (documented at `encrypt_code` in
+`6931e92`). `encrypt_code` doesn't track lines, so it encrypts `FFFFFFFF`
+like any other code and stays in V7. Since `16299e0`, auto-decrypt then reads
+such a list differently: `BEEFC0DE 00000000`, `9029BEAC 0C0A9225`,
+`FFFFFFFF 00000000`, `2043AFCC 2411FFFF` encrypts to `B4336FA9 4DFEFB79`,
+`D08F3A49 00078A53`, `0CF49BDF A4E29C32`, `397951B0 41569FE0`, and the last
+line auto-decrypts to `33CCA260 E2314F40`, on the firmware too. Tracking
+lines in encryption and encoding V7-off lines as V1 would fix that, but:
+
+* `encrypt_code` is the inverse of `decrypt_code`, which still holds.
+  Encrypt, then auto-decrypt was never a round trip. `2A000000 00000001`
+  encrypts with V1 to `20CCDD1D 00000001`, which auto-decrypt reads as raw,
+  in 0.3.2 too. That affects 14% of random V1 code starts (2,772 of
+  20,000).
+* The device reads such lists the same way, so nothing that worked before
+  breaks. Only auto-decrypt agrees with the device now.
+* CB2crypt's recipe works as is: encrypt up to `FFFFFFFF 00000000` and
+  append the raw codes unencrypted.
+* It would turn a plain inverse into a stateful API.
 
 Bit 17 too: `ffffffff-encryption-options` (`fd0e355`, on top of `105d376`)
 implements all options in auto-decrypt. It matches every run in §9.1 except
