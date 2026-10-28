@@ -51,7 +51,7 @@ pub mod cb1;
 pub mod cb7;
 mod rc4;
 
-use cb7::{Cb7, is_beefcode};
+use cb7::{BEEFCODE, Cb7, is_beefcode};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum Scheme {
@@ -74,9 +74,9 @@ pub struct Codebreaker {
     // encrypt/decrypt ignores this field.
     code_lines: usize,
 
-    // Auto-decrypt: decrypted lines until CB v7 comes back on after
-    // "FFFFFFFF 0000nnnn". 0 means never.
-    v7_lines: u16,
+    // Auto-decrypt: decrypted lines (CB v1 or v7) until CB v7 comes back on
+    // after "FFFFFFFF 0000nnnn". 0 means never.
+    lines_until_v7: u16,
 }
 
 /// Does the same as [`new`](#method.new).
@@ -94,7 +94,7 @@ impl Codebreaker {
             scheme: Scheme::Raw,
             cb7: Cb7::new(),
             code_lines: 0,
-            v7_lines: 0,
+            lines_until_v7: 0,
         }
     }
 
@@ -102,14 +102,11 @@ impl Codebreaker {
     ///
     /// Lets you omit `B4336FA9 4DFEFB79` as the first code in the list.
     pub fn new_v7() -> Self {
-        // Same state as after auto-decrypting B4336FA9 4DFEFB79, where the
-        // next line can't be an option line
-        Self {
-            scheme: Scheme::V7,
-            cb7: Cb7::default(),
-            code_lines: 1,
-            v7_lines: 0,
-        }
+        // Same as auto-decrypting B4336FA9 4DFEFB79, the CB v1-encrypted
+        // BEEFC0DE 00000000
+        let mut cb = Self::new();
+        cb.enter_v7(BEEFCODE, 0);
+        cb
     }
 
     /// Encrypts a code and returns the result.
@@ -231,6 +228,10 @@ impl Codebreaker {
     /// Smart version of [`decrypt_code`](#method.decrypt_code) that detects if
     /// and how a code needs to be decrypted.
     ///
+    /// Like CodeBreaker, it also follows `FFFFFFFF 0000nnnn`, which turns CB v7
+    /// off for the next nnnn decrypted lines, or for good if nnnn is 0. That's
+    /// how raw and CB v1 codes can follow CB v7 codes in the same list.
+    ///
     /// # Example
     /// ```
     /// use codebreaker::Codebreaker;
@@ -262,17 +263,33 @@ impl Codebreaker {
     /// Smart version of [`decrypt_code_mut`](#method.decrypt_code_mut) that
     /// detects if and how a code needs to be decrypted.
     ///
-    /// Like CodeBreaker, it also follows `FFFFFFFF 0000nnnn`, which turns CB v7
-    /// off for the next nnnn decrypted lines, or for good if nnnn is 0. That's
-    /// how raw and CB v1 codes can follow CB v7 codes in the same list.
+    /// See [`auto_decrypt_code`](#method.auto_decrypt_code) for how it handles
+    /// `FFFFFFFF` lines.
     pub fn auto_decrypt_code_mut(&mut self, addr: &mut u32, val: &mut u32) {
-        match self.scheme {
+        // The helpers return false for lines that CodeBreaker neither counts
+        // nor checks for a beefcode: raw lines and option lines.
+        let counted = match self.scheme {
             Scheme::V7 => self.auto_decrypt_v7(addr, val),
             Scheme::Raw | Scheme::V1 => self.auto_decrypt_v1_or_raw(addr, val),
+        };
+        if !counted {
+            return;
+        }
+
+        // Like CodeBreaker, count the line towards turning CB v7 back on
+        // before checking for a beefcode
+        if self.lines_until_v7 != 0 {
+            self.lines_until_v7 -= 1;
+            if self.lines_until_v7 == 0 {
+                self.scheme = Scheme::V7;
+            }
+        }
+        if is_beefcode(*addr) {
+            self.enter_v7(*addr, *val);
         }
     }
 
-    fn auto_decrypt_v1_or_raw(&mut self, addr: &mut u32, val: &mut u32) {
+    fn auto_decrypt_v1_or_raw(&mut self, addr: &mut u32, val: &mut u32) -> bool {
         if self.code_lines == 0 {
             // Like CodeBreaker, count lines before decryption. CB v1 encryption
             // can flip bit 22 of cmd 3, so this may differ from the plaintext.
@@ -283,30 +300,24 @@ impl Codebreaker {
                     // next two lines through unchanged
                     self.scheme = Scheme::Raw;
                     self.code_lines = 2;
-                    return;
+                    return false;
                 }
                 self.scheme = Scheme::V1;
-                cb1::decrypt_code_mut(addr, val);
             } else {
                 self.scheme = Scheme::Raw;
-                return;
+                return false;
             }
         } else {
             self.code_lines -= 1;
             if self.scheme == Scheme::Raw {
-                return;
+                return false;
             }
-            cb1::decrypt_code_mut(addr, val);
         }
-
-        self.count_v7_line();
-        if is_beefcode(*addr) {
-            self.enter_v7(*addr, *val);
-            self.code_lines = 1;
-        }
+        cb1::decrypt_code_mut(addr, val);
+        true
     }
 
-    fn auto_decrypt_v7(&mut self, addr: &mut u32, val: &mut u32) {
+    fn auto_decrypt_v7(&mut self, addr: &mut u32, val: &mut u32) -> bool {
         self.cb7.decrypt_code_mut(addr, val);
         if self.code_lines == 0 {
             self.code_lines = num_code_lines(*addr);
@@ -330,43 +341,30 @@ impl Codebreaker {
                 // We ignore X & 2: no code list is known to use it, and it
                 // would take a lot more state.
                 if *val & 0x0001_0000 == 0 {
-                    // Back to detecting raw and CB v1 codes
-                    self.scheme = Scheme::V1;
+                    // Back to detecting raw and CB v1 codes, starting with
+                    // the next line
+                    self.scheme = Scheme::Raw;
                 }
-                self.v7_lines = *val as u16;
+                self.lines_until_v7 = *val as u16;
                 self.code_lines = 0;
-                return;
+                return false;
             }
         }
         self.code_lines -= 1;
-
-        self.count_v7_line();
-        if is_beefcode(*addr) {
-            self.enter_v7(*addr, *val);
-            self.code_lines = 1;
-        }
-    }
-
-    // Like CodeBreaker, count decrypted lines (CB v1 or v7) towards turning
-    // CB v7 back on
-    const fn count_v7_line(&mut self) {
-        if self.v7_lines != 0 {
-            self.v7_lines -= 1;
-            if self.v7_lines == 0 {
-                self.scheme = Scheme::V7;
-            }
-        }
+        true
     }
 
     // In V7 mode, Cb7 has already applied the beefcode at this point.
     // CodeBreaker v9.2 applies it a second time, and so do we. Outside of V7
-    // mode, it starts over with the default key and seeds.
+    // mode, it starts over with the default key and seeds. Either way, the
+    // next line doesn't start a code, as it may be BEEFC0DF's extra seed.
     fn enter_v7(&mut self, addr: u32, val: u32) {
         if self.scheme != Scheme::V7 {
             self.cb7 = Cb7::new();
         }
         self.cb7.beefcode(addr, val);
         self.scheme = Scheme::V7;
+        self.code_lines = 1;
     }
 }
 
@@ -759,6 +757,27 @@ mod tests {
                     "4043AFCC 00020001".into(),
                     "FFFFFFFF 00000001".into(),
                     "2043AFCC 2411FFFF".into(),
+                    "201F6024 00000000".into(),
+                ],
+            },
+            AutoTest {
+                // FFFFFFFF 00000001, then a v1-encrypted beefcode: counting it
+                // turns v7 back on first, so the beefcode keeps the key
+                // instead of starting over
+                input: vec![
+                    "B4336FA9 4DFEFB79".into(),
+                    "D08F3A49 00078A53".into(),
+                    "1C65C412 26F27361".into(),
+                    "B4336FA9 4DFEFB79".into(),
+                    "4FE0642D 3EBDE7D4".into(),
+                    "CA64CBFA CD67C364".into(),
+                ],
+                output: vec![
+                    "BEEFC0DE 00000000".into(),
+                    "9029BEAC 0C0A9225".into(),
+                    "FFFFFFFF 00000001".into(),
+                    "BEEFC0DE 00000000".into(),
+                    "2096F5B8 000000BE".into(),
                     "201F6024 00000000".into(),
                 ],
             },

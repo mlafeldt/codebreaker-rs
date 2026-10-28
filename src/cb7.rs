@@ -347,7 +347,7 @@ const fn mul_mod(a: u64, b: u64, modulus: u64) -> u64 {
     ((a as u128 * b as u128) % modulus as u128) as u64
 }
 
-const BEEFCODE: u32 = 0xbeef_c0de;
+pub(crate) const BEEFCODE: u32 = 0xbeef_c0de;
 
 const RC4_KEY: [u32; 5] = [0xd0db_a9d7, 0x13a0_a96c, 0x8041_0df0, 0x2ccd_be1f, 0xe570_a86b];
 
