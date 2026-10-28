@@ -944,10 +944,10 @@ besides `0x1042b0`, and `0x1042b0` has none besides the list processor
 
 A second image, this time **retail**, to compare against the cracked v9.2. It
 turned out to be a self-decrypting loader, not a quick string check: the body
-is RC4-encrypted over zlib, behind an obfuscated, R5900-specific key schedule.
-This is genuine retail (no PS2TG/misfire crack, §1, §8); the body stays
-unreadable until it is decrypted, and a faithful decrypt is blocked statically
-(§10.5).
+is RC4-encrypted over zlib, behind a key schedule wrapped in anti-analysis
+decoys (§10.8). It is genuine retail (no PS2TG/misfire crack, §1, §8), and it
+unpacks fully offline once the decoys are seen through — the one real trick is
+a little-endian SHA-1 (§10.5). `tools/cbv10_unpack.py` reproduces it.
 
 ### 10.1 Provenance and image
 
@@ -959,7 +959,8 @@ unreadable until it is decrypted, and a faithful decrypt is blocked statically
 | Format | ELF32 LE MIPS-III, one flat `PT_LOAD` at vaddr `0x1000000`, entry `0x1000008`, no ps2-packer/N2E magic |
 | Layout | plaintext loader `0x1000000`–~`0x1014000` (entropy ≈5.5); RC4+zlib body after (≈8.0), no readable strings |
 
-Corpus (gitignored): `elf/CBv10.BOOT.ELF`, `elf/CBv10.SYSTEM.CNF`, loader
+Corpus (gitignored): `elf/CBv10.BOOT.ELF`, `elf/CBv10.SYSTEM.CNF`, the decrypted
+image `elf/CBv10.unpacked.bin` (9,370,970 bytes, SHA-256 `9cb83c7f…`), and loader
 decompilation `elf/cbv10-loader-decomp.txt`. The `va→file` map is
 `off = 0x1000 + (vaddr - 0x1000000)`.
 
@@ -1002,81 +1003,83 @@ Stored RC4 key bytes at `0x1010940`:
 `ce67d054 669226d4 65cadff9 d9c3245c 18ffdde8` — but this is not the key used;
 it is XORed with a runtime value (§10.5).
 
-### 10.5 Key schedule (`FUN_01000248`): decoded, ported, still blocked
+### 10.5 Key schedule (`FUN_01000248`): solved
 
-The real RC4 key is `stored ⊕ C`:
+The RC4 key is `stored ⊕ C`. Most of `FUN_01000248` is anti-analysis decoy:
 
-* four `FUN_010009c0(constA, constB)` calls fill a 32-byte seed at `0x1010980`;
-* `A = SHA1(seed, 0x20)` → `0x1012a88`;
-* after `FUN_01000150`, `B = SHA1(0x1010980, 0x14)`;
-* `C = SHA1(A ‖ B)`, XORed byte-for-byte into the key at `0x1010940`.
+* Four `FUN_010009c0(constA, constB)` calls fill a 32-byte seed at `0x1010980`,
+  which the first `SHA1` hashes to `0x1012a88`. `FUN_010009c0` is a 10-round EE
+  single-precision float bit-mixer (`madd.s`/`msub.s`, EE COP1 extensions,
+  keeping the low 3 bits of each result — exactly where the EE FPU diverges from
+  IEEE, which defeats a generic emulator). **But `FUN_01000150` then overwrites
+  both `0x1012a88` and `0x1010980` with fixed constants** (via `FUN_010060f8`),
+  discarding the seed and that first hash. The mixer and the SIF-RPC around it
+  (`FUN_01000150` binds IOP RPC servers `0x8000059x` but loads no module and
+  feeds nothing into the key) are decoys — they point analysis at the EE FPU and
+  the IOP.
+* The one real trick is **byte order**: the firmware's SHA-1 writes its five
+  state words in EE-native little-endian, not the standard big-endian digest, so
+  every hash is byte-swapped per word.
 
-`FUN_010009c0` is the anti-tamper core, and it is now fully decoded — the
-opcodes Ghidra/rizin/llvm refuse are documented EE instructions, not unknowns.
-The two `invalid` ops are `padduw at/v0, zero, zero` (register clears via
-128-bit MMI). The rest is a 10-round single-precision float bit-mixer:
+With `le_sha1(x)` = per-word byte-swap of a standard SHA-1 digest, and the two
+constant blocks `FUN_010060f8` writes:
 
 ```
-madd.s f0, f12, f13          ; f0 = ACC + f12*f13   (ACC stays 0; madd/msub never write it)
-v0 = (v0 | (bits(f0) & 7)) << 3
-f12 = (float)(v0 & 0xffff) - f0 ;  bits(f12) &= 0xcfffffff
-msub.s f0, f13, f12          ; f0 = ACC - f13*f12
-v0 = v0 | (bits(f0) & 7)
-f13 = (float)(v0 & 0xffff) - f0 ;  bits(f13) &= 0xcfffffff
+const20 = {1, 0x39956993, 0x55, 0, 0x05bc0000}            @ 0x1010980
+A       = {938ca6bf,e620cc81,137a84c2,78ae9796,889dca10}  @ 0x1012a88
+B       = le_sha1(const20)                                # 2nd SHA1 -> 0x1010980
+C       = le_sha1(A ‖ B)                                  # 3rd SHA1 -> 0x1010980
+key     = stored(0x1010940) ⊕ C
+        = 29f32f09 0c66b07d c5b12c51 695e432e b1d8ea10
 ```
 
-returning the 64-bit `v0`. It keeps only the low 3 bits of each result —
-deliberately, since that is exactly where the EE FPU diverges from IEEE.
-`madd.s`/`msub.s` are EE COP1 extensions (functs 0x1c/0x1d); the EE FPU has no
-NaN/Inf (clamp to ±Fmax), flushes denormals, and `madd` rounds the `fs*ft`
-product to single before adding `ACC`.
-
-`tools/cbv10_unpack.py` ports PCSX2's exact EE FPU (`FPU.cpp`: `fpuDouble` plus
-the add/sub/mul/madd/msub bodies and the overflow/underflow checks), computes
-the seed, and tests every plausible SHA-1 chaining against the zlib oracle
-(correct iff the RC4 output inflates). **None matches.** The pure-constant
-chaining reproduces the earlier miss exactly, so the RC4/zlib plumbing is
-sound; the failure is upstream, in the key. That leaves three causes, not
-separable statically:
-
-1. **`FUN_01000150`'s SIF-RPC read feeds the key.** It binds a real IOP RPC
-   server (`0x8000059x`); the 20 bytes it leaves at `0x1010980` may come from an
-   IOP module, not the `FUN_010060f8` constants
-   (`0x1012a88 = 938ca6bf e620cc81 137a84c2 78ae9796 889dca10`,
-   `0x1010980 = 01, 0x39956993, 0x55, 0, 0x05bc0000`), making the key depend on
-   runtime IOP state.
-2. **EE FPU fidelity beyond PCSX2.** The mixer uses only the low 3 mantissa
-   bits, exactly where PCSX2's software FPU is known to diverge from real EE
-   silicon — so a PCSX2-accurate port (and PCSX2 itself) can still give the
-   wrong seed.
-3. A SHA-1 chaining detail not pinned (least likely; the natural ones are
-   covered).
-
-**Conclusion.** The opcodes are solved; one dynamic observation still finishes
-it (§10.7). §8's limits apply — nothing was run on hardware or PCSX2 here.
+The opcodes were the red herring; the SHA-1 endianness was the wall.
+`tools/cbv10_unpack.py` derives this key, RC4-decrypts the body and inflates it
+to `elf/CBv10.unpacked.bin` (9,370,970 bytes, SHA-256 `9cb83c7f…`), which is
+full of plaintext CodeBreaker UI strings — decrypted entirely offline, no
+hardware or PCSX2 run.
 
 ### 10.6 Clean, not cracked
 
-Retail v10 carries no `VERSION`/`PS2TG`/`misfire`/`RSA Patch` strings (the body
-is encrypted) and boots through a genuine anti-tamper loader (RC4 over zlib, an
-obfuscated R5900 key schedule, SIF-RPC to the IOP). It is not the PS2TG "no
-Anti-Modchip" v9.2 carrying misfire's RSA patch (§1, §8). So its signature path
-is presumably unmodified — the opposite problem from v9.2: stock, but unreadable
-until the body is decrypted.
+The decrypted image says `VERSION CodeBreaker PS2 V10.0`, credits Pelican
+Accessories and `www.codebreaker.com`, and loads `pelican.bin`, with no
+`PS2TG`/`misfire`/`RSA Patch`/`Anti-Modchip` markers anywhere. This is stock
+retail, not the PS2TG "no Anti-Modchip" v9.2 carrying misfire's RSA patch
+(§1, §8): its signature path is unmodified. The opposite case from v9.2 — stock,
+but behind an anti-analysis loader rather than in the clear.
 
-### 10.7 Finishing it: pull the key from a dynamic run
+### 10.7 Cross-check on hardware
 
-The key at `0x1010940` is final once `FUN_01000248` returns, before RC4 reads
-it. In PCSX2's R5900 debugger:
+The static key can be confirmed dynamically: in PCSX2's R5900 debugger, set an
+EE execution breakpoint at `0x010000E0` (`FUN_010000e0`, the RC4 wrapper, run
+just after key derivation) and read `0x14` bytes at `0x01010940` — it should be
+`29f32f09…b1d8ea10`. Or breakpoint after the inflate and dump EE RAM from
+`0x00100000` for the inflated length to get the image directly, with the §10.3
+memcpy targets (`0x1d00000`, …) holding the runtime layout. Not run here; the
+offline unpack already produced the image.
 
-1. Boot the disc / `BOOT.ELF` and let the loader run.
-2. Set an EE execution breakpoint at `0x010000E0` (`FUN_010000e0`, the RC4
-   wrapper — reached just after key derivation).
-3. On hit, read `0x14` bytes at EE address `0x01010940`: the real RC4 key.
-4. `python3 tools/cbv10_unpack.py BOOT.ELF --key <40 hex>` RC4-decrypts and
-   inflates the body to `CBv10.unpacked.bin`.
+### 10.8 The anti-analysis decoys
 
-Or breakpoint after the inflate (`FUN_01000a58`, called from `FUN_010003a8`) and
-dump EE RAM from `0x00100000` for the inflated length — the decompressed image
-directly; the §10.3 memcpy targets (`0x1d00000`, …) then hold the runtime
-layout.
+The v10 loader spends more code misdirecting than protecting. Roughly in order
+of how much time each one can burn:
+
+1. **The EE-FPU bit-mixer (`FUN_010009c0`).** Four calls build a 32-byte seed
+   with `madd.s`/`msub.s`, keeping only the low 3 bits of each result — pointing
+   straight at EE-vs-IEEE FPU differences and inviting a full EE FPU port (which
+   I did, from PCSX2). The seed is hashed to `0x1012a88`, then overwritten. It
+   never reaches the key.
+2. **The SIF-RPC to the IOP (`FUN_01000150`).** Real `sceSifBindRpc` scaffolding
+   to servers `0x8000059x` sits right in the key path, implying the key is
+   hardware/IOP-bound and recoverable only on a console. It loads no module and
+   the key depends on no RPC result; `FUN_010060f8` writes the constants either
+   way.
+3. **The stored "key" at `0x1010940`.** The 20 bytes KSA reads are not the key;
+   they are XORed with the derived value first.
+4. **Little-endian SHA-1 — the only real obfuscation.** Writing the five state
+   words EE-native instead of as the standard big-endian digest makes every
+   reconstruction silently wrong until you notice. Add the per-word byte-swap
+   and the constants alone give the key; decoys 1–3 fall away.
+
+The tooling gap sharpened the misdirection: Ghidra, rizin and llvm can't decode
+the EE COP1/MMI ops, so the mixer reads as an opaque wall rather than as the
+dead end it is.
