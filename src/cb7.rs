@@ -292,10 +292,13 @@ const fn mod_inverse(x: u32) -> u32 {
 
 // RSA encryption/decryption
 //
-// This is exact math, which CodeBreaker's own bignum code isn't. Its reduction
-// (at 0x133bbc in v9.2) takes each quotient digit as the low 32 bits of a
-// 64-by-32-bit division and doesn't clamp it to 0xffffffff. The top word of
-// our modulus is 0xffffffff, so the digit wraps whenever the partial
+// This is exact math, which CodeBreaker's own bignum code isn't. That code is
+// a generic 32-bit-limb bignum, not a known crypto library: Karatsuba multiply
+// and a Knuth-D reduction, with the 64-by-32-bit division from libgcc's
+// __udivdi3/__umoddi3. Its reduction (at 0x133bbc in v9.2) takes each quotient
+// digit as the low 32 bits of that division and skips Knuth's step D3 clamp to
+// 0xffffffff. The top word of our modulus is 0xffffffff, so the digit wraps
+// whenever the partial
 // remainder's top word is 0xffffffff as well, and the result is wrong. When
 // decrypting, that happens for every input in 0xffff_ffff_8000_0000..modulus
 // and sporadically for others whose intermediate powers hit the same case, an
