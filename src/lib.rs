@@ -114,6 +114,14 @@ impl Codebreaker {
 
     /// Encrypts a code and returns the result.
     ///
+    /// This is the inverse of [`decrypt_code`](#method.decrypt_code).
+    /// [`auto_decrypt_code`](#method.auto_decrypt_code) can read the result
+    /// differently, just like CodeBreaker: CB v1-encrypted codes may look raw,
+    /// and `FFFFFFFF 0000nnnn`, which encryption doesn't interpret, turns CB v7
+    /// off for the codes after it. To add raw codes after CB v7 codes, encrypt
+    /// up to and including `FFFFFFFF 00000000`, then append the raw codes as
+    /// they are.
+    ///
     /// # Example
     /// ```
     /// use codebreaker::Codebreaker;
@@ -129,6 +137,9 @@ impl Codebreaker {
     }
 
     /// Encrypts a code directly.
+    ///
+    /// See [`encrypt_code`](#method.encrypt_code) for how the result relates to
+    /// decryption.
     ///
     /// # Example
     /// ```
