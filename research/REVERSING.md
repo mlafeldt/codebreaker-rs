@@ -426,7 +426,9 @@ Only for context. The firmware is the reference.
   execute any payload. That is the crack, not stock behaviour, so the verify
   path here says nothing about the real firmware. A genuine forgery question
   (is the RC4-masked padding scheme sound against `e = 0x10001`?) needs a clean
-  image to study.
+  image to study. The retail v10 image now settles what stock does: the same
+  verdict there is `sltiu v0, v0, 1`, so the patch swapped `sltiu`→`addiu`
+  (`2c`→`24`) to force a pass (§10.9).
 * Nothing run on hardware or in PCSX2. §9 emulates the unpacked image in
   Ghidra, with the R5900-specific instructions hooked.
 * Encryption in `src/` has no firmware counterpart and is only checked as the
@@ -1083,3 +1085,33 @@ of how much time each one can burn:
 The tooling gap sharpened the misdirection: Ghidra, rizin and llvm can't decode
 the EE COP1/MMI ops, so the mixer reads as an opaque wall rather than as the
 dead end it is.
+
+### 10.9 Spot check: v10's signature verdict is intact
+
+With v10 decrypted, one comparison is worth making now (the full v9.2 ↔ v10
+diff is for later): does stock v10 enforce the RSA signature that v9.2's crack
+neutered (§8)? Yes. v10's `memcmp` is at `0x144740`, byte-identical to v9.2's
+`FUN_0014611c`, and its RSA verify — the v10 analog of `FUN_00132ed8`, same
+stack frame — ends (base `0x100000`):
+
+```
+0x1316a8  jal   0x144740         ; memcmp(expected, recovered)
+0x1316ac  addiu a2, zero, 0x100  ; 256 bytes
+0x1316b0  ld    ra, 0x340(sp)
+0x1316b4  sltiu v0, v0, 1         ; v0 = (memcmp == 0): 1 iff the blocks match
+0x1316c8  jr    ra
+```
+
+The verdict is the compare result, and all three `memcmp` callers in v10 consume
+it (the other two branch on it). v9.2's crack is this same instruction,
+lobotomised:
+
+| | address | instruction | word |
+|---|---|---|---|
+| v10 retail | `0x1316b4` | `sltiu v0, v0, 1` | `2c420001` |
+| v9.2 PS2TG | `0x132fec` | `addiu v0, zero, 1` | `24020001` |
+
+A one-word patch (`sltiu`→`addiu`, `2c`→`24`) turns "pass iff the signature
+matches" into "always pass". This confirms the v10 decrypt is faithful and pins
+exactly what misfire's 2008 patch changed. Anchors for the full comparison:
+v10 base `0x100000`, `memcmp` `0x144740`, verify tail `0x1316a8`.
