@@ -48,13 +48,13 @@ The CB v7 implementation intentionally preserves byte-level behavior from the or
 
 ## History
 
-- **2006**: I cracked the CodeBreaker PS2 v7 code encryption by reverse-engineering MIPS R5900 assembly and [converting it to C](https://github.com/mlafeldt/cb2util/blob/v1.9/cb2_crypto.c).
-  The first v7 codes were decrypted on March 8, and [CB2crypt](https://github.com/mlafeldt/CB2crypt), a Windows tool built on that code, followed on March 23.
-- **2007**: The code moved on to [cb2util](https://github.com/mlafeldt/cb2util), first released in April and extended until 2013 to handle CodeBreaker's file formats.
-- **2020**: [Ported to Rust](https://github.com/mlafeldt/cb2util/pull/13) for fun and profit and published as this crate.
+- **2006**: I cracked the CodeBreaker PS2 v7 code encryption by reverse-engineering MIPS R5900 assembly and [converting it to C](https://github.com/mlafeldt/CB2crypt/blob/v1.0/src/cb2_crypto.c).
+  I decrypted the first v7 codes on March 8 and released [CB2crypt](https://github.com/mlafeldt/CB2crypt), a Windows tool built on that code, on March 23.
+- **2007**: Released [cb2util](https://github.com/mlafeldt/cb2util) in April, built on the same code, and extended it until 2013 to handle CodeBreaker's file formats.
+- **2020**: [Ported the code to Rust](https://github.com/mlafeldt/cb2util/pull/13) for fun and profit and published it as this crate.
   I wrote about it in [7 Things I Learned From Porting a C Crypto Library to Rust](https://web.archive.org/web/20241119103347/https://sharpend.io/7-things-i-learned-from-porting-a-c-crypto-library-to-rust/).
-- **2026**: Checked against the CodeBreaker v9.2 firmware with the help of AI.
-  Its decryption code was decompiled and run in an emulator side by side with this crate on more than 10,000 code lines.
+- **2026**: Checked against the CodeBreaker v9.2 firmware, mostly with Claude Code and Opus 5.5.
+  A homegrown Ghidra script ran the firmware's own decryption code on more than 10,000 code lines and compared the results with this crate.
   This found two regressions in 0.4.0 and two older bugs, all fixed now, and added support for the `FFFFFFFF` lines that turn CB v7 off.
   A quirk in the firmware's RSA code and a rarely used encryption option are left out on purpose and explained in the code.
 
