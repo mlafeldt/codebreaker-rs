@@ -24,19 +24,20 @@ against `src/` on about 10,600 lines.
 Binaries and raw tool output are in `elf/` (gitignored, copyrighted). Scripts
 are in `tools/` and `compare/`.
 
-**Branches.** `research/` lives only on the `research` branch, which is
-rebased onto `main` from time to time. `main` never sees it:
+**Branches.** `research/` lives only on the `research` branch. `main` never
+sees it; instead `main` is merged into `research` when it advances (never the
+other way, and `research` is never rebased), so every hash on both branches is
+stable and citable:
 
 * Fixes to `src/` that come out of this research go on `main` as normal
   commits, with their own tests, firmware-verified vectors, and commit
   messages that cite CodeBreaker v9.2 but not `research/`.
-* This document cites those fixes by their `main` hash. These hashes survive
-  rebases, unlike the hashes of commits on `research`, so don't cite those.
-* After a rebase, `compare/` (`head = ../..`) builds the crate from `main`
-  plus this branch, so rerun the checks there to confirm a fix.
+* This document cites those fixes by their `main` hash; it may also cite
+  `research` commits, since merging (unlike rebasing) leaves them untouched.
+* `compare/` (`head = ../..`) builds the crate from the `research` tip, i.e.
+  `main` plus this branch, so rerun the checks there to confirm a fix.
 * Verified work that stays off `main` gets its own branch, e.g.
-  `ffffffff-encryption-options` (§9.5). Cite it by hash too, and don't rebase
-  it.
+  `ffffffff-encryption-options` (§9.5). Cite it by hash too.
 
 
 ## 1. The ELF
