@@ -121,7 +121,12 @@ vaddr = file offset + `0xff000`.
   ("requires EF_MIPS_ARCH_32R2, or ... MIPS-I or EF_MIPS_ARCH_32") or R5900
   ("Machine-specific MIPS variants ... need a separately supported processor
   profile"). Hopper, IDA and Kuna adapters admit no MIPS. It also only takes
-  Ghidra 12.1.x.
+  Ghidra 12.1.x. The v10 retail `BOOT.ELF` has a MIPS **III** header, so
+  `open_binary` accepts the file — but every provider then rejects the EE
+  target anyway, with the same "Machine-specific MIPS variants ... need a
+  separately supported processor profile" (Hopper/IDA/Kuna still no MIPS). A
+  valid ELF arch clears REA's loader check but not its adapter, so EE work
+  still goes through `analyzeHeadless` directly (§10).
 
 ```
 analyzeHeadless <proj> cb92 -import elf/CBv92.unpacked.elf -processor MIPS:LE:64:64-32addr \
@@ -934,3 +939,103 @@ besides `0x1042b0`, and `0x1042b0` has none besides the list processor
 * GNU sed is first in `PATH` here, so `sed -i ''` fails.
 * An `FFFFFFFF` test line right after a beefcode is never an option line.
   Two first-draft vectors were wrong because of that.
+
+## 10. CodeBreaker v10 retail loader (2026-10-28)
+
+A second image, this time **retail**, to compare against the cracked v9.2. It
+turned out to be a self-decrypting loader, not a quick string check: the body
+is RC4-encrypted over zlib, behind an obfuscated, R5900-specific key schedule.
+This is genuine retail (no PS2TG/misfire crack, §1, §8); the body stays
+unreadable until it is decrypted, and a faithful decrypt is blocked statically
+(§10.5).
+
+### 10.1 Provenance and image
+
+| | |
+|---|---|
+| Disc | `Code Breaker Version 10.iso`, UDF 1.5 volume `SMS25R4`, 2,122,383,360 bytes |
+| `SYSTEM.CNF` | `BOOT2 = cdrom0:\BOOT.ELF`, `VER = 1.00`, `VMODE = PAL/NTSC` (plus a 2 GB `DUMMY.BIN` pad) |
+| `BOOT.ELF` | 3,688,628 bytes, SHA-256 `aafabd9b9ef8b74349ee6aa4272e4efa3fc1fd9838ceed78a23afff2521f3f04` |
+| Format | ELF32 LE MIPS-III, one flat `PT_LOAD` at vaddr `0x1000000`, entry `0x1000008`, no ps2-packer/N2E magic |
+| Layout | plaintext loader `0x1000000`–~`0x1014000` (entropy ≈5.5); RC4+zlib body after (≈8.0), no readable strings |
+
+Corpus (gitignored): `elf/CBv10.BOOT.ELF`, `elf/CBv10.SYSTEM.CNF`, loader
+decompilation `elf/cbv10-loader-decomp.txt`. The `va→file` map is
+`off = 0x1000 + (vaddr - 0x1000000)`.
+
+### 10.2 Tooling
+
+REA opens the file but can't analyze it (§3), so this used `analyzeHeadless`
+12.1.4 `-processor MIPS:LE:64:64-32addr` with `DecompAt.java`, plus rizin for
+instruction-level checks where Ghidra's lifter failed.
+
+### 10.3 Unpack flow (`entry` → `FUN_010003a8`)
+
+`entry` (`0x1000008`) is ordinary crt0: clear BSS `0x1383680..0x1385710`,
+SetupThread/SetupHeap syscalls, then the unpack driver `FUN_010003a8`:
+
+1. `FUN_01000248()` — derive the RC4 key (§10.5).
+2. `FUN_010000e0(0x1012ab0, *0x1383580)` — RC4-decrypt the body in place,
+   length `0xe9754`.
+3. `FUN_01008f2c(0x80000, 0, 0x1c00)` — memset the zlib window.
+4. `FUN_01000a58(0x100000, ..., 0x1012ab8, *0x1012ab4)` — zlib-inflate the
+   decrypted body (input at `0x1012ab8`, length at `0x1012ab4`) to `0x100000`.
+5. `FUN_01008e80(dst, src, len)` ×5 — memcpy inflated slices to their runtime
+   addresses `0x1d00000`, `0x1d64000`, `0x1d7d000`, `0x1de1000`, `0x1500010`.
+
+So the body is zlib-compressed, then RC4-encrypted; recovery is RC4-decrypt
+then inflate — once the key is known.
+
+### 10.4 Primitives
+
+| Role | Function(s) | Notes |
+|---|---|---|
+| RC4 KSA | `FUN_01003dc0` | S-box + two index bytes at `+0x100/+0x101` |
+| RC4 PRGA | `FUN_01003e58` | keystream `S[(S[i]+S[j])&0xff]`, XORed into data |
+| RC4 wrapper | `FUN_010000e0(data,len)` | S-box `0x1012980`, key `0x1010940` len `0x14` |
+| zlib inflate | `FUN_01000a58` | `inflateInit_(strm,"1.1.4",0x48)` `FUN_01000d40`, `inflate(strm,4)` `FUN_01000d68`, `inflateEnd` `FUN_01000b88` — zlib 1.1.4 |
+| SHA-1 | init `FUN_01003ff0` / update `FUN_01004038` / final `FUN_010040f8` | IV `67452301 efcdab89 98badcfe 10325476 c3d2e1f0`, 20-byte digest |
+| memcpy / memset | `FUN_01008e80` / `FUN_01008f2c` | 16-byte-aligned fast path + byte tail |
+| cache flush | `FUN_010009b0` | `syscall` |
+
+Stored RC4 key bytes at `0x1010940`:
+`ce67d054 669226d4 65cadff9 d9c3245c 18ffdde8` — but this is not the key used;
+it is XORed with a runtime value (§10.5).
+
+### 10.5 Key schedule (`FUN_01000248`), and why static unpack is blocked
+
+The real RC4 key is `stored ⊕ C`, where:
+
+* four `FUN_010009c0(constA, constB)` calls fill a 32-byte seed at `0x1010980`;
+* `A = SHA1(seed, 0x20)` → `0x1012a88`;
+* after `FUN_01000150`, `B = SHA1(0x1010980, 0x14)`;
+* `C = SHA1(A ‖ B)` → `0x1010940` XOR target.
+
+`FUN_010009c0` is R5900 COP1-extension arithmetic on the baked float constants:
+`madd.s` (`0x460d601c`, funct 0x1c), `msub.s` (`0x460c681d`, funct 0x1d) and an
+MMI op (`0x70000c28`, op 0x1c). Ghidra renders these `special2`/`halt_baddata`;
+rizin and llvm show `invalid`. So the seed can't be reconstructed from the
+listing, and Ghidra's own emulator can't execute them either — the same
+R5900-MMI/COP limit noted in §9.10, now on the critical path.
+
+`FUN_01000150` wraps SIF-RPC scaffolding to the IOP (`FUN_01005ba0` bind,
+server IDs `0x8000059x`); `FUN_010060f8` writes fixed constants
+(`0x1012a88 = 938ca6bf e620cc81 137a84c2 78ae9796 889dca10`, and
+`0x1010980 = 01, 0x39956993, 0x55, 0, 0x05bc0000`) into the key buffer. The
+obvious static reconstructions (A/B from those constants, several SHA-1
+chainings, `tools/cbv10_unpack.py`) were tried; none produces a zlib header
+(`0x78`) after RC4, so the `FUN_010009c0` seed genuinely matters and the
+constants alone are not the whole input.
+
+**Conclusion.** A faithful decrypt needs an R5900-accurate emulator (PCSX2) or
+hardware: run the loader and dump EE RAM at `0x100000` (post-inflate) or the
+runtime regions in §10.3. Not done here; §8's limits apply.
+
+### 10.6 Clean, not cracked
+
+Retail v10 carries no `VERSION`/`PS2TG`/`misfire`/`RSA Patch` strings (the body
+is encrypted) and boots through a genuine anti-tamper loader (RC4 over zlib, an
+obfuscated R5900 key schedule, SIF-RPC to the IOP). It is not the PS2TG "no
+Anti-Modchip" v9.2 carrying misfire's RSA patch (§1, §8). So its signature path
+is presumably unmodified — the opposite problem from v9.2: stock, but unreadable
+until the body is decrypted.
