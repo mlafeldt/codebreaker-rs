@@ -337,6 +337,9 @@ def report_lists(t):
     # 2nd line is V1-decrypted.
     prog('opt-key-2-lines', [d, x, (M32, 0x00020000), (0x4043AFCC, 0x00020001), (0x00010003, 0),
                              (0x2043AFCC, 0x2411FFFF, 'raw'), (BEEF, 0, 'v1'), (0x2096F5B8, 0xBE)])
+    # Options: V7 off for 1 decrypted line, and that line is a V1 beefcode.
+    # Counting it turns V7 back on first, so it rekeys without starting over.
+    prog('opt-count-beef', [d, x, (M32, 0x00000001), (BEEF, 0, 'v1'), (0x2096F5B8, 0xBE), (0x201F6024, 0)])
     # RSA inputs (values after the 64 rounds) that the firmware's bignum code
     # gets wrong: N - 1, the start of the always-wrong range, and a value
     # outside it whose square lands in it

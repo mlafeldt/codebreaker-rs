@@ -96,7 +96,12 @@ def main():
                 diffs = []
                 if st['lines'] != cst['lines']:
                     diffs.append(f"lines fw={st['lines']} crate={cst['lines']}")
-                if fw_scheme(st) != cst['scheme']:
+                # Outside V7, the raw/V1 flag is dead at a code start: the
+                # next line sets it before reading it. So only compare V7 then.
+                fs, cs = fw_scheme(st), cst['scheme']
+                if st['lines'] == 0 and st['opt'] != 2 and fs != 'V7':
+                    fs, cs = fs == 'V7', cs == 'V7'
+                if fs != cs:
                     diffs.append(f"scheme fw={fw_scheme(st)} crate={cst['scheme']}")
                 if st['mode'] & 0x10000 and st['key'] != cst['key']:
                     diffs.append('key')
