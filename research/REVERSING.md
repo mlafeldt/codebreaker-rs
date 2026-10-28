@@ -608,6 +608,15 @@ Encryption keeps the exact `mod_pow`. It matches `cb_rsa` on 172,140 values
 (random, the whole bad range, n−1..n−2000, the sporadic ones) and fixes both
 `targeted` RSA lists.
 
+Not a signature-forgery vector. The same reduction runs in the 2048-bit
+signature check (§9.9), so the defect is reachable there too (the partial
+remainder's top word == the modulus's top limb, ~2⁻³² per step). It buys
+nothing: the signature key at `0x2949b8` is e = `0x10001` over a modulus whose
+top limb is `0x90116783`, so the bug only perturbs the modexp into another
+full-width residue — no algebraic lever, no search-space reduction — and e ≠ 3
+rules out low-exponent forgery. Forging still needs the private key or a
+firmware patch.
+
 ### 9.5 `FFFFFFFF` encryption options (bit 16 and count since `16299e0`, bit 17 left out)
 
 Only `0x1042b0` writes `opt` (`0x36e300`) to non-zero (`luirefs.py`: every
@@ -865,10 +874,20 @@ nothing else differs except RSA (§9.4). Both are left out on purpose.
 
 | Caller | Protects | Scope |
 |---|---|---|
-| `0x10ab80` (Day1 import UI) | CBC code files: magic `0x01554643` ("CFU", 1) or the older format with `0x800` at `+0x104`. It verifies the RSA signature (`0x133180` → `0x132ed8`, key at `0x2949b8`: e = `0x10001`, 2048-bit n) and RC4-decrypts from `+0x158`/`+0x40` with the 1024-byte key at `0x314090`. | cb2util (`cbc.c`, `cb2_crypto.c:597` has the same key) |
+| `0x10ab80` (Day1 import UI) | CBC code files. Verifies the RSA signature (`0x133180` → `0x132ed8`, key at `0x2949b8`: e = `0x10001`, 2048-bit n) for v8+ files only, identified by `fileid` `0x01554643` ("CFU", 1) or `cbvers` `0x800` at `+0x104` (both fields of the same `cbc_hdr_t`). Then RC4-decrypts with the 1024-byte key at `0x314090`, from `+0x158` (v8+) or `+0x40` (v7). | cb2util (`cbc.c`, `cb2_crypto.c:597` has the same key) |
 | `0x1186d8`, `0x11aff8` | downloaded/HDD archives at `0xf00000`: 0x128-byte header, then RC4 (same key) and decompress (`0x12e910`, "Uncompress Data Error") | out of scope |
 | `0x114ea0`, `0x114ff0` | `pelican.bin`/`upgrade.bin` (`PCB_*` over the network): signature check (`0x133180`), RC4 (same key) at `0x1000100`, then jump to `0x1000008`/`0x1000000` | out of scope |
 | `0x132e38` | RC4 keystream as a padding/mask generator inside the signature check | out of scope |
+
+The CBC signature only guards v8+ files. A file that is neither (no "CFU"
+magic, no `0x800` `cbvers`) is a v7 CBC file, which has no signature field at
+all — cb2util's `cbc7_hdr_t` is `0x40` bytes of title then data, against
+`cbc_hdr_t`'s `0x158` with its 256-byte `rsasig`. The import defaults the
+verdict (`DAT_00296080` = 1) and loads it. That's legitimate legacy handling,
+not a bypass: v7 code files were always unsigned, so the v8+ signature is
+authenticity, not a capability gate. The real signed execution boundary is PCB
+(`pcb.c`: 256-byte `rsasig` then an ELF loaded at `0x1000000` and jumped to),
+the `pelican.bin`/`upgrade.bin` path at `0x114ea0`/`0x114ff0`.
 
 The V1 and V7 routines (`0x103410`, `0x103f60`, `0x1035b0`) have no callers
 besides `0x1042b0`, and `0x1042b0` has none besides the list processor
