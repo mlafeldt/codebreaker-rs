@@ -1184,6 +1184,18 @@ raw at base `0x100000`.
 cd research && python3 -I tools/cbcrypt_diff.py
 ```
 
+The static diff is cross-checked by emulation. `tools/ghidra/EmuP.java` is
+`Emu.java` with a per-image address table (`v92`/`v10` argument), so the real
+v10 functions run on real inputs; `tools/fwmodel10.py` is an executable v10
+model, written as a diff-subclass of `fwmodel.py` (the four §11.3 changes as
+code). `tools/emudiff10.py` compares the v10 emulation with the crate and the
+model; `tools/cmpout.py` compares the two images' emulations line by line; and
+`tools/attrib.py` puts each change behind a flag and confirms all flags off
+reproduces the v9.2 emulation and all on reproduces v10 (so the four changes
+are jointly sufficient and each is necessary). `tools/runemu.sh` drives the
+headless runs, `tools/wrap.py` makes the Ghidra-loadable v10 ELF from the raw
+`.bin`.
+
 ### 11.2 Verdict
 
 | Function | v9.2 | v10 | insns | Verdict |
@@ -1264,3 +1276,37 @@ engine-side formatting, not crypto, and `src/` returns beefcodes to the caller
 instead (§6.7). `src/` targets v9.2 and the device as decompiled; no v10 support
 is proposed. This is recorded so a future "support v10" task starts from the
 right diff.
+
+### 11.5 Compatibility: why no shipped code breaks
+
+If v9.2 and v10 decrypt the same list differently, how did every v7+ device run
+the same published codes? Because the divergence is gated to beefcode shapes
+that distributed codes never used. A list with a single default
+`BEEFC0DE 00000000` at the top (or no beefcode) takes the identical path on both
+images: the value is 0, so v9.2's `rekey(0/1, 0)` and v10's "ignore val, copy
+zeroed defaults" land on the same key schedule, and every following line
+decrypts bit-for-bit the same. That is what CMGSCCC and the scene shipped. The
+divergence needs one of: a beefcode carrying a **non-zero value**, a **second**
+beefcode in the list, a code count reaching **zero on a beefcode**, or **bit-17**
+options — all engine features nobody authored codes for. v10 did not add
+behaviour; it *removed* the value handling (every beefcode hard-resets to the
+default state), which was safe precisely because that path was dead.
+
+Reproduce with the committed tools (`tools/compat_demo.py`, run from
+`research/`): a plain `BEEFC0DE 00000000` list decrypts identically on both
+models, while `BEEFC0DE 0000002A` and a repeated `BEEFC0DE 0` diverge from the
+first code line after the offending beefcode:
+
+```
+plain   BEEFC0DE 00000000: v9.2==v10 ? True
+value   BEEFC0DE 0000002A: v9.2==v10 ? False   (line 1 on: 01234567 -> 2E432A2B ...)
+second  BEEFC0DE 0 .. BEEFC0DE 0: v9.2==v10 ? False  (lines after the 2nd beefcode)
+```
+
+`tools/fixdiff.py <cb2util code lists>` runs both models over a real code corpus
+and reports the games that differ plus how often a non-zero/repeated beefcode or
+a bit-17 line even occurs; on the cb2util game fixtures it finds none (the only
+`beef.enc` differences are the 3 synthetic tests, §11.4). `tools/attrib.py`
+attributes each divergent fuzz list to the specific change. So `src/`, which
+matches v9.2 (§9.2), also matches v10 on every list a published code can be —
+the incompatibility is real but confined to the subset no one used.
