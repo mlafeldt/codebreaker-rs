@@ -416,8 +416,10 @@ Only for context. The firmware is the reference.
 
 ## 8. Caveats
 
-* Single image, v9.2, cracked and modded (§1). Behaviour in v7/v8 is assumed
-  to be the same. One mod is located: the "RSA Patch ... credits go to
+* Primary image v9.2, cracked and modded (§1). A stock-payload v10 loader was
+  added later (§10); it shows the per-line code crypto changed between versions
+  (§11), so v9.2 behaviour does not carry over unchanged, and v7/v8 are unknown.
+  One mod is located: the "RSA Patch ... credits go to
   misfire" named in the §1 string is the signature verdict in `FUN_00132ed8`
   (the verifier behind `0x133180`, §9.9). It computes the padded-block compare
   at `0x14611c` and then throws the result away, forcing the return to 1
@@ -438,8 +440,8 @@ Only for context. The firmware is the reference.
 
 ## 9. Second pass: emulation (2026-10-26)
 
-Same image as §1 (no other version to diff against, so step 10 of
-`COMPARE_PROMPT.md` doesn't apply). This pass ran the firmware's per-line
+Same image as §1. (A second version, v10, was added later; §11 diffs the two
+and finds the code crypto changed.) This pass ran the firmware's per-line
 decrypt in Ghidra's emulator and diffed it against `src/` at `d9bab13`.
 
 ### 9.1 Method
@@ -901,12 +903,18 @@ nothing else differs except RSA (§9.4). Both are left out on purpose.
 The CBC signature only guards v8+ files. A file that is neither (no "CFU"
 magic, no `0x800` `cbvers`) is a v7 CBC file, which has no signature field at
 all — cb2util's `cbc7_hdr_t` is `0x40` bytes of title then data, against
-`cbc_hdr_t`'s `0x158` with its 256-byte `rsasig`. The import defaults the
-verdict (`DAT_00296080` = 1) and loads it. That's legitimate legacy handling,
-not a bypass: v7 code files were always unsigned, so the v8+ signature is
-authenticity, not a capability gate. The real signed execution boundary is PCB
-(`pcb.c`: 256-byte `rsasig` then an ELF loaded at `0x1000000` and jumped to),
-the `pelican.bin`/`upgrade.bin` path at `0x114ea0`/`0x114ff0`.
+`cbc_hdr_t`'s `0x158` with its 256-byte `rsasig`. v7 code files were always
+unsigned, so the v8+ signature is authenticity, not a capability gate, and the
+real signed execution boundary is PCB (`pcb.c`: 256-byte `rsasig` then an ELF
+loaded at `0x1000000` and jumped to), the `pelican.bin`/`upgrade.bin` path at
+`0x114ea0`/`0x114ff0`.
+
+The *default verdict* for such a v7 file, though, is not stock on this image.
+v9.2 defaults it to 1 — accept — at `DAT_00296080`; stock v10 defaults the same
+global to 0 — reject — at `0x772c80` (both are read-only, never stored). So
+"accept any unsigned v7 CBC" is a v9.2 change, most likely the "Day1 server mod
+... by bfoos" named in §1, not legacy handling. The 1-vs-0 values are verified
+by reading both images; the mod attribution is the 2026-10-29 re-review's.
 
 The V1 and V7 routines (`0x103410`, `0x103f60`, `0x1035b0`) have no callers
 besides `0x1042b0`, and `0x1042b0` has none besides the list processor
@@ -942,24 +950,34 @@ besides `0x1042b0`, and `0x1042b0` has none besides the list processor
 * An `FFFFFFFF` test line right after a beefcode is never an option line.
   Two first-draft vectors were wrong because of that.
 
-## 10. CodeBreaker v10 retail loader (2026-10-28)
+## 10. CodeBreaker v10 loader (2026-10-28, corrected 2026-10-29)
 
-A second image, this time **retail**, to compare against the cracked v9.2. It
-turned out to be a self-decrypting loader, not a quick string check: the body
-is RC4-encrypted over zlib, behind a key schedule wrapped in anti-analysis
-decoys (§10.8). It is genuine retail (no PS2TG/misfire crack, §1, §8), and it
-unpacks fully offline once the decoys are seen through — the one real trick is
-a little-endian SHA-1 (§10.5). `tools/cbv10_unpack.py` reproduces it.
+A second image, to compare against the cracked v9.2. It is a self-decrypting
+loader, not a quick string check: the body is RC4-encrypted over zlib, behind a
+key schedule that binds the key to the disc and the console (§10.8). The
+**decrypted payload is stock retail** (`VERSION CodeBreaker PS2 V10.0`, Pelican,
+unpatched signature path; §10.6, §10.9) — but the **loader itself is cracked**:
+a stub hardcodes the disc/console key inputs and a RAM patcher skips a later
+disc-key check (§10.8), so it boots without the original disc and unpacks fully
+offline. `tools/cbv10_unpack.py` reproduces the key and the decrypt.
+
+> **Correction (2026-10-29).** §10.5/§10.6/§10.8 first read the key schedule as
+> "anti-analysis decoys" around an intact retail loader. A re-review against the
+> image (every claim below re-verified by disassembly) showed the opposite: the
+> FPU mixer and the SIF-RPC are the *real* anti-copy inputs, and this loader is
+> cracked to bypass them. The derived key, the decrypt and §10.9 are unaffected;
+> the mechanism is re-described below. v10 also shows the per-line code crypto
+> changed between versions (§11).
 
 ### 10.1 Provenance and image
 
 | | |
 |---|---|
 | Disc | `Code Breaker Version 10.iso`, UDF 1.5 volume `SMS25R4`, 2,122,383,360 bytes |
-| `SYSTEM.CNF` | `BOOT2 = cdrom0:\BOOT.ELF`, `VER = 1.00`, `VMODE = PAL/NTSC` (plus a 2 GB `DUMMY.BIN` pad) |
+| `SYSTEM.CNF` | `BOOT2 = cdrom0:\BOOT.ELF;1`, `VER = 1.00`, `VMODE = PAL/NTSC` (plus a 2 GB `DUMMY.BIN` pad) |
 | `BOOT.ELF` | 3,688,628 bytes, SHA-256 `aafabd9b9ef8b74349ee6aa4272e4efa3fc1fd9838ceed78a23afff2521f3f04` |
-| Format | ELF32 LE MIPS-III, one flat `PT_LOAD` at vaddr `0x1000000`, entry `0x1000008`, no ps2-packer/N2E magic |
-| Layout | plaintext loader `0x1000000`–~`0x1014000` (entropy ≈5.5); RC4+zlib body after (≈8.0), no readable strings |
+| Format | ELF32 LE MIPS-III (R5900 `e_flags 0x20924001`), one flat `PT_LOAD` at vaddr `0x1000000` (file `0x1000`), entry `0x1000008`, 9 section headers, no ps2-packer/N2E magic |
+| Layout | plaintext loader `0x1000000`–`0x1012ab0` (entropy ≈5.5); RC4+zlib body after (≈8.0), no readable strings |
 
 Corpus (gitignored): `elf/CBv10.BOOT.ELF`, `elf/CBv10.SYSTEM.CNF`, the decrypted
 image `elf/CBv10.unpacked.bin` (9,370,970 bytes, SHA-256 `9cb83c7f…`), and loader
@@ -1007,24 +1025,26 @@ it is XORed with a runtime value (§10.5).
 
 ### 10.5 Key schedule (`FUN_01000248`): solved
 
-The RC4 key is `stored ⊕ C`. Most of `FUN_01000248` is anti-analysis decoy:
+The RC4 key is `stored(0x1010940) ⊕ C`, where `C` is the last of three chained
+SHA-1 hashes. Stock, the schedule binds the key to the disc and the console:
 
-* Four `FUN_010009c0(constA, constB)` calls fill a 32-byte seed at `0x1010980`,
-  which the first `SHA1` hashes to `0x1012a88`. `FUN_010009c0` is a 10-round EE
-  single-precision float bit-mixer (`madd.s`/`msub.s`, EE COP1 extensions,
-  keeping the low 3 bits of each result — exactly where the EE FPU diverges from
-  IEEE, which defeats a generic emulator). **But `FUN_01000150` then overwrites
-  both `0x1012a88` and `0x1010980` with fixed constants** (via `FUN_010060f8`),
-  discarding the seed and that first hash. The mixer and the SIF-RPC around it
-  (`FUN_01000150` binds IOP RPC servers `0x8000059x` but loads no module and
-  feeds nothing into the key) are decoys — they point analysis at the EE FPU and
-  the IOP.
-* The one real trick is **byte order**: the firmware's SHA-1 writes its five
-  state words in EE-native little-endian, not the standard big-endian digest, so
-  every hash is byte-swapped per word.
+* Four `FUN_010009c0(constA, constB)` calls build a 32-byte seed at `0x1010980`
+  with a 10-round EE single-precision float bit-mixer (`madd.s`/`msub.s`, EE
+  COP1 extensions, keeping the low 3 bits of each result — where the EE FPU
+  diverges from IEEE). The first `SHA1` hashes that seed to `A` at `0x1012a88`.
+  The mixer is console-intrinsic: the same `A` on any PS2, but reproducing it
+  off-hardware needs an EE-accurate FPU.
+* `FUN_01000150` does a SIF-RPC to the IOP (`0x8000059x`) and lands the reply —
+  the **disc key** — as `const20` at `0x1010980` (a CDVD read-key call).
+* The one non-obvious schedule detail is **byte order**: the firmware's SHA-1
+  writes its five state words EE-native little-endian, not as the standard
+  big-endian digest, so every hash is byte-swapped per word.
 
-With `le_sha1(x)` = per-word byte-swap of a standard SHA-1 digest, and the two
-constant blocks `FUN_010060f8` writes:
+**This image is cracked** (§10.8): a stub at `0x10060f8` hardcodes *both*
+runtime inputs. It writes `const20` and `A` as literal immediates, so the
+disc-key RPC and the FPU mixer are bypassed and the key is fully static. With
+`le_sha1(x)` = per-word byte-swap of a standard SHA-1 digest, and the stub's two
+blocks (verified in §10.8):
 
 ```
 const20 = {1, 0x39956993, 0x55, 0, 0x05bc0000}            @ 0x1010980
@@ -1035,20 +1055,27 @@ key     = stored(0x1010940) ⊕ C
         = 29f32f09 0c66b07d c5b12c51 695e432e b1d8ea10
 ```
 
-The opcodes were the red herring; the SHA-1 endianness was the wall.
+In the file both `0x1010980` and `0x1012a88` are zero-filled buffers; the stub
+supplies the constants at runtime. The SHA-1 endianness was the wall.
 `tools/cbv10_unpack.py` derives this key, RC4-decrypts the body and inflates it
 to `elf/CBv10.unpacked.bin` (9,370,970 bytes, SHA-256 `9cb83c7f…`), which is
 full of plaintext CodeBreaker UI strings — decrypted entirely offline, no
 hardware or PCSX2 run.
 
-### 10.6 Clean, not cracked
+### 10.6 Cracked loader, stock payload
 
 The decrypted image says `VERSION CodeBreaker PS2 V10.0`, credits Pelican
 Accessories and `www.codebreaker.com`, and loads `pelican.bin`, with no
-`PS2TG`/`misfire`/`RSA Patch`/`Anti-Modchip` markers anywhere. This is stock
-retail, not the PS2TG "no Anti-Modchip" v9.2 carrying misfire's RSA patch
-(§1, §8): its signature path is unmodified. The opposite case from v9.2 — stock,
-but behind an anti-analysis loader rather than in the clear.
+`PS2TG`/`misfire`/`RSA Patch`/`Anti-Modchip` markers. The **payload** is stock
+retail: its signature path is unmodified (§10.9), and the three words the RAM
+patcher (§10.8) changes are intact on disk — `0x115b14` is `jal 0x1310f8` and
+`0x1142c0` is `jal 0x130e18` (verified). So the decrypted image is a faithful
+stock-v10 reference.
+
+The **loader** that wraps it is cracked: it bypasses the disc/console key
+binding (§10.8). So v10 is the mirror image of v9.2 — there the payload is
+patched (misfire's RSA patch, §8) in the clear; here the payload is stock and
+the crack is in the anti-copy loader around it.
 
 ### 10.7 Cross-check on hardware
 
@@ -1060,31 +1087,47 @@ just after key derivation) and read `0x14` bytes at `0x01010940` — it should b
 memcpy targets (`0x1d00000`, …) holding the runtime layout. Not run here; the
 offline unpack already produced the image.
 
-### 10.8 The anti-analysis decoys
+### 10.8 The anti-copy key schedule and the crack
 
-The v10 loader spends more code misdirecting than protecting. Roughly in order
-of how much time each one can burn:
+The v10 loader binds its RC4 key to the disc and the console; this image cracks
+that binding. Stock (§10.5): the EE-FPU bit-mixer (`FUN_010009c0`) produces a
+console-intrinsic `A`, a SIF-RPC (`FUN_01000150`) fetches the disc key
+`const20`, and `key = stored ⊕ le_sha1(A ‖ le_sha1(const20))` with the SHA-1
+state written little-endian. Reproducing it legitimately needs the right disc
+(for `const20`) and an EE-accurate FPU (for `A`).
 
-1. **The EE-FPU bit-mixer (`FUN_010009c0`).** Four calls build a 32-byte seed
-   with `madd.s`/`msub.s`, keeping only the low 3 bits of each result — pointing
-   straight at EE-vs-IEEE FPU differences and inviting a full EE FPU port (which
-   I did, from PCSX2). The seed is hashed to `0x1012a88`, then overwritten. It
-   never reaches the key.
-2. **The SIF-RPC to the IOP (`FUN_01000150`).** Real `sceSifBindRpc` scaffolding
-   to servers `0x8000059x` sits right in the key path, implying the key is
-   hardware/IOP-bound and recoverable only on a console. It loads no module and
-   the key depends on no RPC result; `FUN_010060f8` writes the constants either
-   way.
-3. **The stored "key" at `0x1010940`.** The 20 bytes KSA reads are not the key;
-   they are XORed with the derived value first.
-4. **Little-endian SHA-1 — the only real obfuscation.** Writing the five state
-   words EE-native instead of as the standard big-endian digest makes every
-   reconstruction silently wrong until you notice. Add the per-word byte-swap
-   and the constants alone give the key; decoys 1–3 fall away.
+The crack removes both dependencies. All of this is verified against
+`BOOT.ELF` (loader `va→file = 0x1000 + (va − 0x1000000)`):
 
-The tooling gap sharpened the misdirection: Ghidra, rizin and llvm can't decode
-the EE COP1/MMI ops, so the mixer reads as an opaque wall rather than as the
-dead end it is.
+1. **`sceSifCallRpc` is stubbed.** `0x10060f0` is `jr ra; nop` — the RPC returns
+   at once. The stub right after (`0x10060f8`) hardcodes the two inputs the RPC
+   and the mixer would have produced, writing them as literal immediates
+   (`lui`/`ori`/`sw`, base `0x1010000`):
+   * `const20` → `0x1010980`: `{1, 0x39956993, 0x55, 0, 0x05bc0000}`
+   * `A` → `0x1012a88`: `{938ca6bf, e620cc81, 137a84c2, 78ae9796, 889dca10}`
+
+   Both buffers are zero in the file, so these constants are the entire key
+   input. That is why the key is static and the unpack runs offline — no disc,
+   no FPU fidelity needed.
+2. **A RAM patcher skips a later disc-key check.** The unpack driver exits via
+   `0x10004c0` (`lui at,0x10; j 0x1006168`) into a patcher at `0x1006168`. It
+   overwrites three words of the just-inflated main image —
+   `0x115b14 ← sw zero,-0x5e98(s0)` and `0x115b18 ← b 0x115b34`
+   (was `jal 0x1310f8; nop`), and `0x1142c0 ← nop` (was `jal 0x130e18`) — then
+   `jr 0x100000` into the patched image. The patches pre-clear the flag the
+   check reads and branch past it. They apply in RAM only: the on-disk decrypted
+   image still holds the original `jal`s (§10.6), and all three words sit outside
+   the code-crypto and signature paths, so §10.9 and §11 read stock behaviour.
+
+The little-endian SHA-1 (§10.5) is a genuine schedule detail, not part of the
+crack — it is just what made an offline reconstruction silently wrong until
+noticed. The tooling gap sharpened the misdirection: Ghidra, rizin and llvm
+can't decode the EE COP1/MMI ops, so the FPU mixer reads as an opaque wall.
+
+> The 2026-10-28 first pass mis-read the mixer and the RPC as decoys whose
+> outputs are discarded. They are the real anti-copy inputs; the crack *freezes*
+> their outputs, which looks the same statically — a constant lands in the key
+> slot — but means the opposite.
 
 ### 10.9 Spot check: v10's signature verdict is intact
 
@@ -1115,3 +1158,46 @@ A one-word patch (`sltiu`→`addiu`, `2c`→`24`) turns "pass iff the signature
 matches" into "always pass". This confirms the v10 decrypt is faithful and pins
 exactly what misfire's 2008 patch changed. Anchors for the full comparison:
 v10 base `0x100000`, `memcmp` `0x144740`, verify tail `0x1316a8`.
+
+
+## 11. v10 vs v9.2: the code crypto changed (2026-10-29)
+
+§8 assumed one version's code crypto carried to the others. The stock v10
+payload (§10) disproves it: the per-line decrypt differs from v9.2 in four
+places, all verified by disassembly (v10 raw image base `0x100000`; v9.2
+`va→file = 0x1000 + (va − 0x100000)`). The call tree is otherwise the same
+functions in the same order, and V1 decrypt, RC4, the bignum/RSA, memcpy/memset
+and the four constant tables are instruction-identical.
+
+| Routine | v9.2 | v10 | Difference |
+|---|---|---|---|
+| V7 decrypt | `0x103f60` | `0x104d40` | key-from-line store: v9.2 `sw v0,0x10(s3)` at `0x10427c` (`key[4]`); v10 `sw v0,0x14(s3)` at `0x10505c` (`beefcodf`). The preceding `(a−v)^kc4` is identical. |
+| reset | `0x104548` | `0x1052a8` | v10 also does `memset(0x764ca0 + 0x100·i, 0, 256)` for i=0..4, zeroing the default V7 seed table on every list |
+| rekey(init,val) | `0x1035b0` | `0x104660` | v10's `init≠0` ignores `val`: `a1` is overwritten with the seed-table pointer at `0x104698`. Equals v9.2 `rekey(1,0)` for any `val`. |
+| auto decrypt | `0x1042b0` | `0x105090` | v10's outer beefcode always `mode|=V7; rekey(1,val)` (`li a0,1` at `0x105254`); v9.2 does `rekey(0,val)` when already in V7 |
+
+Net effect on v10:
+
+* Every beefcode reinitialises to the default state (zeroed seeds, default key,
+  5 RC4 rounds, `opt=0`, `code_lines=1`). `BEEFC0DE vvvvvvvv` behaves like
+  `BEEFC0DE 00000000` — the value is ignored — and a second beefcode resets
+  rather than rekeying twice.
+* The line-derived word from a bit-17 key line lands in `beefcodf`, not
+  `key[4]`; the next V7 line is then taken as a `BEEFC0DF` extra-seed line.
+* V1 decrypt, line counting, `BEEFC0DF`'s extra line and the RSA bug (§9.4) are
+  unchanged.
+
+So `main` (which matches v9.2, §9.2) decrypts and encrypts differently from v10
+for any list with a beefcode carrying a non-zero value, a second beefcode, a
+code count reaching zero on a beefcode, or bit-17 options. Lists with a single
+default `BEEFC0DE 00000000` are identical on both — which covers the official
+cb2util fixtures, where `main` already matches the device. An emulation sweep
+over both images (the 2026-10-29 re-review, a per-image address table over
+`Emu.java`) quantified it: of 120 plain lists re-encrypted for v10, 87 fail to
+round-trip under the v9.2-shaped `main`, while the cb2util game fixtures (50 of
+53; the 3 are synthetic `beef.enc` tests) are unaffected. Those counts are the
+re-review's emulation; the four instruction-level differences above are verified
+here.
+
+`src/` targets v9.2 and the device as decompiled; no v10 support is proposed.
+This is recorded so a future "support v10" task starts from the right diff.
