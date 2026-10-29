@@ -57,6 +57,7 @@ The CB v7 implementation intentionally preserves byte-level behavior from the or
   A homegrown Ghidra script ran the firmware's own decryption code on more than 10,000 code lines and compared the results with this crate.
   This found two regressions in 0.4.0 and two older bugs, all fixed now, and added support for the `FFFFFFFF` lines that turn CB v7 off.
   A quirk in the firmware's RSA code and a rarely used encryption option are left out on purpose and explained in the code.
+  Later cross-checked against the stock v10 payload: the firmware crypto is byte-identical across versions (same RSA quirk), and v9.2 and v10 differ only on a few beefcode lists that no distributed code uses, so this crate matches every real code on every v7+ device.
 
 ## License
 

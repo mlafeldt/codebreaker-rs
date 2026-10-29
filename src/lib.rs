@@ -32,6 +32,17 @@
 //! This crate is `no_std` and currently supports little-endian targets only.
 //! The CB v7 implementation intentionally preserves byte-level behavior from
 //! the original C code.
+//!
+//! # Firmware versions
+//!
+//! The CB v7 logic matches the firmware's own decryption, and that firmware
+//! crypto is byte-identical across the v7, v9.2 and stock v10 payloads
+//! (verified by diffing the decrypted images). The versions differ only in how
+//! a few unusual beefcode lists rekey: a beefcode carrying a non-zero value, a
+//! second beefcode in one list, a code count that reaches zero on a beefcode,
+//! or the bit-17 option. None of those appear in distributed codes, and a plain
+//! `BEEFC0DE 00000000` list decrypts identically on every version, so this
+//! crate matches every real code on every v7+ device.
 
 #![deny(clippy::all, clippy::nursery)]
 #![deny(nonstandard_style, rust_2018_idioms)]

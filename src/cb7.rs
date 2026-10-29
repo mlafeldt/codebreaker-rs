@@ -295,8 +295,9 @@ const fn mod_inverse(x: u32) -> u32 {
 // This is exact math, which CodeBreaker's own bignum code isn't. That code is
 // a generic 32-bit-limb bignum, not a known crypto library: Karatsuba multiply
 // and a Knuth-D reduction, with the 64-by-32-bit division from libgcc's
-// __udivdi3/__umoddi3. Its reduction (at 0x133bbc in v9.2) takes each quotient
-// digit as the low 32 bits of that division and skips Knuth's step D3 clamp to
+// __udivdi3/__umoddi3. Its reduction (at 0x133bbc in v9.2, byte-identical in the
+// stock v10 payload) takes each quotient digit as the low 32 bits of that
+// division and skips Knuth's step D3 clamp to
 // 0xffffffff. The top word of our modulus is 0xffffffff, so the digit wraps
 // whenever the partial
 // remainder's top word is 0xffffffff as well, and the result is wrong. When
@@ -525,6 +526,26 @@ mod tests {
         for t in tests {
             assert_eq!(mod_inverse(t.0), t.1);
         }
+    }
+
+    #[test]
+    fn test_rsa_is_exact_near_the_modulus() {
+        // The firmware's bignum RSA mis-reduces near the modulus (see the note
+        // on rsa_crypt): decrypting 0xffff_ffff_ffff_fff4 its reduction yields
+        // 0x04f3_63df_ecae_2b57. That bug is byte-identical in v9.2 and the
+        // stock v10 payload, and we leave it out on purpose: this crate uses
+        // exact math, so the same boundary input decrypts cleanly and round
+        // trips. (0xffff_ffff_ffff_fff4 = modulus - 1, so it is < modulus.)
+        let (addr0, val0) = (0xffff_ffff_u32, 0xffff_fff4_u32);
+        let (mut addr, mut val) = (addr0, val0);
+        rsa_crypt(&mut addr, &mut val, RSA_DEC_KEY, RSA_MODULUS);
+        assert_ne!(
+            u64::from(addr) << 32 | u64::from(val),
+            0x04f3_63df_ecae_2b57,
+            "must not reproduce the firmware's wrong reduction"
+        );
+        rsa_crypt(&mut addr, &mut val, RSA_ENC_KEY, RSA_MODULUS);
+        assert_eq!((addr, val), (addr0, val0), "exact RSA must round-trip");
     }
 
     struct Test {
