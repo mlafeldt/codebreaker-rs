@@ -1160,23 +1160,83 @@ exactly what misfire's 2008 patch changed. Anchors for the full comparison:
 v10 base `0x100000`, `memcmp` `0x144740`, verify tail `0x1316a8`.
 
 
-## 11. v10 vs v9.2: the code crypto changed (2026-10-29)
+## 11. v10 vs v9.2: the full code-crypto diff (2026-10-29)
 
 §8 assumed one version's code crypto carried to the others. The stock v10
-payload (§10) disproves it: the per-line decrypt differs from v9.2 in four
-places, all verified by disassembly (v10 raw image base `0x100000`; v9.2
-`va→file = 0x1000 + (va − 0x100000)`). The call tree is otherwise the same
-functions in the same order, and V1 decrypt, RC4, the bignum/RSA, memcpy/memset
-and the four constant tables are instruction-identical.
+payload (§10) lets us check: every function in the per-line decrypt call tree
+was diffed against v9.2, relocation-normalized, and verified against both
+images. The result — the crypto primitives are byte-identical; only four V7
+state-machine functions changed, all pushing the same way.
 
-| Routine | v9.2 | v10 | Difference |
-|---|---|---|---|
-| V7 decrypt | `0x103f60` | `0x104d40` | key-from-line store: v9.2 `sw v0,0x10(s3)` at `0x10427c` (`key[4]`); v10 `sw v0,0x14(s3)` at `0x10505c` (`beefcodf`). The preceding `(a−v)^kc4` is identical. |
-| reset | `0x104548` | `0x1052a8` | v10 also does `memset(0x764ca0 + 0x100·i, 0, 256)` for i=0..4, zeroing the default V7 seed table on every list |
-| rekey(init,val) | `0x1035b0` | `0x104660` | v10's `init≠0` ignores `val`: `a1` is overwritten with the seed-table pointer at `0x104698`. Equals v9.2 `rekey(1,0)` for any `val`. |
-| auto decrypt | `0x1042b0` | `0x105090` | v10's outer beefcode always `mode|=V7; rekey(1,val)` (`li a0,1` at `0x105254`); v9.2 does `rekey(0,val)` when already in V7 |
+### 11.1 Method
 
-Net effect on v10:
+`tools/cbcrypt_diff.py` decodes each function in both images and compares them
+after removing relocations: call targets map to role names; `lui` high halves
+and global addresses are masked, but a struct resolves to the *same* name in
+both images, so a different offset (e.g. `key+0x10` vs `key+0x14`) still shows
+as a diff; registers, constants, branch displacements and pointer-struct
+offsets stay literal. Where two functions normalize equal it also checks that
+every position differs at the raw-word level only in a relocation field, so
+masking cannot hide a change. v9.2 maps `va→file = va−0x100000+0x1000`; v10 is
+raw at base `0x100000`.
+
+```
+cd research && python3 -I tools/cbcrypt_diff.py
+```
+
+### 11.2 Verdict
+
+| Function | v9.2 | v10 | insns | Verdict |
+|---|---|---|---|---|
+| `num_code_lines` | `0x1033c0` | `0x104470` | 20 | identical (reloc) |
+| V1 decrypt | `0x103410` | `0x1044c0` | 52 | identical |
+| `mod_inverse` | `0x1034e0` | `0x104590` | 40 | identical |
+| `mul_decrypt` | `0x103580` | `0x104630` | 12 | identical |
+| RC4 init / crypt | `0x132c98` / `0x132d30` | `0x131360` / `0x1313f8` | 37 / 33 | identical |
+| bignum / RSA core | `0x133220`–`0x134020` | `0x1318e8`–`0x1326e8` | 896 | identical |
+| RSA modpow wrapper | `0x134020` | `0x1326e8` | 9 | identical |
+| memcpy / memset | `0x1461b0` / `0x146358` | `0x1447d4` / `0x14497c` | 43 / 43 | identical |
+| `__udivdi3` / `__umoddi3` | `0x14cbd8` / `0x14d1a8` | `0x14b230` / `0x14b800` | 372 / 336 | identical |
+| **reset** | `0x104548` | `0x1052a8` | 5 → 36 | **changed** |
+| **rekey** | `0x1035b0` | `0x104660` | 620 → 440 | **changed** |
+| **V7 decrypt** | `0x103f60` | `0x104d40` | 212 | **changed (1 insn)** |
+| **auto decrypt** | `0x1042b0` | `0x105090` | 166 → 134 | **changed** |
+
+The whole crypto primitive layer — V1, RC4, the bignum/RSA core (including the
+§9.4 reduction bug, byte-identical, so **v10 has the same RSA bug**),
+inverse/multiply, memcpy/memset and the libgcc division — is identical modulo
+relocation. Only the four V7 state functions changed.
+
+### 11.3 The four changes
+
+**V7 decrypt (`0x104d40`): one instruction.** The 212-instruction body is
+identical except the key-from-line store: v9.2 `sw v0,0x10(s3)` (`0x10427c`,
+`key[4]`) vs v10 `sw v0,0x14(s3)` (`0x10505c`, `beefcodf`), both after the same
+`(a−v)^kc4`. (The diff also flags the `opt` read at `0x104218`/`0x104ff8`, but
+both reach `opt`; that one is a relocation, not a change.) So a bit-17 key line
+sets `beefcodf` in v10, and the next V7 line becomes a `BEEFC0DF` extra-seed
+line.
+
+**reset (`0x1052a8`): zeroes the default seeds.** v9.2 clears the mode word and
+`code_lines` in 5 instructions. v10 adds a stack frame and five
+`memset(defV7seeds + 0x100·i, 0, 256)` calls (i=0..4), zeroing the default V7
+seed table on every list.
+
+**rekey (`0x104660`): init ignores `val`.** Recompiled (620 → 440 insns: v9.2
+emits per-table aligned+unaligned `ldl/ldr/swl/swr` seed copies — the dead
+unaligned paths of §9.8 — where v10 uses tighter `ld/sd` loops). The behaviour
+change: v10's `init≠0` path overwrites `a1` (the `val` argument) with the
+default-seed pointer at `0x104698` and copies from there, equal to v9.2's
+`rekey(1, 0)` for any `val`. With reset zeroing those defaults, a fresh beefcode
+starts from zeroed seeds.
+
+**auto decrypt (`0x105090`): no options, always rekey(1).** 166 → 134 insns (the
+option handling is gone). The V7 test is mode-bit-16 only — no `opt==2` force
+(`movz`), no `if (opt==2) { opt=0; return; }` — and the outer beefcode always
+does `mode|=V7; rekey(1,val)` (`li a0,1` at `0x105254`), where v9.2 does
+`rekey(0,val)` when V7 is already on.
+
+### 11.4 Net effect and consequence
 
 * Every beefcode reinitialises to the default state (zeroed seeds, default key,
   5 RC4 rounds, `opt=0`, `code_lines=1`). `BEEFC0DE vvvvvvvv` behaves like
@@ -1196,8 +1256,11 @@ over both images (the 2026-10-29 re-review, a per-image address table over
 `Emu.java`) quantified it: of 120 plain lists re-encrypted for v10, 87 fail to
 round-trip under the v9.2-shaped `main`, while the cb2util game fixtures (50 of
 53; the 3 are synthetic `beef.enc` tests) are unaffected. Those counts are the
-re-review's emulation; the four instruction-level differences above are verified
-here.
+re-review's emulation; the per-function diff above is verified here with
+`tools/cbcrypt_diff.py`.
 
-`src/` targets v9.2 and the device as decompiled; no v10 support is proposed.
-This is recorded so a future "support v10" task starts from the right diff.
+The list→engine converter (`0x102e38` / `0x1034c8`) also changed, but it is
+engine-side formatting, not crypto, and `src/` returns beefcodes to the caller
+instead (§6.7). `src/` targets v9.2 and the device as decompiled; no v10 support
+is proposed. This is recorded so a future "support v10" task starts from the
+right diff.
