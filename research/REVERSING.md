@@ -1159,6 +1159,81 @@ matches" into "always pass". This confirms the v10 decrypt is faithful and pins
 exactly what misfire's 2008 patch changed. Anchors for the full comparison:
 v10 base `0x100000`, `memcmp` `0x144740`, verify tail `0x1316a8`.
 
+### 10.10 The whole protection at a glance
+
+How the stock (uncracked) anti-copy chain is meant to boot. It is a two-factor
+lock: the RC4 key that decrypts the real program is *derived* at boot, never
+stored, and binds to both the genuine disc and the console hardware. A visual
+version of this is `docs/disc-lock.html` (published privately as
+`https://claude.ai/artifact/Hht3YyqSzyNPXyXtbgSuZS`).
+
+```mermaid
+flowchart TD
+    CNF["SYSTEM.CNF → BOOT.ELF;1"] --> ELF["BOOT.ELF = plaintext loader<br/>+ RC4-over-zlib body (the real image)"]
+
+    subgraph F1["Factor 1 — console (can't emulate)"]
+      FPU["EE FPU float bit-mixer<br/>FUN_010009c0 · madd.s/msub.s<br/>keeps low 3 bits (non-IEEE)"] --> A["A — console-intrinsic value<br/>(needs an EE-accurate FPU)"]
+    end
+
+    subgraph F2["Factor 2 — disc (can't copy)"]
+      RPC["SIF-RPC to IOP<br/>FUN_01000150 · CDVD read-key"] --> C20["const20 — the disc key<br/>(only a genuine disc returns it)"]
+    end
+
+    subgraph KS["Key schedule — FUN_01000248 (SHA-1 state stored little-endian)"]
+      B["B = le_sha1(const20)"]
+      C["C = le_sha1(A ‖ B)"]
+      KEY["key = stored(0x1010940) ⊕ C"]
+      C20 --> B --> C
+      A --> C --> KEY
+    end
+
+    KEY --> RC4["RC4-decrypt body — FUN_010000e0"]
+    ELF --> RC4
+    RC4 --> GATE1{"zlib inflate to 0x100000<br/>FUN_01000a58"}
+    GATE1 -->|valid stream| JMP["jr 0x100000 — payload runs"]
+    GATE1 -->|garbage| DEAD["no boot"]
+    JMP --> GATE2{"in-payload disc-key re-check<br/>jal @0x115b14 / @0x1142c0"}
+    GATE2 -->|pass| RUN["CodeBreaker v10 runs"]
+    GATE2 -->|fail| DEAD
+
+    BADDISC["copied disc → wrong const20"] -.-> KEY
+    BADHW["emulator/other HW → wrong A"] -.-> KEY
+    KEY -.wrong key.-> GATE1
+```
+
+**Why it defeats a copy.** The payload is *encrypted*, and the only key is a
+function of `A` (console) and `const20` (disc). A plain data copy of the disc
+can't reproduce the authentication disc key, so `const20` is wrong → `C` wrong →
+key wrong → the RC4 output isn't a valid zlib stream → inflate yields garbage →
+nothing to jump to. Same if `A` is wrong (ran without an EE-accurate FPU). Even
+past that, the inflated payload re-checks the disc key at runtime (gate 2).
+
+**Three walls for a static attacker**, all needed at once: no `A` (needs real
+FPU), no `const20` (needs the disc), and the `le_sha1` little-endian-state twist
+silently breaks a naïve SHA-1 reconstruction even with both inputs guessed.
+
+**How this image defeats it** (the crack cuts every wire above, §10.8) — which
+is why `tools/cbv10_unpack.py` runs fully offline:
+
+```diff
+  Factor 1 (console): FPU mixer → A
+- A computed from the live EE FPU
++ stub @0x10060f8 writes A = {938ca6bf,e620cc81,137a84c2,78ae9796,889dca10} as literal immediates
+
+  Factor 2 (disc): SIF-RPC → const20
+- sceSifCallRpc fetches the disc key
++ 0x10060f0 = `jr ra; nop` (RPC stubbed); stub hardcodes const20 = {1,0x39956993,0x55,0,0x05bc0000}
+
+  Gate 2 (in-payload re-check): jal @0x115b14 / @0x1142c0
++ RAM patcher @0x1006168 pre-clears the flag and branches past both checks, then jr 0x100000
+```
+
+Net: the key collapses to the constant `29f32f09 0c66b07d c5b12c51 695e432e
+b1d8ea10`, so the body decrypts and inflates with no disc and no hardware. This
+is the mirror of v9.2: there the payload is patched in the clear and the loader
+is stock; here the loader is cracked and the payload is stock retail (its RSA
+signature check still intact, §10.9).
+
 
 ## 11. v10 vs v9.2: the full code-crypto diff (2026-10-29)
 

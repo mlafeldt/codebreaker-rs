@@ -1,0 +1,434 @@
+<title>CodeBreaker Disc Lock</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="How CodeBreaker PS2 v10's anti-copy boot chain derives its decryption key from the disc and the console.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+  /* Layout: a single-column boot-chain narrative; two factor cards merge into
+     a key, the key gates a decrypt, a copy fails. Dark-first terminal world. */
+  :root{
+    --bg:#0a0e15; --grid:rgba(90,120,160,.05);
+    --surface:#111826; --surface-2:#0d131e; --raised:#16202f;
+    --border:#223146; --border-2:#2d4060;
+    --fg:#e2eaf4; --muted:#8597b0; --faint:#637387;
+    --accent:#3ad6dc; --accent-2:#59e0a6; --accent-dim:rgba(58,214,220,.12);
+    --gold:#f0b24b; --gold-dim:rgba(240,178,75,.12);
+    --pass:#53d492; --fail:#f0706e; --fail-dim:rgba(240,112,110,.12);
+    color-scheme:dark;
+  }
+  @media (prefers-color-scheme:light){ :root:not([data-theme="dark"]){
+    --bg:#eef1f6; --grid:rgba(40,70,110,.05);
+    --surface:#ffffff; --surface-2:#e9eef5; --raised:#f4f7fb;
+    --border:#d2dbe8; --border-2:#bcc9db;
+    --fg:#111b2a; --muted:#55657d; --faint:#8191a6;
+    --accent:#0b8f95; --accent-2:#157f55; --accent-dim:rgba(11,143,149,.1);
+    --gold:#9c6a12; --gold-dim:rgba(156,106,18,.12);
+    --pass:#1f9d63; --fail:#c8463f; --fail-dim:rgba(200,70,63,.1);
+    color-scheme:light;
+  }}
+  :root[data-theme="light"]{
+    --bg:#eef1f6; --grid:rgba(40,70,110,.05);
+    --surface:#ffffff; --surface-2:#e9eef5; --raised:#f4f7fb;
+    --border:#d2dbe8; --border-2:#bcc9db;
+    --fg:#111b2a; --muted:#55657d; --faint:#8191a6;
+    --accent:#0b8f95; --accent-2:#157f55; --accent-dim:rgba(11,143,149,.1);
+    --gold:#9c6a12; --gold-dim:rgba(156,106,18,.12);
+    --pass:#1f9d63; --fail:#c8463f; --fail-dim:rgba(200,70,63,.1);
+    color-scheme:light;
+  }
+  :root[data-theme="dark"]{ color-scheme:dark; }
+
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    background:
+      linear-gradient(var(--grid) 1px,transparent 1px) 0 0/22px 22px,
+      linear-gradient(90deg,var(--grid) 1px,transparent 1px) 0 0/22px 22px,
+      var(--bg);
+    color:var(--fg);
+    font-family:"IBM Plex Sans",ui-sans-serif,system-ui,sans-serif;
+    font-size:16px; line-height:1.6; -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:860px;margin:0 auto;
+    padding-left:max(18px,env(safe-area-inset-left,0px));
+    padding-right:max(18px,env(safe-area-inset-right,0px));}
+  .mono{font-family:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace}
+
+  /* header */
+  header{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;
+    background:color-mix(in srgb,var(--bg) 86%,transparent);
+    backdrop-filter:blur(8px);border-bottom:1px solid var(--border)}
+  body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);
+    z-index:21;background:var(--bg)}
+  .bar{display:flex;align-items:center;gap:12px;padding-block:12px}
+  .brand{display:flex;align-items:center;gap:10px;font-family:"Chakra Petch",sans-serif;
+    font-weight:700;letter-spacing:.02em;font-size:15px}
+  .dot{width:9px;height:9px;border-radius:50%;background:var(--accent);
+    box-shadow:0 0 10px var(--accent);flex:none;animation:blink 3.4s ease-in-out infinite}
+  @keyframes blink{0%,92%,100%{opacity:1}96%{opacity:.25}}
+  .brand small{color:var(--muted);font-weight:500;font-family:"IBM Plex Mono",monospace;
+    font-size:11px;letter-spacing:.06em}
+  .spacer{flex:1}
+  .toggle{appearance:none;border:1px solid var(--border-2);background:var(--raised);
+    color:var(--muted);font-family:"IBM Plex Mono",monospace;font-size:12px;
+    padding:7px 11px;border-radius:8px;cursor:pointer;letter-spacing:.04em}
+  .toggle:hover{color:var(--fg);border-color:var(--accent)}
+  .toggle:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+  /* hero */
+  .hero{padding-top:52px;padding-bottom:30px}
+  .eyebrow{font-family:"IBM Plex Mono",monospace;font-size:12px;letter-spacing:.18em;
+    text-transform:uppercase;color:var(--accent);margin:0 0 18px;display:flex;gap:10px;flex-wrap:wrap}
+  .eyebrow span{color:var(--faint)}
+  h1{font-family:"Chakra Petch",sans-serif;font-weight:700;font-size:clamp(2rem,7vw,3.3rem);
+    line-height:1.04;letter-spacing:-.01em;margin:0 0 20px;text-wrap:balance}
+  h1 em{font-style:normal;color:var(--accent)}
+  .lede{font-size:clamp(1.05rem,2.4vw,1.28rem);color:var(--muted);max-width:60ch;margin:0}
+  .lede b{color:var(--fg);font-weight:600}
+
+  /* key equation callout */
+  .eq{margin:30px 0 8px;border:1px solid var(--border);border-radius:14px;
+    background:linear-gradient(180deg,var(--surface),var(--surface-2));
+    padding:20px 22px;overflow-x:auto}
+  .eq .lbl{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--faint);margin-bottom:12px}
+  .eq code{font-family:"IBM Plex Mono",monospace;font-size:clamp(.92rem,2.4vw,1.15rem);
+    white-space:nowrap;font-weight:500}
+  .k-key{color:var(--accent)} .k-dim{color:var(--muted)} .k-disc{color:var(--gold)}
+  .k-con{color:var(--accent-2)} .k-op{color:var(--faint)}
+
+  /* sections */
+  section{padding:40px 0;border-top:1px solid var(--border)}
+  .sec-head{display:flex;align-items:baseline;gap:14px;margin:0 0 6px}
+  .num{font-family:"IBM Plex Mono",monospace;color:var(--accent);font-size:13px;
+    font-weight:600;flex:none;padding-top:4px}
+  h2{font-family:"Chakra Petch",sans-serif;font-weight:600;font-size:clamp(1.4rem,4vw,2rem);
+    margin:0;letter-spacing:-.01em;text-wrap:balance}
+  .sub{color:var(--muted);margin:10px 0 26px;max-width:62ch}
+  .sub.ind{margin-left:30px}
+  @media (max-width:520px){.sub.ind{margin-left:0}}
+
+  /* factor cards */
+  .factors{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media (max-width:620px){.factors{grid-template-columns:1fr}}
+  .card{border:1px solid var(--border);border-radius:14px;background:var(--surface);
+    padding:20px;position:relative;overflow:hidden}
+  .card::before{content:"";position:absolute;inset:0 auto 0 0;width:3px;background:var(--stripe,var(--accent))}
+  .card.con{--stripe:var(--accent-2)} .card.disc{--stripe:var(--gold)}
+  .card .tag{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.1em;
+    text-transform:uppercase;color:var(--stripe,var(--accent));font-weight:600}
+  .card h3{font-family:"Chakra Petch",sans-serif;font-weight:600;font-size:1.18rem;margin:6px 0 4px}
+  .card p{margin:8px 0 0;color:var(--muted);font-size:.95rem}
+  .card .foot{margin-top:16px;padding-top:14px;border-top:1px dashed var(--border-2);
+    display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+  .card .out{font-family:"Chakra Petch",sans-serif;font-weight:700;font-size:1.05rem;color:var(--fg)}
+  .card .need{font-size:.8rem;color:var(--faint);text-align:right}
+  .addr{font-family:"IBM Plex Mono",monospace;font-size:.78rem;color:var(--muted);
+    background:var(--surface-2);border:1px solid var(--border);border-radius:6px;padding:2px 7px;white-space:nowrap}
+
+  .merge{display:flex;flex-direction:column;align-items:center;gap:4px;margin:20px 0 4px;color:var(--faint)}
+  .merge .line{width:1px;height:26px;background:linear-gradient(var(--border-2),var(--accent))}
+  .merge .cap{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.08em}
+
+  /* schedule pipeline */
+  .pipe{display:flex;flex-direction:column;gap:0}
+  .stage{display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:stretch}
+  .rail{display:flex;flex-direction:column;align-items:center;width:34px;flex:none}
+  .node{width:34px;height:34px;border-radius:9px;border:1px solid var(--border-2);
+    background:var(--raised);display:flex;align-items:center;justify-content:center;
+    font-family:"IBM Plex Mono",monospace;font-size:13px;font-weight:600;color:var(--accent);flex:none}
+  .node.g{color:var(--accent-2)} .node.y{color:var(--gold)}
+  .conn{width:2px;flex:1;min-height:20px;margin:3px 0;
+    background:repeating-linear-gradient(var(--accent) 0 6px,transparent 6px 12px);
+    background-size:2px 12px;opacity:.5;animation:flow 1.1s linear infinite}
+  @keyframes flow{to{background-position:0 12px}}
+  .step{padding:4px 0 24px}
+  .step .t{font-family:"Chakra Petch",sans-serif;font-weight:600;font-size:1.05rem;margin-bottom:3px}
+  .step .d{color:var(--muted);font-size:.93rem}
+  .step code{font-family:"IBM Plex Mono",monospace;font-size:.86em;color:var(--fg);
+    background:var(--surface-2);border:1px solid var(--border);border-radius:5px;padding:1px 5px}
+  .note{margin-top:4px;border:1px solid var(--border);border-left:3px solid var(--accent);
+    border-radius:8px;background:var(--accent-dim);padding:13px 15px;font-size:.9rem;color:var(--muted)}
+  .note b{color:var(--fg);font-weight:600}
+
+  /* gate flow */
+  .gate{display:grid;grid-template-columns:auto 1fr;gap:14px;align-items:start;
+    border:1px solid var(--border);border-radius:12px;background:var(--surface);padding:16px 18px;margin-bottom:12px}
+  .gate .ic{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;
+    font-family:"IBM Plex Mono",monospace;font-weight:700;flex:none;border:1px solid var(--border-2);background:var(--raised)}
+  .gate .t{font-family:"Chakra Petch",sans-serif;font-weight:600}
+  .gate .d{color:var(--muted);font-size:.9rem;margin-top:3px}
+  .verdict{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+  .pill{font-family:"IBM Plex Mono",monospace;font-size:.8rem;border-radius:20px;padding:5px 12px;
+    display:inline-flex;align-items:center;gap:7px;border:1px solid}
+  .pill.pass{color:var(--pass);border-color:color-mix(in srgb,var(--pass) 45%,transparent);background:color-mix(in srgb,var(--pass) 10%,transparent)}
+  .pill.fail{color:var(--fail);border-color:color-mix(in srgb,var(--fail) 45%,transparent);background:var(--fail-dim)}
+
+  /* walls */
+  .walls{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+  @media (max-width:680px){.walls{grid-template-columns:1fr}}
+  .wall{border:1px solid var(--border);border-radius:12px;background:var(--surface);padding:18px}
+  .wall .n{font-family:"IBM Plex Mono",monospace;color:var(--fail);font-weight:600;font-size:.82rem;letter-spacing:.08em}
+  .wall h4{font-family:"Chakra Petch",sans-serif;font-weight:600;font-size:1.02rem;margin:8px 0 6px}
+  .wall p{margin:0;color:var(--muted);font-size:.9rem}
+
+  /* crack section */
+  .crack{border-top:2px solid var(--gold)}
+  .crack .num{color:var(--gold)}
+  .cut{display:grid;grid-template-columns:auto 1fr;gap:16px;padding:16px 0;border-bottom:1px solid var(--border)}
+  .cut:last-of-type{border-bottom:0}
+  .cut .idx{font-family:"IBM Plex Mono",monospace;color:var(--gold);font-weight:600;font-size:.82rem}
+  .cut .t{font-family:"Chakra Petch",sans-serif;font-weight:600;margin-bottom:8px}
+  .diff{font-family:"IBM Plex Mono",monospace;font-size:.82rem;line-height:1.7;
+    border-radius:8px;overflow:hidden;border:1px solid var(--border);margin-top:4px}
+  .diff div{padding:3px 12px;white-space:pre-wrap;word-break:break-word}
+  .diff .was{background:var(--fail-dim);color:var(--fail)}
+  .diff .now{background:color-mix(in srgb,var(--pass) 9%,transparent);color:var(--pass)}
+  .keyout{margin-top:26px;border:1px solid var(--gold);border-radius:14px;
+    background:var(--gold-dim);padding:20px 22px}
+  .keyout .lbl{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--gold);margin-bottom:10px}
+  .keyout .val{font-family:"IBM Plex Mono",monospace;font-weight:600;font-size:clamp(.95rem,3.4vw,1.4rem);
+    color:var(--fg);letter-spacing:.02em;word-break:break-all}
+  .keyout p{margin:12px 0 0;color:var(--muted);font-size:.88rem}
+
+  /* footer */
+  footer{border-top:1px solid var(--border);padding:34px 0 60px;color:var(--faint);font-size:.82rem}
+  footer .meta{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px 26px;margin-bottom:22px}
+  footer .meta div{min-width:0}
+  footer .meta dt{font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.12em;
+    text-transform:uppercase;color:var(--faint);margin-bottom:4px}
+  footer .meta dd{margin:0;color:var(--muted);font-family:"IBM Plex Mono",monospace;font-size:.8rem;word-break:break-all}
+  footer .fine{color:var(--faint);line-height:1.6}
+
+  @media (prefers-reduced-motion:reduce){*{animation:none!important}}
+</style>
+
+<header>
+  <div class="wrap bar">
+    <span class="dot" aria-hidden="true"></span>
+    <span class="brand">DISC&nbsp;LOCK <small>CB&nbsp;PS2&nbsp;·&nbsp;V10&nbsp;·&nbsp;EE&nbsp;R5900</small></span>
+    <span class="spacer"></span>
+    <button class="toggle" id="themeBtn" type="button" aria-label="Switch colour theme">◐ theme</button>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <div class="hero">
+    <p class="eyebrow">anti-copy boot chain <span>/</span> how it&rsquo;s meant to work</p>
+    <h1>The key is <em>derived</em>, never stored.</h1>
+    <p class="lede">CodeBreaker&rsquo;s v10 disc is a self-decrypting loader. The real program ships
+      RC4-encrypted over zlib, and the only key that unlocks it is computed at boot from
+      <b>two things a pirate can&rsquo;t supply at once</b>: the genuine disc and the actual PlayStation&nbsp;2.</p>
+
+    <div class="eq">
+      <div class="lbl">the whole protection, in one line &mdash; FUN_01000248</div>
+      <code class="mono"><span class="k-key">key</span> <span class="k-op">=</span> <span class="k-dim">stored</span> <span class="k-op">&oplus;</span> le_sha1( <span class="k-con">A</span> &Vert; le_sha1( <span class="k-disc">const20</span> ) )</code>
+    </div>
+  </div>
+
+  <section>
+    <div class="sec-head"><span class="num">01</span><h2>Two factors, one key</h2></div>
+    <p class="sub ind">Boot forks into two independent reads. Neither value is in the file; each is produced live,
+      and the key needs both. One binds to the console, the other to the disc.</p>
+
+    <div class="factors">
+      <div class="card con">
+        <div class="tag">factor 1 &middot; console</div>
+        <h3>EE-FPU bit-mixer</h3>
+        <p>Four calls run a 10-round single-precision float mixer on the EE&rsquo;s COP1
+          (<code class="mono">madd.s</code>/<code class="mono">msub.s</code>), keeping the low 3 bits where the
+          R5900 FPU diverges from IEEE. The result is the same on every PS2 &mdash; and unreproducible without
+          cycle-exact EE float hardware.</p>
+        <div class="foot">
+          <span class="out">&rarr; A</span>
+          <span class="need">needs an EE-accurate FPU<br><span class="addr">FUN_010009c0 &rarr; 0x1012a88</span></span>
+        </div>
+      </div>
+      <div class="card disc">
+        <div class="tag">factor 2 &middot; disc</div>
+        <h3>CDVD read-key RPC</h3>
+        <p>A SIF remote call crosses to the IOP and asks the CD/DVD subsystem for the
+          physical <b>disc key</b> (<code class="mono">0x8000059x</code>). Only a genuine, authenticated disc
+          returns the right value; it lives nowhere in the readable filesystem.</p>
+        <div class="foot">
+          <span class="out">&rarr; const20</span>
+          <span class="need">needs the original disc<br><span class="addr">FUN_01000150 &rarr; 0x1010980</span></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="merge" aria-hidden="true">
+      <span class="line"></span><span class="cap">both required</span><span class="line"></span>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="num">02</span><h2>The key schedule</h2></div>
+    <p class="sub ind">The two factors fold together through a chain of three SHA-1 hashes, then XOR against a
+      stored blind. Each step overwrites the same scratch buffer.</p>
+
+    <div class="pipe">
+      <div class="stage">
+        <div class="rail"><span class="node y">H</span><span class="conn"></span></div>
+        <div class="step">
+          <div class="t">Hash the disc key</div>
+          <div class="d"><code class="mono">B = le_sha1(const20)</code> &mdash; the disc factor, digested.</div>
+        </div>
+      </div>
+      <div class="stage">
+        <div class="rail"><span class="node g">H</span><span class="conn"></span></div>
+        <div class="step">
+          <div class="t">Fold in the console value</div>
+          <div class="d"><code class="mono">C = le_sha1(A &Vert; B)</code> &mdash; console and disc now entangled in one digest.</div>
+        </div>
+      </div>
+      <div class="stage">
+        <div class="rail"><span class="node">&oplus;</span></div>
+        <div class="step">
+          <div class="t">Unblind into the RC4 key</div>
+          <div class="d"><code class="mono">key = stored(0x1010940) &oplus; C</code>. The stored bytes alone
+            (<code class="mono">ce67d054&hellip;</code>) are a decoy; they&rsquo;re meaningless until XORed with a correct C.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="note"><b>The quiet twist:</b> this SHA-1 writes its five state words EE-native little-endian,
+      not as the standard big-endian digest. Every hash is byte-swapped per word &mdash; so even a perfect guess of
+      both inputs reconstructs the wrong key until you notice the byte order.</div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="num">03</span><h2>The gate</h2></div>
+    <p class="sub ind">With the key in hand the loader unlocks the payload and jumps in. A wrong key never gets a
+      chance to fail loudly &mdash; it simply produces garbage that can&rsquo;t inflate.</p>
+
+    <div class="gate">
+      <span class="ic" style="color:var(--accent)">1</span>
+      <div>
+        <div class="t">RC4-decrypt &rarr; zlib inflate &rarr; <code class="mono">jr 0x100000</code></div>
+        <div class="d">The body is decrypted in place (<code class="mono">FUN_010000e0</code>, len <code class="mono">0xe9754</code>),
+          inflated to <code class="mono">0x100000</code> (<code class="mono">FUN_01000a58</code>), and executed.</div>
+        <div class="verdict">
+          <span class="pill pass">▸ valid zlib stream &rarr; payload runs</span>
+          <span class="pill fail">▸ wrong key &rarr; garbage, inflate fails</span>
+        </div>
+      </div>
+    </div>
+    <div class="gate">
+      <span class="ic" style="color:var(--gold)">2</span>
+      <div>
+        <div class="t">In-payload disc-key re-check</div>
+        <div class="d">Even after boot, the inflated image checks the disc again
+          (<code class="mono">jal</code> at <code class="mono">0x115b14</code> and <code class="mono">0x1142c0</code>). Belt and suspenders.</div>
+        <div class="verdict">
+          <span class="pill pass">▸ pass &rarr; CodeBreaker continues</span>
+          <span class="pill fail">▸ fail &rarr; halt</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="num">04</span><h2>Why a copy can&rsquo;t boot</h2></div>
+    <p class="sub ind">An attacker needs all three at the same time. Missing any one yields a wrong key, and a wrong
+      key yields nothing to run.</p>
+    <div class="walls">
+      <div class="wall">
+        <div class="n">WALL 1</div>
+        <h4>No disc key</h4>
+        <p>A plain data copy can&rsquo;t reproduce the authentication key, so <code class="mono">const20</code> is wrong
+          and C collapses.</p>
+      </div>
+      <div class="wall">
+        <div class="n">WALL 2</div>
+        <h4>No real FPU</h4>
+        <p>Run it off-hardware or on a loose emulator and the EE float mixer gives the wrong <code class="mono">A</code>.</p>
+      </div>
+      <div class="wall">
+        <div class="n">WALL 3</div>
+        <h4>No byte order</h4>
+        <p>Even with both inputs, the little-endian SHA-1 state silently derails a naïve offline reconstruction.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="crack">
+    <div class="sec-head"><span class="num">05</span><h2>How this image defeats it</h2></div>
+    <p class="sub ind">The v10 BOOT.ELF we reversed is a <b>cracked loader around a stock retail payload</b> &mdash;
+      the mirror of v9.2, where the payload is patched and the loader is clean. The crack cuts every wire above,
+      so the unpack runs fully offline with no disc and no hardware.</p>
+
+    <div class="cut">
+      <div class="idx">CUT 1</div>
+      <div>
+        <div class="t">Factor 1 frozen</div>
+        <div class="diff">
+          <div class="was">− A computed from the live EE FPU</div>
+          <div class="now">+ stub @0x10060f8 writes A = {938ca6bf, e620cc81, 137a84c2, 78ae9796, 889dca10} as immediates</div>
+        </div>
+      </div>
+    </div>
+    <div class="cut">
+      <div class="idx">CUT 2</div>
+      <div>
+        <div class="t">Factor 2 frozen</div>
+        <div class="diff">
+          <div class="was">− sceSifCallRpc fetches the disc key</div>
+          <div class="now">+ 0x10060f0 = jr ra; nop (RPC stubbed) · stub hardcodes const20 = {1, 0x39956993, 0x55, 0, 0x05bc0000}</div>
+        </div>
+      </div>
+    </div>
+    <div class="cut">
+      <div class="idx">CUT 3</div>
+      <div>
+        <div class="t">Gate 2 skipped</div>
+        <div class="diff">
+          <div class="was">− jal @0x115b14 / @0x1142c0 run the in-payload disc check</div>
+          <div class="now">+ RAM patcher @0x1006168 pre-clears the flag, branches past both, then jr 0x100000</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="keyout">
+      <div class="lbl">key collapses to a constant</div>
+      <div class="val mono">29f32f09 0c66b07d c5b12c51 695e432e b1d8ea10</div>
+      <p>With both factors hardcoded, the schedule is static. <code class="mono">tools/cbv10_unpack.py</code> derives
+        this key, RC4-decrypts the body and inflates the image &mdash; no disc, no PS2. The payload underneath is
+        untouched stock v10, down to an intact RSA signature check.</p>
+    </div>
+  </section>
+
+  <footer>
+    <dl class="meta">
+      <div><dt>Disc</dt><dd>Code Breaker V10 · UDF 1.5 · SMS25R4 · ~2.12 GB</dd></div>
+      <div><dt>BOOT.ELF</dt><dd>3,688,628 B · ELF32 LE MIPS-III (R5900)</dd></div>
+      <div><dt>Loader map</dt><dd>plaintext 0x1000000–0x1012ab0 · body RC4⊕zlib</dd></div>
+      <div><dt>Source</dt><dd>research/REVERSING.md §10</dd></div>
+    </dl>
+    <p class="fine">A walkthrough of the intended mechanism, reconstructed by static analysis of the v10 loader.
+      Addresses use the loader&rsquo;s virtual base; <span class="mono">va&rarr;file = 0x1000 + (va − 0x1000000)</span>.</p>
+  </footer>
+
+</main>
+
+<script>
+  (function(){
+    var root=document.documentElement, btn=document.getElementById('themeBtn');
+    var saved=null;
+    try{ saved=localStorage.getItem('disclock-theme'); }catch(e){}
+    if(saved==='light'||saved==='dark') root.setAttribute('data-theme',saved);
+    function cur(){
+      var a=root.getAttribute('data-theme');
+      if(a) return a;
+      return (window.matchMedia&&window.matchMedia('(prefers-color-scheme: light)').matches)?'light':'dark';
+    }
+    btn.addEventListener('click',function(){
+      var next=cur()==='dark'?'light':'dark';
+      root.setAttribute('data-theme',next);
+      try{ localStorage.setItem('disclock-theme',next); }catch(e){}
+    });
+  })();
+</script>
