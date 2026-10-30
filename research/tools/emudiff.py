@@ -1,145 +1,179 @@
-# Compares Emu.java output (firmware) with emucmp.rs output (crate) list by
-# list, and checks the firmware model against both.
-#
+# Compare firmware outputs with the crate, and every logged model state with
+# emulation. Crate state comparison is limited to lines, effective scheme, and
+# key/beefcodf while V7 is active; it does not compare seeds or the V7 counter.
 # usage: python3 -I emudiff.py <unpacked.elf> <emu.out> <crate.out> [plain.txt]
-#   With plain.txt (the plain text that was encrypted by the crate to make the
-#   emulator's input), also checks that the firmware decrypts it back.
-import os, sys
+# Exit 0: agreement / exact --expected baseline; 1: differences; 2: bad input.
+# --write-differences exports a baseline for review without accepting it.
+import argparse
+import os
+import struct
+import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from fwmodel import M32, N, RSA_D, Fw, Image, Tables, parse_emu
+from comparison import add_expectations, align, finish, output_row, read_groups, uint
+from fwmodel import M32, N, RSA_D, Fw, Image, Tables
 
 
-def parse_crate(path):
-    name, rows = None, []
-    for l in open(path):
-        l = l.strip()
-        if l.startswith('==='):
-            if name is not None:
-                yield name, rows
-            name, rows = l[3:].strip(), []
-        elif l:
-            p = l.split()
-            st = dict(kv.split('=') for kv in p[5:])
-            st['lines'] = int(st['lines'], 16)
-            st['key'] = [int(x, 16) for x in st['key'].split(',')]
-            rows.append(((int(p[0], 16), int(p[1], 16)), (int(p[3], 16), int(p[4], 16)), st))
-    if name is not None:
-        yield name, rows
+def parse_outputs(path, firmware):
+    groups, primitives = [], []
+    for name, texts in read_groups(path):
+        rows = []
+        for index, text in enumerate(texts):
+            kind, inp, out, raw = output_row(text)
+            if kind == 'primitive':
+                if not firmware:
+                    raise ValueError(f'{path}: unexpected primitive in crate output')
+                primitives.append((name, index, inp, out))
+                continue
+            required = ({'mode', 'lines', 'v1', 'bf', 'opt', 'key', 'kc', 'seeds'} if firmware
+                        else {'scheme', 'lines', 'bf', 'init', 'key'})
+            if set(raw) != required:
+                raise ValueError(f'{path}: unexpected state fields in {name}:{index}')
+            state = {}
+            for key, value in raw.items():
+                if key == 'scheme':
+                    if value not in ('Raw', 'V1', 'V7'):
+                        raise ValueError(f'{path}: invalid scheme {value!r}')
+                    state[key] = value
+                elif key in ('key', 'kc'):
+                    state[key] = [uint(word) for word in value.split(',')]
+                    if len(state[key]) != 5:
+                        raise ValueError(f'{path}: expected five key words')
+                else:
+                    state[key] = uint(value)
+            rows.append((inp, out, state))
+        groups.append((name, rows))
+    return groups, primitives
 
 
 def parse_plain(path):
-    name, rows, out = None, [], {}
-    for l in open(path):
-        l = l.strip()
-        if l.startswith('==='):
-            name = l[3:].strip()
-            out[name] = rows = []
-        elif l and not l.startswith('!'):
-            a, v = l.split()
-            rows.append((int(a, 16), int(v, 16)))
-    return out
+    groups = []
+    for name, texts in read_groups(path):
+        rows = []
+        for text in texts:
+            if text.startswith('!'):
+                raise ValueError(f'{path}: primitive in plaintext input')
+            words = text.split()
+            if len(words) != 2:
+                raise ValueError(f'{path}: malformed plaintext row')
+            rows.append(tuple(uint(word) for word in words))
+        groups.append((name, rows))
+    return groups
 
 
-def check_primitives(path):
-    """Checks Emu.java primitive calls against the math src/ implements:
-    mod_inverse, mul_decrypt (a * inverse(b | 1)) and rsa_crypt/mod_pow."""
-    n = bad = 0
-    for l in open(path):
-        p = l.split()
-        if not l.startswith('!'):
-            continue
-        n += 1
-        got = int(p[-1], 16)
-        if p[0] == '!inv':
-            want = pow(int(p[1], 16), -1, 1 << 32)
-        elif p[0] == '!mul':
-            want = int(p[1], 16) * pow(int(p[2], 16) | 1, -1, 1 << 32) & M32
-        elif p[0] == '!rsa':
-            want = pow(int(p[1], 16), RSA_D, N)
-        if got != want:
-            bad += 1
-            print(f'PRIM {l.strip()} want {want:X}')
-    if n:
-        print(f'primitives: {n} calls, {bad} differ from src/ math')
+def fw_scheme(state):
+    return 'V7' if state['mode'] & 0x10000 else ('V1' if state['v1'] else 'Raw')
 
 
-def fw_scheme(st):
-    return 'V7' if st['mode'] & 0x10000 else ('V1' if st['v1'] else 'Raw')
+def state_differences(firmware, crate):
+    differences = {}
+    if firmware['lines'] != crate['lines']:
+        differences['lines'] = [firmware['lines'], crate['lines']]
+    fs, cs = fw_scheme(firmware), crate['scheme']
+    if firmware['lines'] == 0 and firmware['opt'] != 2 and fs != 'V7':
+        fs, cs = fs == 'V7', cs == 'V7'  # raw/V1 flag is overwritten before use
+    if fs != cs:
+        differences['scheme'] = [fs, cs]
+    if firmware['mode'] & 0x10000:
+        for key in ('key', 'bf'):
+            if firmware[key] != crate[key]:
+                differences[key] = [firmware[key], crate[key]]
+    return differences
 
 
-def main():
-    t = Tables(Image(sys.argv[1]))
-    emu = list(parse_emu(sys.argv[2]))
-    crate = list(parse_crate(sys.argv[3]))
-    plain = parse_plain(sys.argv[4]) if len(sys.argv) > 4 else None
-    lines = out_diff = state_diff = model_bad = plain_bad = 0
-    groups = {}
-    assert len(crate) == len(emu)
-    for (name, rows), (cname, crows) in zip(emu, crate):
-        assert cname == name and len(crows) == len(rows), name
-        fw = Fw(t)
-        fw.reset()
-        first_out = first_state = None
-        for i, ((inp, out, st), (cinp, cout, cst)) in enumerate(zip(rows, crows)):
-            assert inp == cinp
-            lines += 1
-            if fw.decrypt_line(*inp) != out or fw.state() != st:
-                if not model_bad:
-                    print(f'MODEL {name}:{i} differs from emulation')
-                model_bad += 1
-            if first_out is None and out != cout:
-                first_out = i
-            if first_out is None and first_state is None:
-                # Compare what the crate has a counterpart for. The crate
-                # keeps its key after leaving V7 (it never does), and only
-                # tracks code_lines/scheme in auto mode.
-                diffs = []
-                if st['lines'] != cst['lines']:
-                    diffs.append(f"lines fw={st['lines']} crate={cst['lines']}")
-                # Outside V7, the raw/V1 flag is dead at a code start: the
-                # next line sets it before reading it. So only compare V7 then.
-                fs, cs = fw_scheme(st), cst['scheme']
-                if st['lines'] == 0 and st['opt'] != 2 and fs != 'V7':
-                    fs, cs = fs == 'V7', cs == 'V7'
-                if fs != cs:
-                    diffs.append(f"scheme fw={fw_scheme(st)} crate={cst['scheme']}")
-                if st['mode'] & 0x10000 and st['key'] != cst['key']:
-                    diffs.append('key')
-                if st['mode'] & 0x10000 and st['bf'] != int(cst['bf']):
-                    diffs.append(f"beefcodf fw={st['bf']} crate={cst['bf']}")
-                if diffs:
-                    first_state = (i, diffs)
+def main(argv=None, *, fw_class=Fw, image_class=Image, table_class=Tables):
+    parser = argparse.ArgumentParser(description='Compare firmware, crate and model results.')
+    parser.add_argument('image')
+    parser.add_argument('firmware')
+    parser.add_argument('crate')
+    parser.add_argument('plain', nargs='?')
+    add_expectations(parser)
+    args = parser.parse_args(argv)
+    try:
+        tables = table_class(image_class(args.image))
+        emu, primitives = parse_outputs(args.firmware, True)
+        crate, _ = parse_outputs(args.crate, False)
+        align(emu, crate)
+        plain = parse_plain(args.plain) if args.plain else None
         if plain is not None:
-            want = plain[name]
-            got = [out for _, out, _ in rows]
-            if got != want:
-                plain_bad += 1
-                j = next(k for k in range(len(want)) if got[k] != want[k])
-                print(f'ENCRYPT {name}:{j} plain {want[j][0]:08X} {want[j][1]:08X} '
-                      f'-> crate cipher {rows[j][0][0]:08X} {rows[j][0][1]:08X} -> fw {got[j][0]:08X} {got[j][1]:08X}'
-                      f'  context: {[f"{a:08X} {v:08X}" for a, v in want[max(0, j - 3):j]]}')
-        g = name.split('-')[0].rstrip('0123456789')
-        groups.setdefault(g, [0, 0, 0])
-        groups[g][0] += 1
-        if first_out is not None:
-            out_diff += 1
-            groups[g][1] += 1
-            i = first_out
-            ctx = [f'{a:08X} {v:08X}->{o[0]:08X} {o[1]:08X}' for (a, v), o, _ in rows[max(0, i - 3):i]]
-            print(f'OUTPUT {name}:{i} in {rows[i][0][0]:08X} {rows[i][0][1]:08X}: '
-                  f'fw {rows[i][1][0]:08X} {rows[i][1][1]:08X} crate {crows[i][1][0]:08X} {crows[i][1][1]:08X}'
-                  f'  fw state {fw_scheme(rows[i][2])} mode={rows[i][2]["mode"]:08X} opt={rows[i][2]["opt"]}'
-                  f'  before: {ctx}')
-        elif first_state is not None:
-            state_diff += 1
-            groups[g][2] += 1
-            print(f'STATE  {name}:{first_state[0]} {first_state[1]}')
-    print(f'\n{len(emu)} lists, {lines} lines: {out_diff} lists with output diffs, '
-          f'{state_diff} more with state diffs only, model mismatches {model_bad}'
-          + (f', encryption round-trip failures {plain_bad}' if plain is not None else ''))
-    for g, (n, o, s) in sorted(groups.items()):
-        print(f'  {g:10} lists={n:4} output_diff={o:4} state_diff={s:4}')
-    check_primitives(sys.argv[2])
+            align(emu, plain)
+        lines = out_diff = state_diff = model_bad = plain_bad = primitive_bad = 0
+        differences, groups = [], {}
+        for group_index, ((name, rows), (_, crows)) in enumerate(zip(emu, crate)):
+            model = fw_class(tables)
+            model.reset()
+            first_out = first_state = None
+            plain_failed = False
+            for i, ((inp, out, state), (cinp, cout, cstate)) in enumerate(zip(rows, crows)):
+                if inp != cinp:
+                    raise ValueError(f'{name}:{i}: input words differ')
+                lines += 1
+                modeled = model.decrypt_line(*inp)
+                if modeled != out or model.state() != state:
+                    if not model_bad:
+                        print(f'MODEL {name}:{i} differs from emulation')
+                    model_bad += 1
+                    differences.append({'kind': 'model', 'list': name, 'line': i,
+                                        'firmware': [out, state], 'model': [modeled, model.state()]})
+                if out != cout:
+                    if first_out is None:
+                        first_out = i
+                        print(f'OUTPUT {name}:{i} in {inp[0]:08X} {inp[1]:08X}: '
+                              f'fw {out[0]:08X} {out[1]:08X} crate {cout[0]:08X} {cout[1]:08X}')
+                    differences.append({'kind': 'output', 'list': name, 'line': i,
+                                        'input': inp, 'firmware': out, 'crate': cout})
+                elif first_out is None:
+                    fields = state_differences(state, cstate)
+                    if fields:
+                        if first_state is None:
+                            first_state = i
+                            print(f'STATE {name}:{i} {fields}')
+                        differences.append({'kind': 'state', 'list': name, 'line': i, 'fields': fields})
+                if plain is not None:
+                    want = plain[group_index][1][i]
+                    if out != want:
+                        if not plain_failed:
+                            print(f'ENCRYPT {name}:{i} want {want[0]:08X} {want[1]:08X} '
+                                  f'firmware {out[0]:08X} {out[1]:08X}')
+                        plain_failed = True
+                        differences.append({'kind': 'plaintext', 'list': name, 'line': i,
+                                            'expected': want, 'firmware': out})
+            group = name.split('-')[0].rstrip('0123456789')
+            counts = groups.setdefault(group, [0, 0, 0])
+            counts[0] += 1
+            if first_out is not None:
+                out_diff += 1
+                counts[1] += 1
+            elif first_state is not None:
+                state_diff += 1
+                counts[2] += 1
+            plain_bad += plain_failed
+        for name, index, inp, actual in primitives:
+            op, *words = inp
+            if op == '!inv':
+                want = pow(words[0], -1, 1 << 32)
+            elif op == '!mul':
+                want = words[0] * pow(words[1] | 1, -1, 1 << 32) & M32
+            else:
+                want = pow(words[0], RSA_D, N)
+            if actual != want:
+                primitive_bad += 1
+                print(f'PRIM {name}:{index} {inp}: firmware {actual:X} exact {want:X}')
+                differences.append({'kind': 'primitive', 'list': name, 'line': index,
+                                    'input': inp, 'firmware': actual, 'exact': want})
+        if not lines and not primitives:
+            raise ValueError('no output rows to compare')
+        print(f'\n{len(emu)} lists, {lines} lines: {out_diff} lists with output diffs, '
+              f'{state_diff} more with state diffs only, model mismatches {model_bad}'
+              + (f', encryption round-trip failures {plain_bad}' if plain is not None else ''))
+        for group, (count, outputs, states) in sorted(groups.items()):
+            print(f'  {group:10} lists={count:4} output_diff={outputs:4} state_diff={states:4}')
+        if primitives:
+            print(f'primitives: {len(primitives)} calls, {primitive_bad} differ from exact math')
+        inputs = [args.image, args.firmware, args.crate] + ([args.plain] if args.plain else [])
+        return finish(differences, args, inputs, hard_failures=model_bad + plain_bad)
+    except (OSError, ValueError, KeyError, IndexError, struct.error, AssertionError) as exc:
+        parser.exit(2, f'{parser.prog}: {exc or "invalid image or output data"}\n')
 
 
-main()
+if __name__ == '__main__':
+    sys.exit(main())
