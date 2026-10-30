@@ -77,7 +77,8 @@ def finish(differences, args, inputs, hard_failures=0):
     observation = json.loads(json.dumps(observation))  # portable code-word tuples
     if args.write_differences:
         target = Path(args.write_differences)
-        if target.resolve() in {Path(path).resolve() for path in inputs}:
+        if (target.resolve() in {Path(path).resolve() for path in inputs}
+                or target.exists() and any(target.samefile(path) for path in inputs)):
             raise ValueError('difference output would overwrite an input file')
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text(json.dumps(observation, indent=2) + '\n')
@@ -92,7 +93,8 @@ def finish(differences, args, inputs, hard_failures=0):
                 or not isinstance(expected.get('differences'), list)
                 or not all(isinstance(value, dict) for value in expected['differences'])):
             raise ValueError('unsupported expected-difference format')
-        if expected != observation:
+        if (json.dumps(expected, sort_keys=True, allow_nan=False)
+                != json.dumps(observation, sort_keys=True, allow_nan=False)):
             print('Expected input hashes or difference records do not match.')
             return 1
         if hard_failures:

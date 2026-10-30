@@ -1,5 +1,6 @@
 """CLI regressions for incomplete comparisons and false success statuses."""
 import json
+import os
 from pathlib import Path
 import struct
 import subprocess
@@ -75,6 +76,28 @@ class ComparisonTests(unittest.TestCase):
         self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
         self.assertEqual(left.read_bytes(), original)
 
+    def test_export_cannot_overwrite_a_hardlinked_input(self):
+        left, right = self.logs()
+        original = left.read_bytes()
+        target = self.root / 'hardlink.json'
+        os.link(left, target)
+        result = self.run_tool('cmpout.py', left, right, '--write-differences', target)
+        self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
+        self.assertEqual(left.read_bytes(), original)
+
+    def test_expected_records_preserve_json_number_types(self):
+        left, right = self.logs('00000002')
+        baseline = self.root / 'expected.json'
+        self.run_tool('cmpout.py', left, right, '--write-differences', baseline)
+        original = json.loads(baseline.read_text())
+        for alternate in (True, 1.0):
+            with self.subTest(value=alternate):
+                expected = json.loads(json.dumps(original))
+                expected['differences'][0]['input'][1] = alternate
+                baseline.write_text(json.dumps(expected))
+                result = self.run_tool('cmpout.py', left, right, '--expected', baseline)
+                self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+
     def test_malformed_expectation_is_invalid(self):
         left, right = self.logs()
         baseline = self.write('expected.json', '{"version": 1, "differences": false}')
@@ -126,6 +149,15 @@ class ComparisonTests(unittest.TestCase):
                 result = self.run_tool(tool, *self.firmware_files(version, crate_val=2))
                 self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
                 self.assertIn('output diffs', result.stdout)
+
+    def test_malformed_crate_boolean_flags_are_invalid(self):
+        for version, tool in [(9, 'emudiff.py'), (10, 'emudiff10.py')]:
+            for field in ('init', 'bf'):
+                with self.subTest(version=version, field=field):
+                    files = self.firmware_files(version)
+                    files[2].write_text(files[2].read_text().replace(field+'=0', field+'=2'))
+                    result = self.run_tool(tool, *files)
+                    self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
 
     def test_selected_crate_state_difference_fails(self):
         files = self.firmware_files(9)

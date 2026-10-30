@@ -40,6 +40,8 @@ def parse_outputs(path, firmware):
                         raise ValueError(f'{path}: expected five key words')
                 else:
                     state[key] = uint(value)
+                    if not firmware and key in ('init', 'bf') and state[key] not in (0, 1):
+                        raise ValueError(f'{path}: invalid boolean flag {key}={value}')
             rows.append((inp, out, state))
         groups.append((name, rows))
     return groups, primitives
