@@ -2,14 +2,17 @@
 # Unpack the CodeBreaker v10 BOOT.ELF body (REVERSING.md §10).
 #
 # The body is zlib-compressed then RC4-encrypted. This recovers the RC4 key
-# statically and writes the decompressed image. It works only on this *cracked*
-# loader (§10.6, §10.8): stock v10 derives the key from the disc key and an
-# EE-FPU value, which can't be reproduced offline.
+# statically and writes the decompressed image. Its offsets and hardcoded
+# inputs are specific to the supplied modified loader (§10.6, §10.8), whose
+# BOOT.ELF SHA-256 is aafabd9b9ef8b74349ee6aa4272e4efa3fc1fd9838ceed78a23afff2521f3f04.
 #
-# Key derivation (FUN_01000248). Stock, the key binds to the disc and console:
-# an EE single-precision float bit-mixer (FUN_010009c0, madd.s/msub.s) yields a
-# console value A, and a SIF-RPC (FUN_01000150) fetches the disc key const20.
-# This image is cracked: a stub at 0x10060f8 hardcodes BOTH A and const20 as
+# Key derivation (FUN_01000248) combines two inputs:
+# an EE single-precision float bit-mixer (FUN_010009c0, madd.s/msub.s) feeds the
+# SHA-1 digest A, and a SIF-RPC (FUN_01000150) obtains const20: a status word
+# followed by 16 read-key bytes. The constants below match the software-derived reply
+# for serial SLUS-20202 (§12, F1); they are not an inaccessible physical secret.
+# Reproducing the unmodified EE mixer in software remains unverified here.
+# This image is modified: a stub at 0x10060f8 hardcodes BOTH A and const20 as
 # literal immediates (the 0x1010980/0x1012a88 buffers are zero in the file), so
 # the key is static. The schedule's non-obvious step is that the firmware's
 # SHA-1 writes its 5 state words EE-native little-endian, not as the standard

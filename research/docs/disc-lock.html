@@ -1,12 +1,12 @@
 <title>CodeBreaker Disc Lock</title>
 <meta name="claude:viewport-fit-sides" content="cover">
-<meta name="description" content="How CodeBreaker PS2 v10's anti-copy boot chain derives its decryption key from the disc and the console.">
+<meta name="description" content="How CodeBreaker PS2 v10 derives its loader key from EE arithmetic and a read-key reply, and how the supplied image bypasses those inputs.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
 <style>
-  /* Layout: a single-column boot-chain narrative; two factor cards merge into
-     a key, the key gates a decrypt, a copy fails. Dark-first terminal world. */
+  /* Layout: a single-column boot-chain narrative; two input cards merge into
+     a key, followed by payload recovery and the observed bypass. */
   :root{
     --bg:#0a0e15; --grid:rgba(90,120,160,.05);
     --surface:#111826; --surface-2:#0d131e; --raised:#16202f;
@@ -217,45 +217,45 @@
 <main class="wrap">
 
   <div class="hero">
-    <p class="eyebrow">anti-copy boot chain <span>/</span> how it&rsquo;s meant to work</p>
-    <h1>The key is <em>derived</em>, never stored.</h1>
-    <p class="lede">CodeBreaker&rsquo;s v10 disc is a self-decrypting loader. The real program ships
-      RC4-encrypted over zlib, and the only key that unlocks it is computed at boot from
-      <b>two things a pirate can&rsquo;t supply at once</b>: the genuine disc and the actual PlayStation&nbsp;2.</p>
+    <p class="eyebrow">v10 loader <span>/</span> key derivation and bypass</p>
+    <h1>How the loader <em>derives its key.</em></h1>
+    <p class="lede">CodeBreaker&rsquo;s v10 loader decrypts a zlib-compressed program with RC4.
+      Its key schedule combines <b>an EE arithmetic result and a CDVD read-key reply</b>.
+      The supplied image freezes both inputs, so it can be unpacked offline.</p>
 
     <div class="eq">
-      <div class="lbl">the whole protection, in one line &mdash; FUN_01000248</div>
+      <div class="lbl">the key schedule &mdash; FUN_01000248</div>
       <code class="mono"><span class="k-key">key</span> <span class="k-op">=</span> <span class="k-dim">stored</span> <span class="k-op">&oplus;</span> le_sha1( <span class="k-con">A</span> &Vert; le_sha1( <span class="k-disc">const20</span> ) )</code>
     </div>
   </div>
 
   <section>
-    <div class="sec-head"><span class="num">01</span><h2>Two factors, one key</h2></div>
-    <p class="sub ind">Boot forks into two independent reads. Neither value is in the file; each is produced live,
-      and the key needs both. One binds to the console, the other to the disc.</p>
+    <div class="sec-head"><span class="num">01</span><h2>Two inputs, one key</h2></div>
+    <p class="sub ind">The schedule combines A, a digest of EE arithmetic output, with const20,
+      a 20-byte read-key reply. The modified image supplies both as constants.</p>
 
     <div class="factors">
       <div class="card con">
-        <div class="tag">factor 1 &middot; console</div>
+        <div class="tag">input 1 &middot; EE arithmetic</div>
         <h3>EE-FPU bit-mixer</h3>
         <p>Four calls run a 10-round single-precision float mixer on the EE&rsquo;s COP1
           (<code class="mono">madd.s</code>/<code class="mono">msub.s</code>), keeping the low 3 bits where the
-          R5900 FPU diverges from IEEE. The result is the same on every PS2 &mdash; and unreproducible without
-          cycle-exact EE float hardware.</p>
+          R5900 FPU diverges from IEEE. Correct arithmetic results matter; reproducing the
+          unmodified mixer in software has not been checked here.</p>
         <div class="foot">
           <span class="out">&rarr; A</span>
-          <span class="need">needs an EE-accurate FPU<br><span class="addr">FUN_010009c0 &rarr; 0x1012a88</span></span>
+          <span class="need">digest of the mixer output<br><span class="addr">FUN_010009c0 &rarr; 0x1012a88</span></span>
         </div>
       </div>
       <div class="card disc">
-        <div class="tag">factor 2 &middot; disc</div>
+        <div class="tag">input 2 &middot; read-key reply</div>
         <h3>CDVD read-key RPC</h3>
-        <p>A SIF remote call crosses to the IOP and asks the CD/DVD subsystem for the
-          physical <b>disc key</b> (<code class="mono">0x8000059x</code>). Only a genuine, authenticated disc
-          returns the right value; it lives nowhere in the readable filesystem.</p>
+        <p>A SIF remote call obtains a status word and 16 read-key bytes. The supplied
+          constants match the software-derived reply for <b>SLUS-20202</b>;
+          these bytes are reproducible from that serial.</p>
         <div class="foot">
           <span class="out">&rarr; const20</span>
-          <span class="need">needs the original disc<br><span class="addr">FUN_01000150 &rarr; 0x1010980</span></span>
+          <span class="need">status + 16 read-key bytes<br><span class="addr">FUN_01000150 &rarr; 0x1010980</span></span>
         </div>
       </div>
     </div>
@@ -267,22 +267,22 @@
 
   <section>
     <div class="sec-head"><span class="num">02</span><h2>The key schedule</h2></div>
-    <p class="sub ind">The two factors fold together through a chain of three SHA-1 hashes, then XOR against a
+    <p class="sub ind">The two inputs fold together through a chain of three SHA-1 hashes, then XOR against a
       stored blind. Each step overwrites the same scratch buffer.</p>
 
     <div class="pipe">
       <div class="stage">
         <div class="rail"><span class="node y">H</span><span class="conn"></span></div>
         <div class="step">
-          <div class="t">Hash the disc key</div>
-          <div class="d"><code class="mono">B = le_sha1(const20)</code> &mdash; the disc factor, digested.</div>
+          <div class="t">Hash the read-key reply</div>
+          <div class="d"><code class="mono">B = le_sha1(const20)</code> &mdash; status and read-key bytes, digested.</div>
         </div>
       </div>
       <div class="stage">
         <div class="rail"><span class="node g">H</span><span class="conn"></span></div>
         <div class="step">
-          <div class="t">Fold in the console value</div>
-          <div class="d"><code class="mono">C = le_sha1(A &Vert; B)</code> &mdash; console and disc now entangled in one digest.</div>
+          <div class="t">Combine both digests</div>
+          <div class="d"><code class="mono">C = le_sha1(A &Vert; B)</code> &mdash; EE arithmetic output and the read-key reply combined.</div>
         </div>
       </div>
       <div class="stage">
@@ -290,81 +290,88 @@
         <div class="step">
           <div class="t">Unblind into the RC4 key</div>
           <div class="d"><code class="mono">key = stored(0x1010940) &oplus; C</code>. The stored bytes alone
-            (<code class="mono">ce67d054&hellip;</code>) are a decoy; they&rsquo;re meaningless until XORed with a correct C.</div>
+            (<code class="mono">ce67d054&hellip;</code>) are an XOR mask; the RC4 key also depends on C.</div>
         </div>
       </div>
     </div>
 
     <div class="note"><b>The quiet twist:</b> this SHA-1 writes its five state words EE-native little-endian,
-      not as the standard big-endian digest. Every hash is byte-swapped per word &mdash; so even a perfect guess of
-      both inputs reconstructs the wrong key until you notice the byte order.</div>
+      not as the standard big-endian digest. Every hash is byte-swapped per word.
+      Using the standard digest byte order here produces a different key.</div>
   </section>
 
   <section>
-    <div class="sec-head"><span class="num">03</span><h2>The gate</h2></div>
-    <p class="sub ind">With the key in hand the loader unlocks the payload and jumps in. A wrong key never gets a
-      chance to fail loudly &mdash; it simply produces garbage that can&rsquo;t inflate.</p>
+    <div class="sec-head"><span class="num">03</span><h2>Decrypt, then check</h2></div>
+    <p class="sub ind">The loader decrypts and inflates its body, then transfers control to the payload.
+      The payload&rsquo;s later startup checks are separate from decryption.</p>
 
     <div class="gate">
       <span class="ic" style="color:var(--accent)">1</span>
       <div>
         <div class="t">RC4-decrypt &rarr; zlib inflate &rarr; <code class="mono">jr 0x100000</code></div>
         <div class="d">The body is decrypted in place (<code class="mono">FUN_010000e0</code>, len <code class="mono">0xe9754</code>),
-          inflated to <code class="mono">0x100000</code> (<code class="mono">FUN_01000a58</code>), and executed.</div>
+          inflated to <code class="mono">0x100000</code> (<code class="mono">FUN_01000a58</code>), then entered by the loader.</div>
         <div class="verdict">
-          <span class="pill pass">▸ valid zlib stream &rarr; payload runs</span>
-          <span class="pill fail">▸ wrong key &rarr; garbage, inflate fails</span>
+          <span class="pill pass">▸ derived key &rarr; recovered program</span>
+          <span class="pill fail">▸ wrong key can prevent inflation</span>
         </div>
       </div>
     </div>
     <div class="gate">
       <span class="ic" style="color:var(--gold)">2</span>
       <div>
-        <div class="t">In-payload disc-key re-check</div>
-        <div class="d">Even after boot, the inflated image checks the disc again
-          (<code class="mono">jal</code> at <code class="mono">0x115b14</code> and <code class="mono">0x1142c0</code>). Belt and suspenders.</div>
+        <div class="t">Payload startup checks</div>
+        <div class="d">The call at <code class="mono">0x115b14</code> checks the decoded read-key serial against
+          <code class="mono">SLUS-20202</code>. Another call at <code class="mono">0x115b30</code> checks a byte of an RPC result.
+          The call at <code class="mono">0x1142c0</code> sends function 4 to server <code class="mono">0xfa6a007e</code>;
+          its server-side role remains unresolved.</div>
         <div class="verdict">
-          <span class="pill pass">▸ pass &rarr; CodeBreaker continues</span>
-          <span class="pill fail">▸ fail &rarr; halt</span>
+          <span class="pill pass">▸ serial and result checks located</span>
+          <span class="pill fail">▸ mismatch &rarr; error flags</span>
         </div>
       </div>
     </div>
   </section>
 
   <section>
-    <div class="sec-head"><span class="num">04</span><h2>Why a copy can&rsquo;t boot</h2></div>
-    <p class="sub ind">An attacker needs all three at the same time. Missing any one yields a wrong key, and a wrong
-      key yields nothing to run.</p>
+    <div class="sec-head"><span class="num">04</span><h2>What the evidence establishes</h2></div>
+    <p class="sub ind">Offline unpacking and the inspected instructions support the key reconstruction.
+      They do not establish physical disc authentication or the final outcome of every startup check.</p>
     <div class="walls">
       <div class="wall">
-        <div class="n">WALL 1</div>
-        <h4>No disc key</h4>
-        <p>A plain data copy can&rsquo;t reproduce the authentication key, so <code class="mono">const20</code> is wrong
-          and C collapses.</p>
+        <div class="n">READ-KEY</div>
+        <h4>Reproducible reply</h4>
+        <p>The 20 bytes match status 1 plus serial-derived read-key bytes.
+          This concrete input is reproducible in software.</p>
       </div>
       <div class="wall">
-        <div class="n">WALL 2</div>
-        <h4>No real FPU</h4>
-        <p>Run it off-hardware or on a loose emulator and the EE float mixer gives the wrong <code class="mono">A</code>.</p>
+        <div class="n">EE ARITHMETIC</div>
+        <h4>Result accuracy</h4>
+        <p>The unmodified mixer has not been independently reproduced here.
+          Correct arithmetic results matter; cycle accuracy has not been shown necessary.</p>
       </div>
       <div class="wall">
-        <div class="n">WALL 3</div>
-        <h4>No byte order</h4>
-        <p>Even with both inputs, the little-endian SHA-1 state silently derails a naïve offline reconstruction.</p>
+        <div class="n">SCOPE</div>
+        <h4>Bounded evidence</h4>
+        <p>Intact inspected instructions do not authenticate the whole payload.
+          The immediate failure handler marks flags; its final boot-failure path was not traced.</p>
       </div>
     </div>
+    <div class="note">The serial reconstruction uses
+      <a style="color:var(--accent)" href="https://github.com/PCSX2/pcsx2/blob/33127ad0df121e5b831494c389068ed9f9f3ad4b/pcsx2/CDVD/CDVD.cpp#L583-L620">PCSX2&rsquo;s cdvdReadKey implementation</a>
+      at a pinned revision. It matches the hardcoded reply exactly; a complete boot on hardware or PCSX2 was not run.</div>
   </section>
 
   <section class="crack">
-    <div class="sec-head"><span class="num">05</span><h2>How this image defeats it</h2></div>
-    <p class="sub ind">The v10 BOOT.ELF we reversed is a <b>cracked loader around a stock retail payload</b> &mdash;
-      the mirror of v9.2, where the payload is patched and the loader is clean. The crack cuts every wire above,
-      so the unpack runs fully offline with no disc and no hardware.</p>
+    <div class="sec-head"><span class="num">05</span><h2>How this image bypasses the inputs</h2></div>
+    <p class="sub ind">The supplied v10 BOOT.ELF has a <b>hardcoded-input stub and a RAM patcher</b>.
+      These changes make its key schedule static and bypass the startup calls below.
+      An intact inspected signature verdict does not establish that the whole payload is untouched retail firmware.</p>
 
     <div class="cut">
       <div class="idx">CUT 1</div>
       <div>
-        <div class="t">Factor 1 frozen</div>
+        <div class="t">EE input frozen</div>
         <div class="diff">
           <div class="was">− A computed from the live EE FPU</div>
           <div class="now">+ stub @0x10060f8 writes A = {938ca6bf, e620cc81, 137a84c2, 78ae9796, 889dca10} as immediates</div>
@@ -374,9 +381,9 @@
     <div class="cut">
       <div class="idx">CUT 2</div>
       <div>
-        <div class="t">Factor 2 frozen</div>
+        <div class="t">Read-key reply frozen</div>
         <div class="diff">
-          <div class="was">− sceSifCallRpc fetches the disc key</div>
+          <div class="was">− SIF-RPC supplies the status word and 16 read-key bytes</div>
           <div class="now">+ 0x10060f0 = jr ra; nop (RPC stubbed) · stub hardcodes const20 = {1, 0x39956993, 0x55, 0, 0x05bc0000}</div>
         </div>
       </div>
@@ -384,10 +391,10 @@
     <div class="cut">
       <div class="idx">CUT 3</div>
       <div>
-        <div class="t">Gate 2 skipped</div>
+        <div class="t">Startup calls bypassed</div>
         <div class="diff">
-          <div class="was">− jal @0x115b14 / @0x1142c0 run the in-payload disc check</div>
-          <div class="now">+ RAM patcher @0x1006168 pre-clears the flag, branches past both, then jr 0x100000</div>
+          <div class="was">− calls @0x115b14 / @0x115b30 check serial/result; call @0x1142c0 sends custom RPC 4</div>
+          <div class="now">+ patcher @0x1006168 writes sw zero,-0x5e98(s0) @0x115b14, branch 0x115b34 @0x115b18, and nop @0x1142c0; then jr 0x100000</div>
         </div>
       </div>
     </div>
@@ -395,9 +402,9 @@
     <div class="keyout">
       <div class="lbl">key collapses to a constant</div>
       <div class="val mono">29f32f09 0c66b07d c5b12c51 695e432e b1d8ea10</div>
-      <p>With both factors hardcoded, the schedule is static. <code class="mono">tools/cbv10_unpack.py</code> derives
-        this key, RC4-decrypts the body and inflates the image &mdash; no disc, no PS2. The payload underneath is
-        untouched stock v10, down to an intact RSA signature check.</p>
+      <p>With both inputs hardcoded, the schedule is static. <code class="mono">tools/cbv10_unpack.py</code> derives
+        this key, RC4-decrypts the body and inflates the image offline. The inspected RSA verdict consumes its
+        comparison result; signature-scheme security and whole-image authenticity were not established.</p>
     </div>
   </section>
 
@@ -406,10 +413,11 @@
       <div><dt>Disc</dt><dd>Code Breaker V10 · UDF 1.5 · SMS25R4 · ~2.12 GB</dd></div>
       <div><dt>BOOT.ELF</dt><dd>3,688,628 B · ELF32 LE MIPS-III (R5900)</dd></div>
       <div><dt>Loader map</dt><dd>plaintext 0x1000000–0x1012ab0 · body RC4⊕zlib</dd></div>
-      <div><dt>Source</dt><dd>research/REVERSING.md §10</dd></div>
+      <div><dt>Source</dt><dd><a style="color:var(--accent)" href="../REVERSING.md">research/REVERSING.md §10, §12</a></dd></div>
     </dl>
-    <p class="fine">A walkthrough of the intended mechanism, reconstructed by static analysis of the v10 loader.
-      Addresses use the loader&rsquo;s virtual base; <span class="mono">va&rarr;file = 0x1000 + (va − 0x1000000)</span>.</p>
+    <p class="fine">Reconstructed from the supplied modified v10 image and an offline unpack.
+      Loader addresses use base <span class="mono">0x1000000</span>; payload addresses use <span class="mono">0x100000</span>.
+      Loader <span class="mono">va&rarr;file = 0x1000 + (va − 0x1000000)</span>.</p>
   </footer>
 
 </main>

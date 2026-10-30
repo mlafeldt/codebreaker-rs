@@ -2,7 +2,8 @@
 # and reports the games whose decrypted output differs between the two, plus
 # how often real codes use the beefcode features that diverge. This is the
 # empirical basis for REVERSING.md §11.4's "the cb2util game fixtures are
-# unaffected": real published codes stay on the single default BEEFC0DE path.
+# unaffected": the checked game fixtures stay on the single default BEEFC0DE
+# path. This does not establish compatibility for every published code.
 #
 # usage: run from research/.  python3 -I tools/fixdiff.py <code-list file>...
 #   Each file is a cb2util text listing: a '"Game name"' line starts a list,

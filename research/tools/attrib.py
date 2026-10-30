@@ -4,9 +4,9 @@
 # that all flags off reproduces the v9.2 emulation and all flags on reproduces
 # the v10 emulation, then counts the lists each single change alters (vs v9.2)
 # and whether each change is still needed once the others are on. This is the
-# evidence behind REVERSING.md §11.3/§11.4. The five flags are the four §11.3
-# changes (reset zeroing + rekey ignoring val are two flags of one change):
-#   initval  reset zeroes the default seeds (rekey(1) then copies zeros)
+# evidence behind REVERSING.md §11.3/§11.4. The five flags cover behavior changes
+# in four functions; initval combines reset zeroing and the init-copy decision:
+#   initval  reset zeroes default seeds; rekey(1) copies them and ignores val
 #   rekey0   rekey(0) uses the (val + j) index, ignoring the val == 0 case
 #   always1  a beefcode already in V7 does rekey(1), not rekey(0)
 #   noforce  no opt == 2 forced-V7 line

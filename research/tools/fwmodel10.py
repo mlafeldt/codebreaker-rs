@@ -1,9 +1,10 @@
 # Model of CodeBreaker v10's per-line auto decrypt (0x105090 and callees),
 # as a diff against fwmodel.py's v9.2 model. Written from the v10 listings and
 # checked against the Ghidra emulation (tools/ghidra/EmuP.java "v10"). The four
-# code changes vs v9.2 are REVERSING.md §11.3; this file is their executable
-# form (reset zeroes the default seeds, rekey(init) ignores val, v7_decrypt's
-# key-from-line 5th word lands in beefcodf, auto always rekey(1) on a beefcode).
+# changed functions are described in REVERSING.md §11.3. Reset zeroes default
+# seeds; rekey(init) ignores val, while rekey(0) changes its indices and zero
+# handling; v7_decrypt stores the fifth key-from-line word in beefcodf; auto
+# decrypt retains options but removes forced V7 and always rekey(1) on a beefcode.
 #
 # usage: python3 -I fwmodel10.py check <CBv10.unpacked.bin> <emu.out>
 #        python3 -I fwmodel10.py run <CBv10.unpacked.bin> <lists.txt> <out.txt>
