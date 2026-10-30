@@ -134,6 +134,25 @@ class ComparisonTests(unittest.TestCase):
         self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
         self.assertIn('1 more with state diffs only', result.stdout)
 
+    def test_state_records_include_mismatch_rows_and_following_rows(self):
+        files = self.firmware_files(9, crate_val=9)
+        firmware = files[1].read_text()
+        crate = files[2].read_text()
+        firmware_row = firmware.splitlines()[1]
+        crate_row = crate.splitlines()[1]
+        files[1].write_text(firmware + firmware_row.replace(
+            '00000000 00000001 -> 00000000 00000001',
+            '00000000 00000002 -> 00000000 00000002') + '\n')
+        files[2].write_text((crate + crate_row.replace(
+            '00000000 00000001 -> 00000000 00000009',
+            '00000000 00000002 -> 00000000 00000002') + '\n').replace(
+                'lines=00000000', 'lines=00000001'))
+        baseline = self.root / 'all-state.expected.json'
+        result = self.run_tool('emudiff.py', *files, '--write-differences', baseline)
+        self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+        records = json.loads(baseline.read_text())['differences']
+        self.assertEqual([r['line'] for r in records if r['kind'] == 'state'], [0, 1])
+
     def test_known_rsa_primitive_difference_needs_exact_expectations(self):
         files = self.firmware_files(9)
         with files[1].open('a') as out:

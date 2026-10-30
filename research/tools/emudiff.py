@@ -121,13 +121,12 @@ def main(argv=None, *, fw_class=Fw, image_class=Image, table_class=Tables):
                               f'fw {out[0]:08X} {out[1]:08X} crate {cout[0]:08X} {cout[1]:08X}')
                     differences.append({'kind': 'output', 'list': name, 'line': i,
                                         'input': inp, 'firmware': out, 'crate': cout})
-                elif first_out is None:
-                    fields = state_differences(state, cstate)
-                    if fields:
-                        if first_state is None:
-                            first_state = i
-                            print(f'STATE {name}:{i} {fields}')
-                        differences.append({'kind': 'state', 'list': name, 'line': i, 'fields': fields})
+                fields = state_differences(state, cstate)
+                if fields:
+                    if first_state is None:
+                        first_state = i
+                        print(f'STATE {name}:{i} {fields}')
+                    differences.append({'kind': 'state', 'list': name, 'line': i, 'fields': fields})
                 if plain is not None:
                     want = plain[group_index][1][i]
                     if out != want:
