@@ -1,0 +1,19 @@
+Mutations are in-memory copies; archived files are unchanged.
+
+v9.2 0x13351c: jal 0x133428 -> jal 0x123450
+
+======================================================================
+mutated-bignum-call: v9.2 0x133220..0x134020 (896)  v10 0x1318e8..0x1326e8 (896)
+  CHANGED (1 hunks). - v9.2 / + v10:
+  @@ replace v9.2[191:192] v10[191:192]
+    - 0x13351c 0c048d14 jal 0x123450
+    + 0x131be4 0c04c6bc jal 0x131af0
+
+v10 0x131be4: jal 0x131af0 -> jal 0x131af4
+
+======================================================================
+mutated-interior-call: v9.2 0x133220..0x134020 (896)  v10 0x1318e8..0x1326e8 (896)
+  CHANGED (1 hunks). - v9.2 / + v10:
+  @@ replace v9.2[191:192] v10[191:192]
+    - 0x13351c 0c04cd0a jal 0x133428
+    + 0x131be4 0c04c6bd jal 0x131af4

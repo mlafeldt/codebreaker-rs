@@ -1,0 +1,3 @@
+Default comparison: exit1 (four changed state functions)
+--allow-differences: exit0 (expected changes allowed; no unresolved mappings)
+Summary: 12 identical, 4 changed, 0 unresolved

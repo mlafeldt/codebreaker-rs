@@ -1,0 +1,40 @@
+Without expectations:
+STATE opt-key:3 {'key': [[80669551, 1570592232, 863852705, 1653388495, 2087987935], [385531159, 3340864280, 3736534487, 3352286687, 184769879]]}
+OUTPUT opt-key:4 in 14EE53A7 F77E00B2: fw 2043AFCC 2411FFFF crate 3D1506F6 CE9A21C5
+STATE opt-key-v7-off:2 {'scheme': ['V1', 'Raw']}
+OUTPUT opt-key-v7-off:3 in F968CE47 D8CA4DAA: fw 12345678 9ABCDEF0 crate F3C1D9F5 58F7FB05
+STATE opt-key-beef:3 {'lines': [0, 1], 'key': [[3545022032, 2275537658, 2322773643, 1863179079, 3364332045], [3890260592, 2864481365, 2640763773, 1589375795, 3764451916]], 'bf': [1, 0]}
+OUTPUT opt-key-beef:4 in DEDB2F61 DE6E9E11: fw 01234567 89ABCDEF crate 1E98364C 743B1BC2
+STATE opt-key-2-lines:2 {'scheme': ['V1', 'Raw']}
+OUTPUT opt-key-2-lines:3 in 460BA690 21E337B9: fw 4043AFCC 00020001 crate 4C77539E D9BB2E26
+OUTPUT rsa-wrong:1 in 4A2AF1C7 2DF772C5: fw F2222B68 F4C6BE86 crate 3C875748 89294DDF
+STATE rsa-wrong:2 {'lines': [0, 1]}
+
+13 lists, 82 lines: 5 lists with output diffs, 0 more with state diffs only, model mismatches 0
+  beef       lists=   1 output_diff=   0 state_diff=   0
+  enc        lists=   2 output_diff=   0 state_diff=   0
+  ffff       lists=   2 output_diff=   0 state_diff=   0
+  opt        lists=   7 output_diff=   4 state_diff=   0
+  rsa        lists=   1 output_diff=   1 state_diff=   0
+Exit status: 1
+
+With exact expectations:
+STATE opt-key:3 {'key': [[80669551, 1570592232, 863852705, 1653388495, 2087987935], [385531159, 3340864280, 3736534487, 3352286687, 184769879]]}
+OUTPUT opt-key:4 in 14EE53A7 F77E00B2: fw 2043AFCC 2411FFFF crate 3D1506F6 CE9A21C5
+STATE opt-key-v7-off:2 {'scheme': ['V1', 'Raw']}
+OUTPUT opt-key-v7-off:3 in F968CE47 D8CA4DAA: fw 12345678 9ABCDEF0 crate F3C1D9F5 58F7FB05
+STATE opt-key-beef:3 {'lines': [0, 1], 'key': [[3545022032, 2275537658, 2322773643, 1863179079, 3364332045], [3890260592, 2864481365, 2640763773, 1589375795, 3764451916]], 'bf': [1, 0]}
+OUTPUT opt-key-beef:4 in DEDB2F61 DE6E9E11: fw 01234567 89ABCDEF crate 1E98364C 743B1BC2
+STATE opt-key-2-lines:2 {'scheme': ['V1', 'Raw']}
+OUTPUT opt-key-2-lines:3 in 460BA690 21E337B9: fw 4043AFCC 00020001 crate 4C77539E D9BB2E26
+OUTPUT rsa-wrong:1 in 4A2AF1C7 2DF772C5: fw F2222B68 F4C6BE86 crate 3C875748 89294DDF
+STATE rsa-wrong:2 {'lines': [0, 1]}
+
+13 lists, 82 lines: 5 lists with output diffs, 0 more with state diffs only, model mismatches 0
+  beef       lists=   1 output_diff=   0 state_diff=   0
+  enc        lists=   2 output_diff=   0 state_diff=   0
+  ffff       lists=   2 output_diff=   0 state_diff=   0
+  opt        lists=   7 output_diff=   4 state_diff=   0
+  rsa        lists=   1 output_diff=   1 state_diff=   0
+Input hashes and all expected difference records match.
+Exit status: 0

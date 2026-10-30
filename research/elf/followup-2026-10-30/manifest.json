@@ -1,0 +1,177 @@
+{
+  "base_research_commit": "63b2c2e3536080d3643311bb50acd629d27f6849",
+  "main_commit": "0bb7c1117eb406062e75ade6744f39645111feb3",
+  "notes": "Regenerated crate output checked against archived firmware observations; no new firmware emulation or hardware run. Only duplicate targeted headers were renamed in replay copies.",
+  "sources": {
+    "research/elf/CBv92.unpacked.elf": {
+      "bytes": 18089338,
+      "sha256": "91c04ee76b1126b2b060298fe6c2d434740d2b1923f7e282bc154153c1b79edb"
+    },
+    "research/elf/CBv10.unpacked.bin": {
+      "bytes": 9370970,
+      "sha256": "9cb83c7ffd28c09ebadf1bba986b34a4dce86bedb03ebb2023c4f944a5d422e3"
+    },
+    "research/elf/emu/report.txt": {
+      "bytes": 1707,
+      "sha256": "3660c733f896a84ab89f35429d6de0d1f5a8eab51c6319a1fe2dd2607e4acf3b"
+    },
+    "research/elf/review/v92/report.out": {
+      "bytes": 16303,
+      "sha256": "eb1b11b276f0c48dbe24ae1b020456c0f77fcb4e760bb1492d675dc89d4b801c"
+    },
+    "research/elf/review/v10/cases.txt": {
+      "bytes": 950,
+      "sha256": "42e46d152711b0cbcdb196b0835dc525f9ea1b74534eef04658b7f6b15cf954d"
+    },
+    "research/elf/review/v10/cases.out": {
+      "bytes": 9159,
+      "sha256": "2462c40c6a887090defdc4d05ceba44e30c97b833099588ebebbffa3a6780410"
+    },
+    "research/elf/emu/targeted.txt": {
+      "bytes": 70132,
+      "sha256": "558671c42f4bc5a2bb8e51bf0530841d12e5d51fbaadc50cc0eea8ea67cc815a"
+    },
+    "research/elf/emu/targeted.out": {
+      "bytes": 645306,
+      "sha256": "832ca7a03a255b0ae821646cff3214b11269b4514f29abe354a3b748b7c0f78a"
+    },
+    "research/elf/emu/optfuzz16.txt": {
+      "bytes": 62194,
+      "sha256": "50474be1a340d5b864e18257c301bc04a2ed40d0805f2aa922095b726f847865"
+    },
+    "research/elf/emu/optfuzz16.out": {
+      "bytes": 663478,
+      "sha256": "7d497a0b558b70991df7ec3ea6fa723769d8cce641912f53514dd85e34fcdffd"
+    },
+    "research/docs/disc-lock.html": {
+      "bytes": 24386,
+      "sha256": "dbb7fc0015ddb8cf2f4b64ae5132ae3207e70e9c08c4ec022e334167f794b7fe"
+    },
+    "research/tools/comparison.py": {
+      "bytes": 4693,
+      "sha256": "3871b9e4dde34553ce24816a24d06bc0724b26c3da6cdcab5d85e215b4b0094f"
+    },
+    "research/tools/cmpout.py": {
+      "bytes": 2730,
+      "sha256": "c375c2b4518c34f77f77c346927d74465c49b68259317f5680584ba363dcecba"
+    },
+    "research/tools/emudiff.py": {
+      "bytes": 8738,
+      "sha256": "b8a46103482442312608e3e4fb0117ba0a0e3ea619fe11ecd3060d10672eccc0"
+    },
+    "research/tools/emudiff10.py": {
+      "bytes": 499,
+      "sha256": "157b042cb7d8b31ee00f23da5533a843f95c1389d11130ff313d386bf9b948ff"
+    },
+    "research/tools/cbcrypt_diff.py": {
+      "bytes": 14069,
+      "sha256": "91037b48cc2e0d2fe89888629e358dc287268e400a9e747403970d07ce50a629"
+    },
+    "research/tools/fwmodel.py": {
+      "bytes": 13942,
+      "sha256": "a6ac01dcc028f9463640fc4e8a7aaa9f2b362f4738b7f6f3daef766ce7792759"
+    },
+    "research/tools/fwmodel10.py": {
+      "bytes": 5673,
+      "sha256": "bbdf61021cce19c20661f8b18fd51dc151dbfc3e09c6414e636744e045e8e5ac"
+    },
+    "research/compare/examples/emucmp.rs": {
+      "bytes": 2821,
+      "sha256": "13b01769ecab9b02dc8ef0928a079c2a353238192b421dfc6d8c66d539a09fff"
+    },
+    "src/lib.rs": {
+      "bytes": 30651,
+      "sha256": "c7cc0f93ccaa4792aec799ee0a247015c72214a13cbe57ccbe1a235abf2dbc7b"
+    },
+    "src/cb7.rs": {
+      "bytes": 29188,
+      "sha256": "4bd34557803e6ac93dd0cc8e62cd810888a3775131b9a3e53229a05687c64fd1"
+    }
+  },
+  "files": {
+    "disc-page-checks.json": {
+      "bytes": 363,
+      "sha256": "fac99ef8b23d98eea176fc485ae37e4be743b79b3a4cc69b1505a9c116d63e3d"
+    },
+    "normalizer-diff.txt": {
+      "bytes": 46297,
+      "sha256": "57e2faf2a37ed7edf2df72210134365386af6e889d596b3cacd217d9f308edee"
+    },
+    "normalizer-extents-and-tables.txt": {
+      "bytes": 2033,
+      "sha256": "e60d0af56c2540707c6a0b803f5f4256e1dc3fc0ecf1192d8c4d9925e1bbdb70"
+    },
+    "normalizer-mutation-probes.txt": {
+      "bytes": 761,
+      "sha256": "fd0d646cff883eee94e716c79411255e97cc9ef3d76207e4e0157d1ed355b7f7"
+    },
+    "normalizer-regressions.txt": {
+      "bytes": 1939,
+      "sha256": "b4433173d6bf20d5f60af378c9da28e530d9f5ecf6c6a20a4eb7f7587d3135da"
+    },
+    "normalizer-status.txt": {
+      "bytes": 182,
+      "sha256": "77d8808f1ec4303c4624bc54e9ff21d16c1853b0ef7005c30e27dce7e5beda96"
+    },
+    "optfuzz16-check.txt": {
+      "bytes": 172,
+      "sha256": "5396895b9823ea1f7d8900d96b8ecac2eccb43b9d3e9723c55786cf075ee7b51"
+    },
+    "optfuzz16.crate": {
+      "bytes": 424413,
+      "sha256": "7b60cbd022daceb0986f41232c974b4a6810b68aef1764ac7be8cdd6b0bdfc39"
+    },
+    "report-check.txt": {
+      "bytes": 2714,
+      "sha256": "267e280a9dffc2d10e38c447233ae15b140e07ce5836b4e3adf48d753fcb4326"
+    },
+    "report.crate": {
+      "bytes": 10489,
+      "sha256": "a0fac7aa926316a7ee63fcec1d72113f852a2839e0ed2cf6e28dcb2bb18237dd"
+    },
+    "report.expected.json": {
+      "bytes": 10361,
+      "sha256": "8ce0d1529ee2eda73bdece23a5c439f72f37a445c26db3ed753e723b26af9957"
+    },
+    "targeted-check.txt": {
+      "bytes": 17171,
+      "sha256": "9a2b725eab2bce3f888ec0ad0d5f248abe98da41a3e5523909ac16380c31e36d"
+    },
+    "targeted-firmware.out": {
+      "bytes": 645426,
+      "sha256": "ec1d876c812f3503619b9ac91acf85d2fa8385fad51e98d388641dc64a6f184d"
+    },
+    "targeted-input.txt": {
+      "bytes": 70252,
+      "sha256": "df02a26e2b9ce3e0021fcf0a8d1c4e5b371a71ee845bace8a7f33b50d7931590"
+    },
+    "targeted-labels.json": {
+      "bytes": 958,
+      "sha256": "891ea30d44612adfeee95f51650859401320190705e73effad4ff1e95e47bffd"
+    },
+    "targeted.crate": {
+      "bytes": 412830,
+      "sha256": "19e81a8941f8e9a253bc9fcbb57d82ee5ce116fb0adff82e45965d53769a7644"
+    },
+    "targeted.expected.json": {
+      "bytes": 201754,
+      "sha256": "3319e8e521a2ad8c363fe6b31849595315d376bf8282aaf9a1f69c6960534df1"
+    },
+    "tool-regressions.txt": {
+      "bytes": 4478,
+      "sha256": "d06578eff27125413bdd1bd1134a9ef201c6f8dfe8405dc350833f3bf31d7757"
+    },
+    "v10-cases-check.txt": {
+      "bytes": 3034,
+      "sha256": "08295aff7a6886ba2be5ae93d43afe9ab6830e8ae485f13fa9c604049fca2a75"
+    },
+    "v10-cases.crate": {
+      "bytes": 5874,
+      "sha256": "6064657279e082fca3a39fd53232365f62fe148fed026b3aa9c0c16c704c2da3"
+    },
+    "v10-cases.expected.json": {
+      "bytes": 10512,
+      "sha256": "9e732fab916eba59d47affd5632022f2558dd028ce0958fe5589b3ecdc597fbd"
+    }
+  }
+}

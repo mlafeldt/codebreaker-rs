@@ -1,0 +1,1170 @@
+Command: python3 -I tools/cbcrypt_diff.py elf/CBv92.unpacked.elf elf/CBv10.unpacked.bin
+
+======================================================================
+lines: v9.2 0x1033c0..0x103410 (20)  v10 0x104470..0x1044c0 (20)
+  IDENTICAL modulo validated relocation (static instructions only)
+
+======================================================================
+v1dec: v9.2 0x103410..0x1034dc (51)  v10 0x1044c0..0x10458c (51)
+  IDENTICAL modulo validated relocation (static instructions only)
+
+======================================================================
+inverse: v9.2 0x1034e0..0x10357c (39)  v10 0x104590..0x10462c (39)
+  IDENTICAL modulo validated relocation (static instructions only)
+
+======================================================================
+multiply: v9.2 0x103580..0x1035ac (11)  v10 0x104630..0x10465c (11)
+  IDENTICAL modulo validated relocation (static instructions only)
+
+======================================================================
+rekey: v9.2 0x1035b0..0x103f60 (620)  v10 0x104660..0x104d3c (439)
+  CHANGED (52 hunks). - v9.2 / + v10:
+  @@ replace v9.2[10:11] v10[10:11]
+    - 0x1035d8 10800166 beq a0,zero,0x103b74
+    + 0x104688 10800103 beq a0,zero,0x104a98
+  @@ replace v9.2[12:16] v10[12:19]
+    - 0x1035e0 3c020037 lui v0,0x37
+    - 0x1035e4 3c030037 lui v1,0x37
+    - 0x1035e8 3c170037 lui s7,0x37
+    - 0x1035ec 3c040029 lui a0,0x29
+    + 0x104690 3c020076 lui v0,0x76
+    + 0x104694 3c16009f lui s6,0x9f
+    + 0x104698 24454ca0 addiu a1,v0,19616
+    + 0x10469c 26c6ff48 addiu a2,s6,-184
+    + 0x1046a0 3c04009f lui a0,0x9f
+    + 0x1046a4 3c03009f lui v1,0x9f
+    + 0x1046a8 00a61025 or v0,a1,a2
+  @@ delete v9.2[17:66] v10[20:20]
+    - 0x1035f4 ac40e2fc sw zero,-7428(v0)
+    - 0x1035f8 2487a098 addiu a3,a0,-24424
+    - 0x1035fc 26e6e2e8 addiu a2,s7,-7448
+    - 0x103600 68e20007 ldl v0,7(a3)
+    - 0x103604 6ce20000 ldr v0,0(a3)
+    - 0x103608 68e3000f ldl v1,15(a3)
+    - 0x10360c 6ce30008 ldr v1,8(a3)
+    - 0x103610 b0c20007 .word 0xb0c20007 (op=0x2c)
+    - 0x103614 b4c20000 .word 0xb4c20000 (op=0x2d)
+    - 0x103618 b0c3000f .word 0xb0c3000f (op=0x2c)
+    - 0x10361c b4c30008 .word 0xb4c30008 (op=0x2d)
+    - 0x103620 88e20013 lwl v0,19(a3)
+    - 0x103624 98e20010 lwr v0,16(a3)
+    - 0x103628 a8c20013 swl v0,19(a2)
+    - 0x10362c b8c20010 swr v0,16(a2)
+    - 0x103630 14a0001c bne a1,zero,0x1036a4
+    - 0x103634 02e0a82d daddu s5,s7,zero
+    - 0x103638 3c1e0037 lui s8,0x37
+    - 0x10363c 0000282d daddu a1,zero,zero
+    - 0x103640 27c4dcc8 addiu a0,s8,-9016
+    - 0x103644 0c0518d6 jal 0x146358
+    - 0x103648 24060100 li a2,256
+    - 0x10364c 3c080037 lui t0,0x37
+    - 0x103650 0000282d daddu a1,zero,zero
+    - 0x103654 2504ddc8 addiu a0,t0,-8760
+    - 0x103658 0c0518d6 jal 0x146358
+    - 0x10365c 24060100 li a2,256
+    - 0x103660 3c0a0037 lui t2,0x37
+    - 0x103664 0000282d daddu a1,zero,zero
+    - 0x103668 2544dec8 addiu a0,t2,-8504
+    - 0x10366c 0c0518d6 jal 0x146358
+    - 0x103670 24060100 li a2,256
+    - 0x103674 3c0c0037 lui t4,0x37
+    - 0x103678 0000282d daddu a1,zero,zero
+    - 0x10367c 2584dfc8 addiu a0,t4,-8248
+    - 0x103680 0c0518d6 jal 0x146358
+    - 0x103684 24060100 li a2,256
+    - 0x103688 3c0d0037 lui t5,0x37
+    - 0x10368c 0000282d daddu a1,zero,zero
+    - 0x103690 25a4e0c8 addiu a0,t5,-7992
+    - 0x103694 0c0518d6 jal 0x146358
+    - 0x103698 24060100 li a2,256
+    - 0x10369c 100001d3 b 0x103dec
+    - 0x1036a0 3c180037 lui t8,0x37
+    - 0x1036a4 3c1e0037 lui s8,0x37
+    - 0x1036a8 3c020029 lui v0,0x29
+    - 0x1036ac 24439b98 addiu v1,v0,-25704
+    - 0x1036b0 27c4dcc8 addiu a0,s8,-9016
+    - 0x1036b4 00641025 or v0,v1,a0
+  @@ replace v9.2[67:97] v10[21:54]
+    - 0x1036bc 10400022 beq v0,zero,0x103748
+    - 0x1036c0 03c0302d daddu a2,s8,zero
+    - 0x1036c4 00057202 srl t6,a1,8
+    - 0x1036c8 30ab00ff andi t3,a1,0xff
+    - 0x1036cc 00054e02 srl t1,a1,24
+    - 0x1036d0 24680100 addiu t0,v1,256
+    - 0x1036d4 3c020029 lui v0,0x29
+    - 0x1036d8 3c070029 lui a3,0x29
+    - 0x1036dc 3c0a0029 lui t2,0x29
+    - 0x1036e0 3c0c0029 lui t4,0x29
+    - 0x1036e4 00052c02 srl a1,a1,16
+    - 0x1036e8 3c180037 lui t8,0x37
+    - 0x1036ec 686f0007 ldl t7,7(v1)
+    - 0x1036f0 6c6f0000 ldr t7,0(v1)
+    - 0x1036f4 6870000f ldl s0,15(v1)
+    - 0x1036f8 6c700008 ldr s0,8(v1)
+    - 0x1036fc 68710017 ldl s1,23(v1)
+    - 0x103700 6c710010 ldr s1,16(v1)
+    - 0x103704 686d001f ldl t5,31(v1)
+    - 0x103708 6c6d0018 ldr t5,24(v1)
+    - 0x10370c b08f0007 .word 0xb08f0007 (op=0x2c)
+    - 0x103710 b48f0000 .word 0xb48f0000 (op=0x2d)
+    - 0x103714 b090000f .word 0xb090000f (op=0x2c)
+    - 0x103718 b4900008 .word 0xb4900008 (op=0x2d)
+    - 0x10371c b0910017 .word 0xb0910017 (op=0x2c)
+    - 0x103720 b4910010 .word 0xb4910010 (op=0x2d)
+    - 0x103724 b08d001f .word 0xb08d001f (op=0x2c)
+    - 0x103728 b48d0018 .word 0xb48d0018 (op=0x2d)
+    - 0x10372c 24630020 addiu v1,v1,32
+    - 0x103730 24840020 addiu a0,a0,32
+    + 0x1046b4 10400025 beq v0,zero,0x10474c
+    + 0x1046b8 ac80057c sw zero,1404(a0)
+    + 0x1046bc 24a30100 addiu v1,a1,256
+    + 0x1046c0 3c17009f lui s7,0x9f
+    + 0x1046c4 3c020076 lui v0,0x76
+    + 0x1046c8 3c1e009f lui s8,0x9f
+    + 0x1046cc 3c070076 lui a3,0x76
+    + 0x1046d0 3c080076 lui t0,0x76
+    + 0x1046d4 3c12009f lui s2,0x9f
+    + 0x1046d8 3c090076 lui t1,0x76
+    + 0x1046dc 3c15009f lui s5,0x9f
+    + 0x1046e0 3c0a0076 lui t2,0x76
+    + 0x1046e4 3c10009f lui s0,0x9f
+    + 0x1046e8 3c14009f lui s4,0x9f
+    + 0x1046ec 3c13009f lui s3,0x9f
+    + 0x1046f0 68a40007 ldl a0,7(a1)
+    + 0x1046f4 6ca40000 ldr a0,0(a1)
+    + 0x1046f8 68ab000f ldl t3,15(a1)
+    + 0x1046fc 6cab0008 ldr t3,8(a1)
+    + 0x104700 68ac0017 ldl t4,23(a1)
+    + 0x104704 6cac0010 ldr t4,16(a1)
+    + 0x104708 68ad001f ldl t5,31(a1)
+    + 0x10470c 6cad0018 ldr t5,24(a1)
+    + 0x104710 b0c40007 .word 0xb0c40007 (op=0x2c)
+    + 0x104714 b4c40000 .word 0xb4c40000 (op=0x2d)
+    + 0x104718 b0cb000f .word 0xb0cb000f (op=0x2c)
+    + 0x10471c b4cb0008 .word 0xb4cb0008 (op=0x2d)
+    + 0x104720 b0cc0017 .word 0xb0cc0017 (op=0x2c)
+    + 0x104724 b4cc0010 .word 0xb4cc0010 (op=0x2d)
+    + 0x104728 b0cd001f .word 0xb0cd001f (op=0x2c)
+    + 0x10472c b4cd0018 .word 0xb4cd0018 (op=0x2d)
+    + 0x104730 24a50020 addiu a1,a1,32
+    + 0x104734 24c60020 addiu a2,a2,32
+  @@ replace v9.2[98:99] v10[55:56]
+    - 0x103738 1468ffec bne v1,t0,0x1036ec
+    + 0x10473c 14a3ffec bne a1,v1,0x1046f0
+  @@ replace v9.2[100:122] v10[57:82]
+    - 0x103740 10000019 b 0x1037a8
+    - 0x103744 3c0f0037 lui t7,0x37
+    - 0x103748 00057202 srl t6,a1,8
+    - 0x10374c 30ab00ff andi t3,a1,0xff
+    - 0x103750 00054e02 srl t1,a1,24
+    - 0x103754 24680100 addiu t0,v1,256
+    - 0x103758 3c020029 lui v0,0x29
+    - 0x10375c 3c070029 lui a3,0x29
+    - 0x103760 3c0a0029 lui t2,0x29
+    - 0x103764 3c0c0029 lui t4,0x29
+    - 0x103768 00052c02 srl a1,a1,16
+    - 0x10376c 3c180037 lui t8,0x37
+    - 0x103770 dc6f0000 ld t7,0(v1)
+    - 0x103774 dc700008 ld s0,8(v1)
+    - 0x103778 dc710010 ld s1,16(v1)
+    - 0x10377c dc6d0018 ld t5,24(v1)
+    - 0x103780 fc8f0000 sd t7,0(a0)
+    - 0x103784 fc900008 sd s0,8(a0)
+    - 0x103788 fc910010 sd s1,16(a0)
+    - 0x10378c fc8d0018 sd t5,24(a0)
+    - 0x103790 24630020 addiu v1,v1,32
+    - 0x103794 24840020 addiu a0,a0,32
+    + 0x104744 1000001c b 0x1047b8
+    + 0x104748 24434da0 addiu v1,v0,19872
+    + 0x10474c 24a30100 addiu v1,a1,256
+    + 0x104750 3c17009f lui s7,0x9f
+    + 0x104754 3c020076 lui v0,0x76
+    + 0x104758 3c1e009f lui s8,0x9f
+    + 0x10475c 3c070076 lui a3,0x76
+    + 0x104760 3c080076 lui t0,0x76
+    + 0x104764 3c12009f lui s2,0x9f
+    + 0x104768 3c090076 lui t1,0x76
+    + 0x10476c 3c15009f lui s5,0x9f
+    + 0x104770 3c0a0076 lui t2,0x76
+    + 0x104774 3c10009f lui s0,0x9f
+    + 0x104778 3c14009f lui s4,0x9f
+    + 0x10477c 3c13009f lui s3,0x9f
+    + 0x104780 dca40000 ld a0,0(a1)
+    + 0x104784 dcab0008 ld t3,8(a1)
+    + 0x104788 dcac0010 ld t4,16(a1)
+    + 0x10478c dcad0018 ld t5,24(a1)
+    + 0x104790 fcc40000 sd a0,0(a2)
+    + 0x104794 fccb0008 sd t3,8(a2)
+    + 0x104798 fccc0010 sd t4,16(a2)
+    + 0x10479c fccd0018 sd t5,24(a2)
+    + 0x1047a0 24a50020 addiu a1,a1,32
+    + 0x1047a4 24c60020 addiu a2,a2,32
+  @@ replace v9.2[123:124] v10[83:84]
+    - 0x10379c 1468fff4 bne v1,t0,0x103770
+    + 0x1047ac 14a3fff4 bne a1,v1,0x104780
+  @@ replace v9.2[125:128] v10[85:87]
+    - 0x1037a4 3c0f0037 lui t7,0x37
+    - 0x1037a8 24439c98 addiu v1,v0,-25448
+    - 0x1037ac 25e4ddc8 addiu a0,t7,-8760
+    + 0x1047b4 24434da0 addiu v1,v0,19872
+    + 0x1047b8 26e40048 addiu a0,s7,72
+  @@ replace v9.2[132:148] v10[91:107]
+    - 0x1037c0 68700007 ldl s0,7(v1)
+    - 0x1037c4 6c700000 ldr s0,0(v1)
+    - 0x1037c8 6871000f ldl s1,15(v1)
+    - 0x1037cc 6c710008 ldr s1,8(v1)
+    - 0x1037d0 68680017 ldl t0,23(v1)
+    - 0x1037d4 6c680010 ldr t0,16(v1)
+    - 0x1037d8 686d001f ldl t5,31(v1)
+    - 0x1037dc 6c6d0018 ldr t5,24(v1)
+    - 0x1037e0 b0900007 .word 0xb0900007 (op=0x2c)
+    - 0x1037e4 b4900000 .word 0xb4900000 (op=0x2d)
+    - 0x1037e8 b091000f .word 0xb091000f (op=0x2c)
+    - 0x1037ec b4910008 .word 0xb4910008 (op=0x2d)
+    - 0x1037f0 b0880017 .word 0xb0880017 (op=0x2c)
+    - 0x1037f4 b4880010 .word 0xb4880010 (op=0x2d)
+    - 0x1037f8 b08d001f .word 0xb08d001f (op=0x2c)
+    - 0x1037fc b48d0018 .word 0xb48d0018 (op=0x2d)
+    + 0x1047cc 68650007 ldl a1,7(v1)
+    + 0x1047d0 6c650000 ldr a1,0(v1)
+    + 0x1047d4 6866000f ldl a2,15(v1)
+    + 0x1047d8 6c660008 ldr a2,8(v1)
+    + 0x1047dc 686b0017 ldl t3,23(v1)
+    + 0x1047e0 6c6b0010 ldr t3,16(v1)
+    + 0x1047e4 686c001f ldl t4,31(v1)
+    + 0x1047e8 6c6c0018 ldr t4,24(v1)
+    + 0x1047ec b0850007 .word 0xb0850007 (op=0x2c)
+    + 0x1047f0 b4850000 .word 0xb4850000 (op=0x2d)
+    + 0x1047f4 b086000f .word 0xb086000f (op=0x2c)
+    + 0x1047f8 b4860008 .word 0xb4860008 (op=0x2d)
+    + 0x1047fc b08b0017 .word 0xb08b0017 (op=0x2c)
+    + 0x104800 b48b0010 .word 0xb48b0010 (op=0x2d)
+    + 0x104804 b08c001f .word 0xb08c001f (op=0x2c)
+    + 0x104808 b48c0018 .word 0xb48c0018 (op=0x2d)
+  @@ replace v9.2[154:163] v10[113:122]
+    - 0x103818 3c0d0037 lui t5,0x37
+    - 0x10381c dc6f0000 ld t7,0(v1)
+    - 0x103820 dc700008 ld s0,8(v1)
+    - 0x103824 dc710010 ld s1,16(v1)
+    - 0x103828 dc680018 ld t0,24(v1)
+    - 0x10382c fc8f0000 sd t7,0(a0)
+    - 0x103830 fc900008 sd s0,8(a0)
+    - 0x103834 fc910010 sd s1,16(a0)
+    - 0x103838 fc880018 sd t0,24(a0)
+    + 0x104824 24e34ea0 addiu v1,a3,20128
+    + 0x104828 dc6d0000 ld t5,0(v1)
+    + 0x10482c dc650008 ld a1,8(v1)
+    + 0x104830 dc660010 ld a2,16(v1)
+    + 0x104834 dc6b0018 ld t3,24(v1)
+    + 0x104838 fc8d0000 sd t5,0(a0)
+    + 0x10483c fc850008 sd a1,8(a0)
+    + 0x104840 fc860010 sd a2,16(a0)
+    + 0x104844 fc8b0018 sd t3,24(a0)
+  @@ replace v9.2[168:171] v10[127:129]
+    - 0x103850 3c0d0037 lui t5,0x37
+    - 0x103854 24e39d98 addiu v1,a3,-25192
+    - 0x103858 25a4dec8 addiu a0,t5,-8504
+    + 0x10485c 24e34ea0 addiu v1,a3,20128
+    + 0x104860 27c40148 addiu a0,s8,328
+  @@ replace v9.2[175:191] v10[133:149]
+    - 0x10386c 686f0007 ldl t7,7(v1)
+    - 0x103870 6c6f0000 ldr t7,0(v1)
+    - 0x103874 6870000f ldl s0,15(v1)
+    - 0x103878 6c700008 ldr s0,8(v1)
+    - 0x10387c 68710017 ldl s1,23(v1)
+    - 0x103880 6c710010 ldr s1,16(v1)
+    - 0x103884 6867001f ldl a3,31(v1)
+    - 0x103888 6c670018 ldr a3,24(v1)
+    - 0x10388c b08f0007 .word 0xb08f0007 (op=0x2c)
+    - 0x103890 b48f0000 .word 0xb48f0000 (op=0x2d)
+    - 0x103894 b090000f .word 0xb090000f (op=0x2c)
+    - 0x103898 b4900008 .word 0xb4900008 (op=0x2d)
+    - 0x10389c b0910017 .word 0xb0910017 (op=0x2c)
+    - 0x1038a0 b4910010 .word 0xb4910010 (op=0x2d)
+    - 0x1038a4 b087001f .word 0xb087001f (op=0x2c)
+    - 0x1038a8 b4870018 .word 0xb4870018 (op=0x2d)
+    + 0x104874 686c0007 ldl t4,7(v1)
+    + 0x104878 6c6c0000 ldr t4,0(v1)
+    + 0x10487c 686d000f ldl t5,15(v1)
+    + 0x104880 6c6d0008 ldr t5,8(v1)
+    + 0x104884 68650017 ldl a1,23(v1)
+    + 0x104888 6c650010 ldr a1,16(v1)
+    + 0x10488c 6866001f ldl a2,31(v1)
+    + 0x104890 6c660018 ldr a2,24(v1)
+    + 0x104894 b08c0007 .word 0xb08c0007 (op=0x2c)
+    + 0x104898 b48c0000 .word 0xb48c0000 (op=0x2d)
+    + 0x10489c b08d000f .word 0xb08d000f (op=0x2c)
+    + 0x1048a0 b48d0008 .word 0xb48d0008 (op=0x2d)
+    + 0x1048a4 b0850017 .word 0xb0850017 (op=0x2c)
+    + 0x1048a8 b4850010 .word 0xb4850010 (op=0x2d)
+    + 0x1048ac b086001f .word 0xb086001f (op=0x2c)
+    + 0x1048b0 b4860018 .word 0xb4860018 (op=0x2d)
+  @@ replace v9.2[197:206] v10[155:164]
+    - 0x1038c4 3c110037 lui s1,0x37
+    - 0x1038c8 dc680000 ld t0,0(v1)
+    - 0x1038cc dc6d0008 ld t5,8(v1)
+    - 0x1038d0 dc6f0010 ld t7,16(v1)
+    - 0x1038d4 dc700018 ld s0,24(v1)
+    - 0x1038d8 fc880000 sd t0,0(a0)
+    - 0x1038dc fc8d0008 sd t5,8(a0)
+    - 0x1038e0 fc8f0010 sd t7,16(a0)
+    - 0x1038e4 fc900018 sd s0,24(a0)
+    + 0x1048cc 3c02009f lui v0,0x9f
+    + 0x1048d0 dc670000 ld a3,0(v1)
+    + 0x1048d4 dc6b0008 ld t3,8(v1)
+    + 0x1048d8 dc6c0010 ld t4,16(v1)
+    + 0x1048dc dc6d0018 ld t5,24(v1)
+    + 0x1048e0 fc870000 sd a3,0(a0)
+    + 0x1048e4 fc8b0008 sd t3,8(a0)
+    + 0x1048e8 fc8c0010 sd t4,16(a0)
+    + 0x1048ec fc8d0018 sd t5,24(a0)
+  @@ replace v9.2[211:214] v10[169:172]
+    - 0x1038fc 3c110037 lui s1,0x37
+    - 0x103900 25439e98 addiu v1,t2,-24936
+    - 0x103904 2624dfc8 addiu a0,s1,-8248
+    + 0x104904 3c02009f lui v0,0x9f
+    + 0x104908 25034fa0 addiu v1,t0,20384
+    + 0x10490c 24440248 addiu a0,v0,584
+  @@ replace v9.2[218:234] v10[176:192]
+    - 0x103918 68670007 ldl a3,7(v1)
+    - 0x10391c 6c670000 ldr a3,0(v1)
+    - 0x103920 6868000f ldl t0,15(v1)
+    - 0x103924 6c680008 ldr t0,8(v1)
+    - 0x103928 686a0017 ldl t2,23(v1)
+    - 0x10392c 6c6a0010 ldr t2,16(v1)
+    - 0x103930 686d001f ldl t5,31(v1)
+    - 0x103934 6c6d0018 ldr t5,24(v1)
+    - 0x103938 b0870007 .word 0xb0870007 (op=0x2c)
+    - 0x10393c b4870000 .word 0xb4870000 (op=0x2d)
+    - 0x103940 b088000f .word 0xb088000f (op=0x2c)
+    - 0x103944 b4880008 .word 0xb4880008 (op=0x2d)
+    - 0x103948 b08a0017 .word 0xb08a0017 (op=0x2c)
+    - 0x10394c b48a0010 .word 0xb48a0010 (op=0x2d)
+    - 0x103950 b08d001f .word 0xb08d001f (op=0x2c)
+    - 0x103954 b48d0018 .word 0xb48d0018 (op=0x2d)
+    + 0x104920 68650007 ldl a1,7(v1)
+    + 0x104924 6c650000 ldr a1,0(v1)
+    + 0x104928 6866000f ldl a2,15(v1)
+    + 0x10492c 6c660008 ldr a2,8(v1)
+    + 0x104930 68670017 ldl a3,23(v1)
+    + 0x104934 6c670010 ldr a3,16(v1)
+    + 0x104938 6868001f ldl t0,31(v1)
+    + 0x10493c 6c680018 ldr t0,24(v1)
+    + 0x104940 b0850007 .word 0xb0850007 (op=0x2c)
+    + 0x104944 b4850000 .word 0xb4850000 (op=0x2d)
+    + 0x104948 b086000f .word 0xb086000f (op=0x2c)
+    + 0x10494c b4860008 .word 0xb4860008 (op=0x2d)
+    + 0x104950 b0870017 .word 0xb0870017 (op=0x2c)
+    + 0x104954 b4870010 .word 0xb4870010 (op=0x2d)
+    + 0x104958 b088001f .word 0xb088001f (op=0x2c)
+    + 0x10495c b4880018 .word 0xb4880018 (op=0x2d)
+  @@ replace v9.2[240:249] v10[198:207]
+    - 0x103970 3c080037 lui t0,0x37
+    - 0x103974 dc6f0000 ld t7,0(v1)
+    - 0x103978 dc700008 ld s0,8(v1)
+    - 0x10397c dc710010 ld s1,16(v1)
+    - 0x103980 dc670018 ld a3,24(v1)
+    - 0x103984 fc8f0000 sd t7,0(a0)
+    - 0x103988 fc900008 sd s0,8(a0)
+    - 0x10398c fc910010 sd s1,16(a0)
+    - 0x103990 fc870018 sd a3,24(a0)
+    + 0x104978 252350a0 addiu v1,t1,20640
+    + 0x10497c dc6b0000 ld t3,0(v1)
+    + 0x104980 dc6c0008 ld t4,8(v1)
+    + 0x104984 dc6d0010 ld t5,16(v1)
+    + 0x104988 dc650018 ld a1,24(v1)
+    + 0x10498c fc8b0000 sd t3,0(a0)
+    + 0x104990 fc8c0008 sd t4,8(a0)
+    + 0x104994 fc8d0010 sd t5,16(a0)
+    + 0x104998 fc850018 sd a1,24(a0)
+  @@ replace v9.2[254:257] v10[212:214]
+    - 0x1039a8 3c080037 lui t0,0x37
+    - 0x1039ac 25839f98 addiu v1,t4,-24680
+    - 0x1039b0 2504e0c8 addiu a0,t0,-7992
+    + 0x1049b0 252350a0 addiu v1,t1,20640
+    + 0x1049b4 26440348 addiu a0,s2,840
+  @@ replace v9.2[261:277] v10[218:234]
+    - 0x1039c4 686a0007 ldl t2,7(v1)
+    - 0x1039c8 6c6a0000 ldr t2,0(v1)
+    - 0x1039cc 686c000f ldl t4,15(v1)
+    - 0x1039d0 6c6c0008 ldr t4,8(v1)
+    - 0x1039d4 686d0017 ldl t5,23(v1)
+    - 0x1039d8 6c6d0010 ldr t5,16(v1)
+    - 0x1039dc 686f001f ldl t7,31(v1)
+    - 0x1039e0 6c6f0018 ldr t7,24(v1)
+    - 0x1039e4 b08a0007 .word 0xb08a0007 (op=0x2c)
+    - 0x1039e8 b48a0000 .word 0xb48a0000 (op=0x2d)
+    - 0x1039ec b08c000f .word 0xb08c000f (op=0x2c)
+    - 0x1039f0 b48c0008 .word 0xb48c0008 (op=0x2d)
+    - 0x1039f4 b08d0017 .word 0xb08d0017 (op=0x2c)
+    - 0x1039f8 b48d0010 .word 0xb48d0010 (op=0x2d)
+    - 0x1039fc b08f001f .word 0xb08f001f (op=0x2c)
+    - 0x103a00 b48f0018 .word 0xb48f0018 (op=0x2d)
+    + 0x1049c8 68660007 ldl a2,7(v1)
+    + 0x1049cc 6c660000 ldr a2,0(v1)
+    + 0x1049d0 6867000f ldl a3,15(v1)
+    + 0x1049d4 6c670008 ldr a3,8(v1)
+    + 0x1049d8 68680017 ldl t0,23(v1)
+    + 0x1049dc 6c680010 ldr t0,16(v1)
+    + 0x1049e0 686b001f ldl t3,31(v1)
+    + 0x1049e4 6c6b0018 ldr t3,24(v1)
+    + 0x1049e8 b0860007 .word 0xb0860007 (op=0x2c)
+    + 0x1049ec b4860000 .word 0xb4860000 (op=0x2d)
+    + 0x1049f0 b087000f .word 0xb087000f (op=0x2c)
+    + 0x1049f4 b4870008 .word 0xb4870008 (op=0x2d)
+    + 0x1049f8 b0880017 .word 0xb0880017 (op=0x2c)
+    + 0x1049fc b4880010 .word 0xb4880010 (op=0x2d)
+    + 0x104a00 b08b001f .word 0xb08b001f (op=0x2c)
+    + 0x104a04 b48b0018 .word 0xb48b0018 (op=0x2d)
+  @@ replace v9.2[282:292] v10[239:249]
+    - 0x103a18 1000000f b 0x103a58
+    - 0x103a1c 3c0c0037 lui t4,0x37
+    - 0x103a20 dc700000 ld s0,0(v1)
+    - 0x103a24 dc710008 ld s1,8(v1)
+    - 0x103a28 dc670010 ld a3,16(v1)
+    - 0x103a2c dc680018 ld t0,24(v1)
+    - 0x103a30 fc900000 sd s0,0(a0)
+    - 0x103a34 fc910008 sd s1,8(a0)
+    - 0x103a38 fc870010 sd a3,16(a0)
+    - 0x103a3c fc880018 sd t0,24(a0)
+    + 0x104a1c 1000000e b 0x104a58
+    + 0x104a20 00000000 nop
+    + 0x104a24 dc6c0000 ld t4,0(v1)
+    + 0x104a28 dc6d0008 ld t5,8(v1)
+    + 0x104a2c dc650010 ld a1,16(v1)
+    + 0x104a30 dc660018 ld a2,24(v1)
+    + 0x104a34 fc8c0000 sd t4,0(a0)
+    + 0x104a38 fc8d0008 sd t5,8(a0)
+    + 0x104a3c fc850010 sd a1,16(a0)
+    + 0x104a40 fc860018 sd a2,24(a0)
+  @@ replace v9.2[297:307] v10[254:284]
+    - 0x103a54 3c0c0037 lui t4,0x37
+    - 0x103a58 30ad00ff andi t5,a1,0xff
+    - 0x103a5c 2591dec8 addiu s1,t4,-8504
+    - 0x103a60 3c0a0037 lui t2,0x37
+    - 0x103a64 3c0f0037 lui t7,0x37
+    - 0x103a68 2552dfc8 addiu s2,t2,-8248
+    - 0x103a6c 25f0ddc8 addiu s0,t7,-8760
+    - 0x103a70 312900ff andi t1,t1,0xff
+    - 0x103a74 31ce00ff andi t6,t6,0xff
+    - 0x103a78 01b12021 addu a0,t5,s1
+    + 0x104a58 254c51a0 addiu t4,t2,20896
+    + 0x104a5c 26ab0568 addiu t3,s5,1384
+    + 0x104a60 69870007 ldl a3,7(t4)
+    + 0x104a64 6d870000 ldr a3,0(t4)
+    + 0x104a68 6988000f ldl t0,15(t4)
+    + 0x104a6c 6d880008 ldr t0,8(t4)
+    + 0x104a70 b1670007 .word 0xb1670007 (op=0x2c)
+    + 0x104a74 b5670000 .word 0xb5670000 (op=0x2d)
+    + 0x104a78 b168000f .word 0xb168000f (op=0x2c)
+    + 0x104a7c b5680008 .word 0xb5680008 (op=0x2d)
+    + 0x104a80 89870013 lwl a3,19(t4)
+    + 0x104a84 99870010 lwr a3,16(t4)
+    + 0x104a88 a9670013 swl a3,19(t3)
+    + 0x104a8c b9670010 swr a3,16(t3)
+    + 0x104a90 10000053 b 0x104be0
+    + 0x104a94 26100460 addiu s0,s0,1120
+    + 0x104a98 24a70002 addiu a3,a1,2
+    + 0x104a9c 3c1e009f lui s8,0x9f
+    + 0x104aa0 30e700ff andi a3,a3,0xff
+    + 0x104aa4 27d10148 addiu s1,s8,328
+    + 0x104aa8 24a80001 addiu t0,a1,1
+    + 0x104aac 24a60003 addiu a2,a1,3
+    + 0x104ab0 3c0d009f lui t5,0x9f
+    + 0x104ab4 3c17009f lui s7,0x9f
+    + 0x104ab8 25b20248 addiu s2,t5,584
+    + 0x104abc 30c600ff andi a2,a2,0xff
+    + 0x104ac0 310800ff andi t0,t0,0xff
+    + 0x104ac4 26ef0048 addiu t7,s7,72
+    + 0x104ac8 00f12021 addu a0,a3,s1
+    + 0x104acc 3c16009f lui s6,0x9f
+  @@ replace v9.2[308:313] v10[285:292]
+    - 0x103a80 24c6dcc8 addiu a2,a2,-9016
+    - 0x103a84 01321021 addu v0,t1,s2
+    - 0x103a88 01d03821 addu a3,t6,s0
+    - 0x103a8c 90e40000 lbu a0,0(a3)
+    - 0x103a90 01664021 addu t0,t3,a2
+    + 0x104ad4 30b000ff andi s0,a1,0xff
+    + 0x104ad8 26c9ff48 addiu t1,s6,-184
+    + 0x104adc 00d21021 addu v0,a2,s2
+    + 0x104ae0 010f5021 addu t2,t0,t7
+    + 0x104ae4 02095821 addu t3,s0,t1
+    + 0x104ae8 91440000 lbu a0,0(t2)
+    + 0x104aec 00031c00 sll v1,v1,16
+  @@ replace v9.2[314:316] v10[293:295]
+    - 0x103a98 00031c00 sll v1,v1,16
+    - 0x103a9c 91020000 lbu v0,0(t0)
+    + 0x104af4 3c15009f lui s5,0x9f
+    + 0x104af8 91620000 lbu v0,0(t3)
+  @@ replace v9.2[320:321] v10[299:300]
+    - 0x103ab0 01d12021 addu a0,t6,s1
+    + 0x104b0c 01099821 addu s3,t0,t1
+  @@ replace v9.2[322:405] v10[301:303]
+    - 0x103ab8 01c62821 addu a1,t6,a2
+    - 0x103abc aea2e2e8 sw v0,-7448(s5)
+    - 0x103ac0 01261821 addu v1,t1,a2
+    - 0x103ac4 0131a021 addu s4,t1,s1
+    - 0x103ac8 01b21021 addu v0,t5,s2
+    - 0x103acc 01b09821 addu s3,t5,s0
+    - 0x103ad0 01304821 addu t1,t1,s0
+    - 0x103ad4 01d27021 addu t6,t6,s2
+    - 0x103ad8 01708021 addu s0,t3,s0
+    - 0x103adc 01729021 addu s2,t3,s2
+    - 0x103ae0 01718821 addu s1,t3,s1
+    - 0x103ae4 912b0000 lbu t3,0(t1)
+    - 0x103ae8 01a66821 addu t5,t5,a2
+    - 0x103aec 904a0000 lbu t2,0(v0)
+    - 0x103af0 906f0000 lbu t7,0(v1)
+    - 0x103af4 000b5e00 sll t3,t3,24
+    - 0x103af8 908c0000 lbu t4,0(a0)
+    - 0x103afc 000a5400 sll t2,t2,16
+    - 0x103b00 90a20000 lbu v0,0(a1)
+    - 0x103b04 000f7e00 sll t7,t7,24
+    - 0x103b08 91a70000 lbu a3,0(t5)
+    - 0x103b0c 000c6200 sll t4,t4,8
+    - 0x103b10 91c90000 lbu t1,0(t6)
+    - 0x103b14 00021200 sll v0,v0,8
+    - 0x103b18 92880000 lbu t0,0(s4)
+    - 0x103b1c 00073c00 sll a3,a3,16
+    - 0x103b20 92660000 lbu a2,0(s3)
+    - 0x103b24 00094a00 sll t1,t1,8
+    - 0x103b28 92050000 lbu a1,0(s0)
+    - 0x103b2c 00084600 sll t0,t0,24
+    - 0x103b30 92240000 lbu a0,0(s1)
+    - 0x103b34 00063400 sll a2,a2,16
+    - 0x103b38 92430000 lbu v1,0(s2)
+    - 0x103b3c 00c23025 or a2,a2,v0
+    - 0x103b40 00af2825 or a1,a1,t7
+    - 0x103b44 014c5025 or t2,t2,t4
+    - 0x103b48 008b2025 or a0,a0,t3
+    - 0x103b4c 00e93825 or a3,a3,t1
+    - 0x103b50 00681825 or v1,v1,t0
+    - 0x103b54 26a2e2e8 addiu v0,s5,-7448
+    - 0x103b58 00aa2825 or a1,a1,t2
+    - 0x103b5c 00872025 or a0,a0,a3
+    - 0x103b60 00661825 or v1,v1,a2
+    - 0x103b64 ac450004 sw a1,4(v0)
+    - 0x103b68 ac43000c sw v1,12(v0)
+    - 0x103b6c 1000009f b 0x103dec
+    - 0x103b70 ac440008 sw a0,8(v0)
+    - 0x103b74 10a0004e beq a1,zero,0x103cb0
+    - 0x103b78 00053c02 srl a3,a1,16
+    - 0x103b7c 3c110037 lui s1,0x37
+    - 0x103b80 262cdec8 addiu t4,s1,-8504
+    - 0x103b84 30e700ff andi a3,a3,0xff
+    - 0x103b88 00054a02 srl t1,a1,8
+    - 0x103b8c 3c100037 lui s0,0x37
+    - 0x103b90 3c020037 lui v0,0x37
+    - 0x103b94 2612dfc8 addiu s2,s0,-8248
+    - 0x103b98 00057602 srl t6,a1,24
+    - 0x103b9c 2451ddc8 addiu s1,v0,-8760
+    - 0x103ba0 312900ff andi t1,t1,0xff
+    - 0x103ba4 00ec2021 addu a0,a3,t4
+    - 0x103ba8 3c1e0037 lui s8,0x37
+    - 0x103bac 90830000 lbu v1,0(a0)
+    - 0x103bb0 27cadcc8 addiu t2,s8,-9016
+    - 0x103bb4 30b000ff andi s0,a1,0xff
+    - 0x103bb8 01d21021 addu v0,t6,s2
+    - 0x103bbc 01314021 addu t0,t1,s1
+    - 0x103bc0 91040000 lbu a0,0(t0)
+    - 0x103bc4 020a3021 addu a2,s0,t2
+    - 0x103bc8 90450000 lbu a1,0(v0)
+    - 0x103bcc 00031c00 sll v1,v1,16
+    - 0x103bd0 90c20000 lbu v0,0(a2)
+    - 0x103bd4 00042200 sll a0,a0,8
+    - 0x103bd8 00052e00 sll a1,a1,24
+    - 0x103bdc 00641825 or v1,v1,a0
+    - 0x103be0 00451025 or v0,v0,a1
+    - 0x103be4 3c170037 lui s7,0x37
+    - 0x103be8 00431025 or v0,v0,v1
+    - 0x103bec 01cc2821 addu a1,t6,t4
+    - 0x103bf0 aee2e2e8 sw v0,-7448(s7)
+    - 0x103bf4 012c2021 addu a0,t1,t4
+    - 0x103bf8 01ca1021 addu v0,t6,t2
+    - 0x103bfc 012a9821 addu s3,t1,t2
+    - 0x103c00 00f13021 addu a2,a3,s1
+    + 0x104b14 00ef2821 addu a1,a3,t7
+    + 0x104b18 aea20568 sw v0,1384(s5)
+  @@ replace v9.2[406:409] v10[304:311]
+    - 0x103c08 01d17021 addu t6,t6,s1
+    - 0x103c0c 01324821 addu t1,t1,s2
+    - 0x103c10 00ea3821 addu a3,a3,t2
+    + 0x104b20 00c91021 addu v0,a2,t1
+    + 0x104b24 00d1a021 addu s4,a2,s1
+    + 0x104b28 01112021 addu a0,t0,s1
+    + 0x104b2c 00cf3021 addu a2,a2,t7
+    + 0x104b30 00e93821 addu a3,a3,t1
+    + 0x104b34 01124021 addu t0,t0,s2
+    + 0x104b38 908d0000 lbu t5,0(a0)
+  @@ replace v9.2[410:415] v10[312:317]
+    - 0x103c18 02118821 addu s1,s0,s1
+    - 0x103c1c 908d0000 lbu t5,0(a0)
+    - 0x103c20 90e80000 lbu t0,0(a3)
+    - 0x103c24 020c8021 addu s0,s0,t4
+    - 0x103c28 904f0000 lbu t7,0(v0)
+    + 0x104b40 90e90000 lbu t1,0(a3)
+    + 0x104b44 020f7821 addu t7,s0,t7
+    + 0x104b48 904e0000 lbu t6,0(v0)
+    + 0x104b4c 02118021 addu s0,s0,s1
+    + 0x104b50 906b0000 lbu t3,0(v1)
+  @@ replace v9.2[416:421] v10[318:321]
+    - 0x103c30 906b0000 lbu t3,0(v1)
+    - 0x103c34 00084400 sll t0,t0,16
+    - 0x103c38 90a70000 lbu a3,0(a1)
+    - 0x103c3c 000f7e00 sll t7,t7,24
+    - 0x103c40 90c40000 lbu a0,0(a2)
+    + 0x104b58 90cc0000 lbu t4,0(a2)
+    + 0x104b5c 000e7600 sll t6,t6,24
+    + 0x104b60 92870000 lbu a3,0(s4)
+  @@ replace v9.2[422:423] v10[322:327]
+    - 0x103c48 91cc0000 lbu t4,0(t6)
+    + 0x104b68 90a40000 lbu a0,0(a1)
+    + 0x104b6c 000c6600 sll t4,t4,24
+    + 0x104b70 92620000 lbu v0,0(s3)
+    + 0x104b74 00094c00 sll t1,t1,16
+    + 0x104b78 910a0000 lbu t2,0(t0)
+  @@ delete v9.2[424:430] v10[328:328]
+    - 0x103c50 912a0000 lbu t2,0(t1)
+    - 0x103c54 00042400 sll a0,a0,16
+    - 0x103c58 92620000 lbu v0,0(s3)
+    - 0x103c5c 000c6600 sll t4,t4,24
+    - 0x103c60 92250000 lbu a1,0(s1)
+    - 0x103c64 000a5200 sll t2,t2,8
+  @@ insert v9.2[433:433] v10[331:334]
+    + 0x104b8c 000a5200 sll t2,t2,8
+    + 0x104b90 91e50000 lbu a1,0(t7)
+    + 0x104b94 00042400 sll a0,a0,16
+  @@ delete v9.2[434:435] v10[335:335]
+    - 0x103c78 00af2825 or a1,a1,t7
+  @@ insert v9.2[436:436] v10[336:337]
+    + 0x104ba0 00ae2825 or a1,a1,t6
+  @@ replace v9.2[437:438] v10[338:339]
+    - 0x103c84 010a4025 or t0,t0,t2
+    + 0x104ba8 012a4825 or t1,t1,t2
+  @@ replace v9.2[439:440] v10[340:341]
+    - 0x103c8c 26e2e2e8 addiu v0,s7,-7448
+    + 0x104bb0 26a20568 addiu v0,s5,1384
+  @@ replace v9.2[441:442] v10[342:343]
+    - 0x103c94 00c83025 or a2,a2,t0
+    + 0x104bb8 00c93025 or a2,a2,t1
+  @@ delete v9.2[443:444] v10[344:344]
+    - 0x103c9c 3c180037 lui t8,0x37
+  @@ insert v9.2[445:445] v10[345:346]
+    + 0x104bc4 3c12009f lui s2,0x9f
+  @@ replace v9.2[446:447] v10[347:348]
+    - 0x103ca8 10000050 b 0x103dec
+    + 0x104bcc 3c10009f lui s0,0x9f
+  @@ replace v9.2[448:529] v10[349:353]
+    - 0x103cb0 3c1e0037 lui s8,0x37
+    - 0x103cb4 0000282d daddu a1,zero,zero
+    - 0x103cb8 27d5dcc8 addiu s5,s8,-9016
+    - 0x103cbc 24060100 li a2,256
+    - 0x103cc0 02a0202d daddu a0,s5,zero
+    - 0x103cc4 0c0518d6 jal 0x146358
+    - 0x103cc8 3c170037 lui s7,0x37
+    - 0x103ccc 3c030037 lui v1,0x37
+    - 0x103cd0 0000282d daddu a1,zero,zero
+    - 0x103cd4 2474ddc8 addiu s4,v1,-8760
+    - 0x103cd8 24060100 li a2,256
+    - 0x103cdc 0c0518d6 jal 0x146358
+    - 0x103ce0 0280202d daddu a0,s4,zero
+    - 0x103ce4 3c050037 lui a1,0x37
+    - 0x103ce8 24060100 li a2,256
+    - 0x103cec 24b1dec8 addiu s1,a1,-8504
+    - 0x103cf0 0220202d daddu a0,s1,zero
+    - 0x103cf4 0c0518d6 jal 0x146358
+    - 0x103cf8 0000282d daddu a1,zero,zero
+    - 0x103cfc 3c060037 lui a2,0x37
+    - 0x103d00 0000282d daddu a1,zero,zero
+    - 0x103d04 24d0dfc8 addiu s0,a2,-8248
+    - 0x103d08 0200202d daddu a0,s0,zero
+    - 0x103d0c 0c0518d6 jal 0x146358
+    - 0x103d10 24060100 li a2,256
+    - 0x103d14 3c070037 lui a3,0x37
+    - 0x103d18 0000282d daddu a1,zero,zero
+    - 0x103d1c 24e4e0c8 addiu a0,a3,-7992
+    - 0x103d20 0c0518d6 jal 0x146358
+    - 0x103d24 24060100 li a2,256
+    - 0x103d28 920d0003 lbu t5,3(s0)
+    - 0x103d2c 26f6e2e8 addiu s6,s7,-7448
+    - 0x103d30 93c4dcc8 lbu a0,-9016(s8)
+    - 0x103d34 3c180037 lui t8,0x37
+    - 0x103d38 000d6e00 sll t5,t5,24
+    - 0x103d3c 92320003 lbu s2,3(s1)
+    - 0x103d40 008d2025 or a0,a0,t5
+    - 0x103d44 928e0002 lbu t6,2(s4)
+    - 0x103d48 92af0001 lbu t7,1(s5)
+    - 0x103d4c 3c0d0037 lui t5,0x37
+    - 0x103d50 92130001 lbu s3,1(s0)
+    - 0x103d54 00129600 sll s2,s2,24
+    - 0x103d58 922b0002 lbu t3,2(s1)
+    - 0x103d5c 000e7400 sll t6,t6,16
+    - 0x103d60 92090002 lbu t1,2(s0)
+    - 0x103d64 000f7a00 sll t7,t7,8
+    - 0x103d68 92280001 lbu t0,1(s1)
+    - 0x103d6c 3c100037 lui s0,0x37
+    - 0x103d70 928c0001 lbu t4,1(s4)
+    - 0x103d74 3c110037 lui s1,0x37
+    - 0x103d78 91a2dfc8 lbu v0,-8248(t5)
+    - 0x103d7c 000b5c00 sll t3,t3,16
+    - 0x103d80 92aa0003 lbu t2,3(s5)
+    - 0x103d84 000c6200 sll t4,t4,8
+    - 0x103d88 92870003 lbu a3,3(s4)
+    - 0x103d8c 00521025 or v0,v0,s2
+    - 0x103d90 92a30002 lbu v1,2(s5)
+    - 0x103d94 01cf7025 or t6,t6,t7
+    - 0x103d98 9205ddc8 lbu a1,-8760(s0)
+    - 0x103d9c 00139a00 sll s3,s3,8
+    - 0x103da0 9226dec8 lbu a2,-8504(s1)
+    - 0x103da4 000a5600 sll t2,t2,24
+    - 0x103da8 00094c00 sll t1,t1,16
+    - 0x103dac 00084200 sll t0,t0,8
+    - 0x103db0 00073e00 sll a3,a3,24
+    - 0x103db4 00031c00 sll v1,v1,16
+    - 0x103db8 016c5825 or t3,t3,t4
+    - 0x103dbc 004e1025 or v0,v0,t6
+    - 0x103dc0 00aa2825 or a1,a1,t2
+    - 0x103dc4 01284825 or t1,t1,t0
+    - 0x103dc8 00c73025 or a2,a2,a3
+    - 0x103dcc 00731825 or v1,v1,s3
+    - 0x103dd0 008b2025 or a0,a0,t3
+    - 0x103dd4 aec2000c sw v0,12(s6)
+    - 0x103dd8 aee4e2e8 sw a0,-7448(s7)
+    - 0x103ddc 00a92825 or a1,a1,t1
+    - 0x103de0 00c33025 or a2,a2,v1
+    - 0x103de4 aec50004 sw a1,4(s6)
+    - 0x103de8 aec60008 sw a2,8(s6)
+    - 0x103dec 2710e1e0 addiu s0,t8,-7712
+    - 0x103df0 26f1e2e8 addiu s1,s7,-7448
+    + 0x104bd4 3c14009f lui s4,0x9f
+    + 0x104bd8 3c13009f lui s3,0x9f
+    + 0x104bdc 26100460 addiu s0,s0,1120
+    + 0x104be0 26b10568 addiu s1,s5,1384
+  @@ replace v9.2[533:534] v10[357:358]
+    - 0x103e04 27c5dcc8 addiu a1,s8,-9016
+    + 0x104bf4 26c5ff48 addiu a1,s6,-184
+  @@ replace v9.2[545:546] v10[369:370]
+    - 0x103e34 3c0f0037 lui t7,0x37
+    + 0x104c24 26e50048 addiu a1,s7,72
+  @@ delete v9.2[547:548] v10[371:371]
+    - 0x103e3c 25e5ddc8 addiu a1,t7,-8760
+  @@ replace v9.2[558:559] v10[381:382]
+    - 0x103e68 3c020037 lui v0,0x37
+    + 0x104c54 27c50148 addiu a1,s8,328
+  @@ delete v9.2[560:561] v10[383:383]
+    - 0x103e70 2445dec8 addiu a1,v0,-8504
+  @@ replace v9.2[571:572] v10[393:394]
+    - 0x103e9c 3c030037 lui v1,0x37
+    + 0x104c84 3c02009f lui v0,0x9f
+  @@ replace v9.2[573:574] v10[395:396]
+    - 0x103ea4 2465dfc8 addiu a1,v1,-8248
+    + 0x104c8c 24450248 addiu a1,v0,584
+  @@ replace v9.2[584:585] v10[406:407]
+    - 0x103ed0 3c060037 lui a2,0x37
+    + 0x104cb8 26450348 addiu a1,s2,840
+  @@ delete v9.2[586:587] v10[408:408]
+    - 0x103ed8 24c5e0c8 addiu a1,a2,-7992
+  @@ replace v9.2[594:595] v10[415:418]
+    - 0x103ef8 3c070037 lui a3,0x37
+    + 0x104cdc 3c07009f lui a3,0x9f
+    + 0x104ce0 8e24000c lw a0,12(s1)
+    + 0x104ce4 3c08009f lui t0,0x9f
+  @@ replace v9.2[596:597] v10[419:420]
+    - 0x103f00 3c080037 lui t0,0x37
+    + 0x104cec 3c0b009f lui t3,0x9f
+  @@ replace v9.2[598:603] v10[421:424]
+    - 0x103f08 3c0a0037 lui t2,0x37
+    - 0x103f0c 8e24000c lw a0,12(s1)
+    - 0x103f10 3c0c0037 lui t4,0x37
+    - 0x103f14 8ee5e2e8 lw a1,-7448(s7)
+    - 0x103f18 3c0d0037 lui t5,0x37
+    + 0x104cf4 8ea50568 lw a1,1384(s5)
+    + 0x104cf8 ae840454 sw a0,1108(s4)
+    + 0x104cfc ae660458 sw a2,1112(s3)
+  @@ replace v9.2[615:618] v10[436:437]
+    - 0x103f4c ad43e1d0 sw v1,-7728(t2)
+    - 0x103f50 ad84e1d4 sw a0,-7724(t4)
+    - 0x103f54 ada6e1d8 sw a2,-7720(t5)
+    + 0x104d30 ad630450 sw v1,1104(t3)
+
+======================================================================
+v7dec: v9.2 0x103f60..0x1042b0 (212)  v10 0x104d40..0x105090 (212)
+  CHANGED (22 hunks). - v9.2 / + v10:
+  @@ replace v9.2[30:34] v10[30:34]
+    - 0x103fd8 3c160037 lui s6,0x37
+    - 0x103fdc 3c170037 lui s7,0x37
+    - 0x103fe0 3c1e0037 lui s8,0x37
+    - 0x103fe4 3c140037 lui s4,0x37
+    + 0x104db8 3c16009f lui s6,0x9f
+    + 0x104dbc 3c17009f lui s7,0x9f
+    + 0x104dc0 3c1e009f lui s8,0x9f
+    + 0x104dc4 3c14009f lui s4,0x9f
+  @@ replace v9.2[67:68] v10[67:68]
+    - 0x10406c 3c020037 lui v0,0x37
+    + 0x104e4c 3c02009f lui v0,0x9f
+  @@ replace v9.2[92:93] v10[92:93]
+    - 0x1040d0 3c020037 lui v0,0x37
+    + 0x104eb0 3c02009f lui v0,0x9f
+  @@ replace v9.2[106:108] v10[106:108]
+    - 0x104108 8ec2e1c8 lw v0,-7736(s6)
+    - 0x10410c 8ee5e1cc lw a1,-7732(s7)
+    + 0x104ee8 8ec20448 lw v0,1096(s6)
+    + 0x104eec 8ee5044c lw a1,1100(s7)
+  @@ replace v9.2[112:114] v10[112:114]
+    - 0x104120 3c030037 lui v1,0x37
+    - 0x104124 8fc2e1d0 lw v0,-7728(s8)
+    + 0x104f00 3c03009f lui v1,0x9f
+    + 0x104f04 8fc20450 lw v0,1104(s8)
+  @@ replace v9.2[120:121] v10[120:121]
+    - 0x104140 8e82e2fc lw v0,-7428(s4)
+    + 0x104f20 8e82057c lw v0,1404(s4)
+  @@ replace v9.2[122:123] v10[122:123]
+    - 0x104148 3c020037 lui v0,0x37
+    + 0x104f28 3c02009f lui v0,0x9f
+  @@ replace v9.2[124:125] v10[124:125]
+    - 0x104150 2447e308 addiu a3,v0,-7416
+    + 0x104f30 24470588 addiu a3,v0,1416
+  @@ replace v9.2[126:127] v10[126:127]
+    - 0x104158 ac43e308 sw v1,-7416(v0)
+    + 0x104f38 ac430588 sw v1,1416(v0)
+  @@ replace v9.2[132:133] v10[132:133]
+    - 0x104170 3c090037 lui t1,0x37
+    + 0x104f50 3c09009f lui t1,0x9f
+  @@ replace v9.2[137:138] v10[137:138]
+    - 0x104184 3c020037 lui v0,0x37
+    + 0x104f64 3c02009f lui v0,0x9f
+  @@ replace v9.2[142:143] v10[142:143]
+    - 0x104198 3c030037 lui v1,0x37
+    + 0x104f78 3c03009f lui v1,0x9f
+  @@ replace v9.2[147:148] v10[147:148]
+    - 0x1041ac 3c090037 lui t1,0x37
+    + 0x104f8c 3c09009f lui t1,0x9f
+  @@ replace v9.2[152:153] v10[152:153]
+    - 0x1041c0 3c020037 lui v0,0x37
+    + 0x104fa0 3c02009f lui v0,0x9f
+  @@ replace v9.2[157:159] v10[157:159]
+    - 0x1041d4 3c020037 lui v0,0x37
+    - 0x1041d8 ae80e2fc sw zero,-7428(s4)
+    + 0x104fb4 3c02009f lui v0,0x9f
+    + 0x104fb8 ae80057c sw zero,1404(s4)
+  @@ replace v9.2[168:169] v10[168:169]
+    - 0x104200 3c020037 lui v0,0x37
+    + 0x104fe0 3c02009f lui v0,0x9f
+  @@ replace v9.2[173:175] v10[173:175]
+    - 0x104214 ae82e2fc sw v0,-7428(s4)
+    - 0x104218 8c43e300 lw v1,-7424(v0)
+    + 0x104ff4 ae82057c sw v0,1404(s4)
+    + 0x104ff8 8c430580 lw v1,1408(v0)
+  @@ replace v9.2[176:177] v10[176:177]
+    - 0x104220 8ec2e1c8 lw v0,-7736(s6)
+    + 0x105000 8ec20448 lw v0,1096(s6)
+  @@ replace v9.2[178:180] v10[178:180]
+    - 0x104228 8ee5e1cc lw a1,-7732(s7)
+    - 0x10422c 3c040037 lui a0,0x37
+    + 0x105008 8ee5044c lw a1,1100(s7)
+    + 0x10500c 3c04009f lui a0,0x9f
+  @@ replace v9.2[181:182] v10[181:182]
+    - 0x104234 3c090037 lui t1,0x37
+    + 0x105014 3c09009f lui t1,0x9f
+  @@ replace v9.2[183:184] v10[183:184]
+    - 0x10423c 8fc6e1d0 lw a2,-7728(s8)
+    + 0x10501c 8fc60450 lw a2,1104(s8)
+  @@ replace v9.2[199:200] v10[199:200]
+    - 0x10427c ae620010 sw v0,16(s3)
+    + 0x10505c ae620014 sw v0,20(s3)
+
+======================================================================
+auto: v9.2 0x1042b0..0x104544 (165)  v10 0x105090..0x1052a4 (133)
+  CHANGED (27 hunks). - v9.2 / + v10:
+  @@ replace v9.2[0:2] v10[0:4]
+    - 0x1042b0 27bdff80 addiu sp,sp,-128
+    - 0x1042b4 3c060001 lui a2,0x1
+    + 0x105090 27bdffa0 addiu sp,sp,-96
+    + 0x105094 3c030001 lui v1,0x1
+    + 0x105098 ffb20020 sd s2,32(sp)
+    + 0x10509c 3c120076 lui s2,0x76
+  @@ insert v9.2[3:3] v10[5:7]
+    + 0x1050a4 8e424bd0 lw v0,19408(s2)
+    + 0x1050a8 0240a02d daddu s4,s2,zero
+  @@ replace v9.2[4:14] v10[8:14]
+    - 0x1042c0 3c140037 lui s4,0x37
+    - 0x1042c4 3c130029 lui s3,0x29
+    - 0x1042c8 8e82e300 lw v0,-7424(s4)
+    - 0x1042cc 8e639ac8 lw v1,-25912(s3)
+    - 0x1042d0 ffb60060 sd s6,96(sp)
+    - 0x1042d4 38420002 xori v0,v0,0x2
+    - 0x1042d8 ffb50050 sd s5,80(sp)
+    - 0x1042dc 00661824 and v1,v1,a2
+    - 0x1042e0 ffb20020 sd s2,32(sp)
+    - 0x1042e4 0260a82d daddu s5,s3,zero
+    + 0x1050b0 ffb00000 sd s0,0(sp)
+    + 0x1050b4 00a0982d daddu s3,a1,zero
+    + 0x1050b8 ffbf0050 sd ra,80(sp)
+    + 0x1050bc 0080802d daddu s0,a0,zero
+    + 0x1050c0 00431024 and v0,v0,v1
+    + 0x1050c4 10400005 beq v0,zero,0x1050dc
+  @@ replace v9.2[15:25] v10[15:18]
+    - 0x1042ec 0280b02d daddu s6,s4,zero
+    - 0x1042f0 ffbf0070 sd ra,112(sp)
+    - 0x1042f4 0080882d daddu s1,a0,zero
+    - 0x1042f8 ffb00000 sd s0,0(sp)
+    - 0x1042fc 00c2180a .word 0x00c2180a (R fn=0x0a)
+    - 0x104300 10600005 beq v1,zero,0x104318
+    - 0x104304 00a0902d daddu s2,a1,zero
+    - 0x104308 1066002c beq v1,a2,0x1043bc
+    - 0x10430c 8e639ac8 lw v1,-25912(s3)
+    - 0x104310 10000053 b 0x104460
+    + 0x1050cc 1043002a beq v0,v1,0x105178
+    + 0x1050d0 8e434bd0 lw v1,19408(s2)
+    + 0x1050d4 1000004d b 0x10520c
+  @@ replace v9.2[26:28] v10[19:21]
+    - 0x104318 3c100029 lui s0,0x29
+    - 0x10431c 8e049acc lw a0,-25908(s0)
+    + 0x1050dc 3c110076 lui s1,0x76
+    + 0x1050e0 8e244bd4 lw a0,19412(s1)
+  @@ replace v9.2[29:30] v10[22:23]
+    - 0x104324 3c020029 lui v0,0x29
+    + 0x1050e8 3c020076 lui v0,0x76
+  @@ replace v9.2[31:32] v10[24:25]
+    - 0x10432c 8e240000 lw a0,0(s1)
+    + 0x1050f0 8e040000 lw a0,0(s0)
+  @@ replace v9.2[33:35] v10[26:28]
+    - 0x104334 ae049acc sw a0,-25908(s0)
+    - 0x104338 8e250000 lw a1,0(s1)
+    + 0x1050f8 ae244bd4 sw a0,19412(s1)
+    + 0x1050fc 8e050000 lw a1,0(s0)
+  @@ replace v9.2[45:46] v10[38:39]
+    - 0x104364 3c030029 lui v1,0x29
+    + 0x105128 3c030076 lui v1,0x76
+  @@ replace v9.2[47:50] v10[40:43]
+    - 0x10436c 3c030029 lui v1,0x29
+    - 0x104370 ae029acc sw v0,-25908(s0)
+    - 0x104374 10000069 b 0x10451c
+    + 0x105130 3c030076 lui v1,0x76
+    + 0x105134 ae224bd4 sw v0,19412(s1)
+    + 0x105138 10000052 b 0x105284
+  @@ replace v9.2[53:55] v10[46:48]
+    - 0x104384 ac629ad0 sw v0,-25904(v1)
+    - 0x104388 8c439ad0 lw v1,-25904(v0)
+    + 0x105148 ac624bd8 sw v0,19416(v1)
+    + 0x10514c 8c434bd8 lw v1,19416(v0)
+  @@ replace v9.2[56:57] v10[49:50]
+    - 0x104390 0220202d daddu a0,s1,zero
+    + 0x105154 0200202d daddu a0,s0,zero
+  @@ replace v9.2[58:61] v10[51:54]
+    - 0x104398 10000060 b 0x10451c
+    - 0x10439c ae029acc sw v0,-25908(s0)
+    - 0x1043a0 0220202d daddu a0,s1,zero
+    + 0x10515c 10000049 b 0x105284
+    + 0x105160 ae224bd4 sw v0,19412(s1)
+    + 0x105164 0200202d daddu a0,s0,zero
+  @@ replace v9.2[62:64] v10[55:64]
+    - 0x1043a8 0240282d daddu a1,s2,zero
+    - 0x1043ac 8e029acc lw v0,-25908(s0)
+    + 0x10516c 0260282d daddu a1,s3,zero
+    + 0x105170 10000022 b 0x1051fc
+    + 0x105174 8e224bd4 lw v0,19412(s1)
+    + 0x105178 0200202d daddu a0,s0,zero
+    + 0x10517c 0c041350 jal 0x104d40
+    + 0x105180 0260282d daddu a1,s3,zero
+    + 0x105184 3c110076 lui s1,0x76
+    + 0x105188 8e224bd4 lw v0,19412(s1)
+    + 0x10518c 1440001c bne v0,zero,0x105200
+  @@ delete v9.2[65:74] v10[65:65]
+    - 0x1043b4 10000028 b 0x104458
+    - 0x1043b8 ae029acc sw v0,-25908(s0)
+    - 0x1043bc 0220202d daddu a0,s1,zero
+    - 0x1043c0 0c040fd8 jal 0x103f60
+    - 0x1043c4 0240282d daddu a1,s2,zero
+    - 0x1043c8 3c100029 lui s0,0x29
+    - 0x1043cc 8e029acc lw v0,-25908(s0)
+    - 0x1043d0 1440001b bne v0,zero,0x104440
+    - 0x1043d4 24040002 li a0,2
+  @@ replace v9.2[75:76] v10[66:67]
+    - 0x1043dc 8e240000 lw a0,0(s1)
+    + 0x105198 8e040000 lw a0,0(s0)
+  @@ replace v9.2[77:79] v10[68:70]
+    - 0x1043e4 14430014 bne v0,v1,0x104438
+    - 0x1043e8 ae029acc sw v0,-25908(s0)
+    + 0x1051a0 14430015 bne v0,v1,0x1051f8
+    + 0x1051a4 ae224bd4 sw v0,19412(s1)
+  @@ replace v9.2[80:81] v10[71:72]
+    - 0x1043f0 8e230000 lw v1,0(s1)
+    + 0x1051ac 8e030000 lw v1,0(s0)
+  @@ replace v9.2[82:101] v10[73:91]
+    - 0x1043f8 14620010 bne v1,v0,0x10443c
+    - 0x1043fc 8e029acc lw v0,-25908(s0)
+    - 0x104400 8e629ac8 lw v0,-25912(s3)
+    - 0x104404 3c0300ff lui v1,0xff
+    - 0x104408 8e440000 lw a0,0(s2)
+    - 0x10440c 3463ffff ori v1,v1,0xffff
+    - 0x104410 00021402 srl v0,v0,16
+    - 0x104414 ae009acc sw zero,-25908(s0)
+    - 0x104418 00832024 and a0,a0,v1
+    - 0x10441c 00021600 sll v0,v0,24
+    - 0x104420 00441025 or v0,v0,a0
+    - 0x104424 00021c02 srl v1,v0,16
+    - 0x104428 ae629ac8 sw v0,-25912(s3)
+    - 0x10442c 30630002 andi v1,v1,0x2
+    - 0x104430 1000003a b 0x10451c
+    - 0x104434 ae83e300 sw v1,-7424(s4)
+    - 0x104438 8e029acc lw v0,-25908(s0)
+    - 0x10443c 24040002 li a0,2
+    - 0x104440 8ec3e300 lw v1,-7424(s6)
+    + 0x1051b4 14620011 bne v1,v0,0x1051fc
+    + 0x1051b8 8e224bd4 lw v0,19412(s1)
+    + 0x1051bc 8e434bd0 lw v1,19408(s2)
+    + 0x1051c0 3c0200ff lui v0,0xff
+    + 0x1051c4 8e640000 lw a0,0(s3)
+    + 0x1051c8 3442ffff ori v0,v0,0xffff
+    + 0x1051cc 00031c02 srl v1,v1,16
+    + 0x1051d0 3c05009f lui a1,0x9f
+    + 0x1051d4 00822024 and a0,a0,v0
+    + 0x1051d8 00031e00 sll v1,v1,24
+    + 0x1051dc 00641825 or v1,v1,a0
+    + 0x1051e0 ae204bd4 sw zero,19412(s1)
+    + 0x1051e4 00031402 srl v0,v1,16
+    + 0x1051e8 ae434bd0 sw v1,19408(s2)
+    + 0x1051ec 30420002 andi v0,v0,0x2
+    + 0x1051f0 10000024 b 0x105284
+    + 0x1051f4 aca20580 sw v0,1408(a1)
+    + 0x1051f8 8e224bd4 lw v0,19412(s1)
+  @@ replace v9.2[102:107] v10[92:94]
+    - 0x104448 14640003 bne v1,a0,0x104458
+    - 0x10444c ae029acc sw v0,-25908(s0)
+    - 0x104450 10000032 b 0x10451c
+    - 0x104454 ae80e300 sw zero,-7424(s4)
+    - 0x104458 8e639ac8 lw v1,-25912(s3)
+    + 0x105200 ae224bd4 sw v0,19412(s1)
+    + 0x105204 8e434bd0 lw v1,19408(s2)
+  @@ replace v9.2[112:113] v10[99:100]
+    - 0x104470 aea39ac8 sw v1,-25912(s5)
+    + 0x10521c ae834bd0 sw v1,19408(s4)
+  @@ replace v9.2[115:117] v10[102:104]
+    - 0x10447c aea29ac8 sw v0,-25912(s5)
+    - 0x104480 8e220000 lw v0,0(s1)
+    + 0x105228 ae824bd0 sw v0,19408(s4)
+    + 0x10522c 8e020000 lw v0,0(s0)
+  @@ replace v9.2[122:142] v10[109:112]
+    - 0x104498 14440021 bne v0,a0,0x104520
+    - 0x10449c dfbf0070 ld ra,112(sp)
+    - 0x1044a0 12400010 beq s2,zero,0x1044e4
+    - 0x1044a4 8e639ac8 lw v1,-25912(s3)
+    - 0x1044a8 3c040001 lui a0,0x1
+    - 0x1044ac 00641024 and v0,v1,a0
+    - 0x1044b0 10400006 beq v0,zero,0x1044cc
+    - 0x1044b4 00641025 or v0,v1,a0
+    - 0x1044b8 8e450000 lw a1,0(s2)
+    - 0x1044bc 0c040d6c jal 0x1035b0
+    - 0x1044c0 0000202d daddu a0,zero,zero
+    - 0x1044c4 1000000f b 0x104504
+    - 0x1044c8 8e220000 lw v0,0(s1)
+    - 0x1044cc aea29ac8 sw v0,-25912(s5)
+    - 0x1044d0 24040001 li a0,1
+    - 0x1044d4 0c040d6c jal 0x1035b0
+    - 0x1044d8 8e450000 lw a1,0(s2)
+    - 0x1044dc 10000009 b 0x104504
+    - 0x1044e0 8e220000 lw v0,0(s1)
+    - 0x1044e4 8e629ac8 lw v0,-25912(s3)
+    + 0x105244 14440010 bne v0,a0,0x105288
+    + 0x105248 dfbf0050 ld ra,80(sp)
+    + 0x10524c 8e424bd0 lw v0,19408(s2)
+  @@ replace v9.2[145:146] v10[115:116]
+    - 0x1044f4 ae629ac8 sw v0,-25912(s3)
+    + 0x10525c ae424bd0 sw v0,19408(s2)
+  @@ replace v9.2[147:151] v10[117:121]
+    - 0x1044fc 8e450000 lw a1,0(s2)
+    - 0x104500 8e220000 lw v0,0(s1)
+    - 0x104504 3c050037 lui a1,0x37
+    - 0x104508 3c040029 lui a0,0x29
+    + 0x105264 8e650000 lw a1,0(s3)
+    + 0x105268 8e020000 lw v0,0(s0)
+    + 0x10526c 3c05009f lui a1,0x9f
+    + 0x105270 3c040076 lui a0,0x76
+  @@ replace v9.2[155:158] v10[125:126]
+    - 0x10451c dfbf0070 ld ra,112(sp)
+    - 0x104520 dfb60060 ld s6,96(sp)
+    - 0x104524 dfb50050 ld s5,80(sp)
+    + 0x105284 dfbf0050 ld ra,80(sp)
+  @@ replace v9.2[164:165] v10[132:133]
+    - 0x104540 27bd0080 addiu sp,sp,128
+    + 0x1052a0 27bd0060 addiu sp,sp,96
+
+======================================================================
+reset: v9.2 0x104548..0x10455c (5)  v10 0x1052a8..0x10532c (33)
+  CHANGED (1 hunks). - v9.2 / + v10:
+  @@ replace v9.2[0:5] v10[0:33]
+    - 0x104548 3c020029 lui v0,0x29
+    - 0x10454c 3c030029 lui v1,0x29
+    - 0x104550 ac409ac8 sw zero,-25912(v0)
+    - 0x104554 03e00008 jr ra
+    - 0x104558 ac609acc sw zero,-25908(v1)
+    + 0x1052a8 27bdfff0 addiu sp,sp,-16
+    + 0x1052ac 3c030076 lui v1,0x76
+    + 0x1052b0 3c020076 lui v0,0x76
+    + 0x1052b4 3c040076 lui a0,0x76
+    + 0x1052b8 ffbf0000 sd ra,0(sp)
+    + 0x1052bc 24844ca0 addiu a0,a0,19616
+    + 0x1052c0 ac404bd4 sw zero,19412(v0)
+    + 0x1052c4 0000282d daddu a1,zero,zero
+    + 0x1052c8 ac604bd0 sw zero,19408(v1)
+    + 0x1052cc 0c05125f jal 0x14497c
+    + 0x1052d0 24060100 li a2,256
+    + 0x1052d4 3c040076 lui a0,0x76
+    + 0x1052d8 0000282d daddu a1,zero,zero
+    + 0x1052dc 24844da0 addiu a0,a0,19872
+    + 0x1052e0 0c05125f jal 0x14497c
+    + 0x1052e4 24060100 li a2,256
+    + 0x1052e8 3c040076 lui a0,0x76
+    + 0x1052ec 0000282d daddu a1,zero,zero
+    + 0x1052f0 24844ea0 addiu a0,a0,20128
+    + 0x1052f4 0c05125f jal 0x14497c
+    + 0x1052f8 24060100 li a2,256
+    + 0x1052fc 3c040076 lui a0,0x76
+    + 0x105300 0000282d daddu a1,zero,zero
+    + 0x105304 24844fa0 addiu a0,a0,20384
+    + 0x105308 0c05125f jal 0x14497c
+    + 0x10530c 24060100 li a2,256
+    + 0x105310 3c040076 lui a0,0x76
+    + 0x105314 dfbf0000 ld ra,0(sp)
+    + 0x105318 0000282d daddu a1,zero,zero
+    + 0x10531c 248450a0 addiu a0,a0,20640
+    + 0x105320 24060100 li a2,256
+    + 0x105324 0805125f j 0x14497c
+    + 0x105328 27bd0010 addiu sp,sp,16
+
+======================================================================
+rc4init: v9.2 0x132c98..0x132d2c (37)  v10 0x131360..0x1313f4 (37)
+  IDENTICAL modulo validated relocation (static instructions only)
+
+======================================================================
+rc4crypt: v9.2 0x132d30..0x132db4 (33)  v10 0x1313f8..0x13147c (33)
+  IDENTICAL modulo validated relocation (static instructions only)
+
+======================================================================
+rsawrap: v9.2 0x134020..0x134044 (9)  v10 0x1326e8..0x13270c (9)
+  IDENTICAL modulo validated relocation (static instructions only)
+
+======================================================================
+memcpy: v9.2 0x1461b0..0x146358 (106)  v10 0x1447d4..0x14497c (106)
+  IDENTICAL modulo validated relocation (static instructions only)
+
+======================================================================
+memset: v9.2 0x146358..0x146404 (43)  v10 0x14497c..0x144a28 (43)
+  IDENTICAL modulo validated relocation (static instructions only)
+
+======================================================================
+udiv: v9.2 0x14cbd8..0x14d1a8 (372)  v10 0x14b230..0x14b800 (372)
+  IDENTICAL modulo validated relocation (static instructions only)
+
+======================================================================
+umod: v9.2 0x14d1a8..0x14d6e8 (336)  v10 0x14b800..0x14bd40 (336)
+  IDENTICAL modulo validated relocation (static instructions only)
+
+======================================================================
+bignum: v9.2 0x133220..0x134020 (896)  v10 0x1318e8..0x1326e8 (896)
+  IDENTICAL modulo validated relocation (static instructions only)
+
+Summary: 12 identical, 4 changed, 0 unresolved
+
+Exit status: 1

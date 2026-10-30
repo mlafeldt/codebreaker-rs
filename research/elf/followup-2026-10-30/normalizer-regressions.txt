@@ -1,0 +1,20 @@
+Command: python3 -I -m unittest discover -s research/tools/tests -p test_cbcrypt_diff.py -v
+test_allow_differences_cannot_hide_unresolved_references (test_cbcrypt_diff.NormalizerTests.test_allow_differences_cannot_hide_unresolved_references) ... ok
+test_changed_shift_amount_is_not_hidden (test_cbcrypt_diff.NormalizerTests.test_changed_shift_amount_is_not_hidden) ... ok
+test_changed_struct_offset_is_not_a_relocation (test_cbcrypt_diff.NormalizerTests.test_changed_struct_offset_is_not_a_relocation) ... ok
+test_cli_compares_past_memcpy_first_return (test_cbcrypt_diff.NormalizerTests.test_cli_compares_past_memcpy_first_return) ... ok
+test_equal_unknown_calls_remain_unresolved (test_cbcrypt_diff.NormalizerTests.test_equal_unknown_calls_remain_unresolved) ... ok
+test_interior_call_mutation_is_not_a_relocation (test_cbcrypt_diff.NormalizerTests.test_interior_call_mutation_is_not_a_relocation) ... ok
+test_known_relocated_call_still_matches (test_cbcrypt_diff.NormalizerTests.test_known_relocated_call_still_matches) ... ok
+test_known_relocated_data_address_still_matches (test_cbcrypt_diff.NormalizerTests.test_known_relocated_data_address_still_matches) ... ok
+test_lui_numeric_constant_is_not_masked (test_cbcrypt_diff.NormalizerTests.test_lui_numeric_constant_is_not_masked) ... ok
+test_missing_image_bytes_are_invalid_input (test_cbcrypt_diff.NormalizerTests.test_missing_image_bytes_are_invalid_input) ... ok
+test_numeric_use_of_address_high_half_is_not_masked (test_cbcrypt_diff.NormalizerTests.test_numeric_use_of_address_high_half_is_not_masked) ... ok
+test_unknown_call_targets_do_not_collapse (test_cbcrypt_diff.NormalizerTests.test_unknown_call_targets_do_not_collapse) ... ok
+test_unknown_data_addresses_do_not_collapse (test_cbcrypt_diff.NormalizerTests.test_unknown_data_addresses_do_not_collapse) ... ok
+
+----------------------------------------------------------------------
+Ran 13 tests in 0.146s
+
+OK
+Exit status: 0

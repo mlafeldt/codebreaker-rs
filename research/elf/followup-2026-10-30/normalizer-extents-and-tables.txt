@@ -1,0 +1,39 @@
+v92 unpacked SHA256 91c04ee76b1126b2b060298fe6c2d434740d2b1923f7e282bc154153c1b79edb
+v10 unpacked SHA256 9cb83c7ffd28c09ebadf1bba986b34a4dce86bedb03ebb2023c4f944a5d422e3
+
+Explicit instruction ranges; end is exclusive; return/tail delay included; alignment padding excluded:
+lines      v92 0x1033c0..0x103410 (20) v10 0x104470..0x1044c0 (20)
+  terminal: jr ra / jr ra
+v1dec      v92 0x103410..0x1034dc (51) v10 0x1044c0..0x10458c (51)
+  terminal: jr ra / jr ra
+inverse    v92 0x1034e0..0x10357c (39) v10 0x104590..0x10462c (39)
+  terminal: jr ra / jr ra
+multiply   v92 0x103580..0x1035ac (11) v10 0x104630..0x10465c (11)
+  terminal: jr ra / jr ra
+rekey      v92 0x1035b0..0x103f60 (620) v10 0x104660..0x104d3c (439)
+  terminal: jr ra / jr ra
+v7dec      v92 0x103f60..0x1042b0 (212) v10 0x104d40..0x105090 (212)
+  terminal: jr ra / jr ra
+auto       v92 0x1042b0..0x104544 (165) v10 0x105090..0x1052a4 (133)
+  terminal: jr ra / jr ra
+reset      v92 0x104548..0x10455c (5) v10 0x1052a8..0x10532c (33)
+  terminal: jr ra / j 0x14497c
+rc4init    v92 0x132c98..0x132d2c (37) v10 0x131360..0x1313f4 (37)
+  terminal: jr ra / jr ra
+rc4crypt   v92 0x132d30..0x132db4 (33) v10 0x1313f8..0x13147c (33)
+  terminal: jr ra / jr ra
+rsawrap    v92 0x134020..0x134044 (9) v10 0x1326e8..0x13270c (9)
+  terminal: jr ra / jr ra
+memcpy     v92 0x1461b0..0x146358 (106) v10 0x1447d4..0x14497c (106)
+  terminal: jr ra / jr ra
+memset     v92 0x146358..0x146404 (43) v10 0x14497c..0x144a28 (43)
+  terminal: jr ra / jr ra
+udiv       v92 0x14cbd8..0x14d1a8 (372) v10 0x14b230..0x14b800 (372)
+  terminal: jr ra / jr ra
+umod       v92 0x14d1a8..0x14d6e8 (336) v10 0x14b800..0x14bd40 (336)
+  terminal: jr ra / jr ra
+bignum     v92 0x133220..0x134020 (896) v10 0x1318e8..0x1326e8 (896)
+
+Newly explicit libgcc bit-length lookup tables:
+clz_udiv 0x36d6d0 0x9ef970 256 bytes equal; SHA256 14a5d850c255623f9472e3c650abce0c78d32f0276b315b3a276a0462d97a1ac
+clz_umod 0x36d7d0 0x9efa70 256 bytes equal; SHA256 14a5d850c255623f9472e3c650abce0c78d32f0276b315b3a276a0462d97a1ac

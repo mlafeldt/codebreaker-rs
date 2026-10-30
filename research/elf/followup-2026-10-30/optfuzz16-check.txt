@@ -1,0 +1,4 @@
+
+100 lists, 3378 lines: 0 lists with output diffs, 0 more with state diffs only, model mismatches 0
+  optfuzz    lists= 100 output_diff=   0 state_diff=   0
+Exit status: 0

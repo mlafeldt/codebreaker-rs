@@ -1,0 +1,19 @@
+{
+  "checks": [
+    {
+      "width": 1280,
+      "scrollWidth": 1280,
+      "height": 4009,
+      "sectionCount": 5
+    },
+    {
+      "width": 390,
+      "scrollWidth": 390,
+      "height": 5965,
+      "sectionCount": 5
+    }
+  ],
+  "themeToggle": true,
+  "jsExceptions": [],
+  "html_sha256": "dbb7fc0015ddb8cf2f4b64ae5132ae3207e70e9c08c4ec022e334167f794b7fe"
+}

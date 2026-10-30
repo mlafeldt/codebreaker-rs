@@ -1,0 +1,39 @@
+{
+  "reason": "Archived duplicate headers receive occurrence suffixes; code words, outputs and state rows are unchanged.",
+  "source_input": "elf/emu/targeted.txt",
+  "source_firmware": "elf/emu/targeted.out",
+  "renamed": [
+    {
+      "old": "cmd3-flip-b22=0",
+      "new": "cmd3-flip-b22=0 [occurrence 1]"
+    },
+    {
+      "old": "cmd3-flip-b22=0",
+      "new": "cmd3-flip-b22=0 [occurrence 2]"
+    },
+    {
+      "old": "cmd3-flip-b22=0",
+      "new": "cmd3-flip-b22=0 [occurrence 3]"
+    },
+    {
+      "old": "cmd3-flip-b22=0",
+      "new": "cmd3-flip-b22=0 [occurrence 4]"
+    },
+    {
+      "old": "cmd3-flip-b22=1",
+      "new": "cmd3-flip-b22=1 [occurrence 1]"
+    },
+    {
+      "old": "cmd3-flip-b22=1",
+      "new": "cmd3-flip-b22=1 [occurrence 2]"
+    },
+    {
+      "old": "cmd3-flip-b22=1",
+      "new": "cmd3-flip-b22=1 [occurrence 3]"
+    },
+    {
+      "old": "cmd3-flip-b22=1",
+      "new": "cmd3-flip-b22=1 [occurrence 4]"
+    }
+  ]
+}

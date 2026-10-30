@@ -1,8 +1,8 @@
 # Reversing CodeBreaker v9.2 against the Rust implementation
 
-> **Review (2026-10-30):** §12 validates the core crypto findings and records
-> corrections to the disc-lock explanation, v10 summary, comparison tools,
-> provenance, and compatibility claims. Read it before relying on those claims.
+> **Review and follow-up (2026-10-30):** §12 preserves the audit of the
+> earlier findings. The affected sections below have been corrected; §12.5
+> records the resolution status and the remaining evidence boundaries.
 
 Done 2026-10-26, prompted by question 3 of
 [issue #11](https://github.com/mlafeldt/codebreaker-rs/issues/11): when a
@@ -14,7 +14,7 @@ with `src/`. Results:
 
 | Area | Firmware vs `src/` |
 |---|---|
-| V1 decrypt, V7 decrypt, RSA, RC4, multiply, line counting, key/seed schedule, constant tables | **same** |
+| V1 decrypt, V7 rounds, RC4, multiply, line counting, key/seed schedule, constant tables | **same**, subject to the state-machine fixes and intentional omissions below |
 | Beefcode in V7 mode (`auto_decrypt`, `decrypt`, `encrypt`) | firmware rekeys **twice**. 0.4.0 (`7691577`) did it once; fixed in `75471b6`. |
 | Line count of V1-encrypted codes (`auto_decrypt`) | firmware counts from the **encrypted** address, `src/` from the decrypted one since `bb95630` (0.4.0). Fixed in `fadd9d9`. |
 | Raw beefcode during auto-detection | firmware passes the next two lines through raw, `src/` re-detected the next line. Fixed in `d9bab13`. |
@@ -171,7 +171,7 @@ vaddr = file offset + `0xff000`.
   ("requires EF_MIPS_ARCH_32R2, or ... MIPS-I or EF_MIPS_ARCH_32") or R5900
   ("Machine-specific MIPS variants ... need a separately supported processor
   profile"). Hopper, IDA and Kuna adapters admit no MIPS. It also only takes
-  Ghidra 12.1.x. The v10 retail `BOOT.ELF` has a MIPS **III** header, so
+  Ghidra 12.1.x. The supplied v10 `BOOT.ELF` has a MIPS **III** header, so
   `open_binary` accepts the file — but every provider then rejects the EE
   target anyway, with the same "Machine-specific MIPS variants ... need a
   separately supported processor profile" (Hopper/IDA/Kuna still no MIPS). A
@@ -228,7 +228,7 @@ and always through `0x1042b0`.
 | `0x36e308` | `BEEFC0DF` extra seed (8 bytes) | local in `decrypt_code_mut` |
 
 
-## 5. Identical parts
+## 5. Matched primitives and schedule
 
 **Constants.** `python3 -I tools/cmptables.py elf/CBv92.unpacked.elf ../src`
 reads `cb1::SEEDS`, `cb7::SEEDS`, `cb7::RC4_KEY` and `RSA_MODULUS` out of the
@@ -245,8 +245,9 @@ is the same byte placement as the Rust
 **Lines per code (`0x1033c0` vs `num_code_lines`).** Cmd 3 is 2 lines if bit
 22 is set, cmds 4–6 are 2, everything else 1.
 
-**V7 decrypt (`0x103f60` vs `Cb7::decrypt_code_mut`).** Same steps in the same
-order:
+**V7 decrypt (`0x103f60` vs `Cb7::decrypt_code_mut`).** The common path uses
+the same steps in the same order; the RSA defect and omitted option path are
+described in §§9.4–9.5:
 
 1. 64 rounds, `i = 63..0`: `val = ((val - (addr ^ s4[i])) ^ s1[i]) + s3[i]`,
    then `addr = ((addr + (val ^ s4[i])) ^ s0[i]) - s2[i]`.
@@ -258,10 +259,11 @@ order:
 5. If `beefcodf` is set, RC4 the seeds with `addr:val` as key, clear the flag
    and return. Otherwise, on a beefcode, `rekey(0, val)`.
 
-The only difference is step 5: the firmware sets `beefcodf = 1` for any
-beefcode, while `Cb7::beefcode` sets `addr & 1`. The firmware's only caller
-overwrites it with `addr & 1` straight away (§6.1), so the net state is the
-same.
+There is also an intermediate flag difference in step 5: the firmware sets
+`beefcodf = 1` for any beefcode, while `Cb7::beefcode` sets `addr & 1`.
+The firmware's caller overwrites it with `addr & 1` on the common path
+(§6.1), so the final flag agrees there. Forced option lines need the separate
+handling in §9.5.
 
 **Multiply (`0x103580` vs `mul_decrypt`).** `a * inverse(b | 1)`. The
 firmware gets the inverse from an extended-Euclid loop (`0x1034e0`, `divu`
@@ -411,8 +413,9 @@ from the `bit22` auto test in `src/lib.rs`:
 ```
 
 The firmware ignores the line and passes the next two lines through raw
-(continuation path). `auto_decrypt_v1_or_raw` returns with `code_lines == 0`,
-so the next line is detected afresh. Neither path rekeys.
+(continuation path). Before `d9bab13`, `auto_decrypt_v1_or_raw` returned with
+`code_lines == 0`, so the next line was detected afresh. Since that fix it
+keeps two raw continuation lines, matching the firmware. Neither path rekeys.
 
 ### 6.4 Line counting otherwise
 
@@ -430,8 +433,9 @@ that copy. `src/` has only `Cb7::key`. They differ only once the option path
 
 A one-line V7 `FFFFFFFF vvvvvvvv` sets
 `mode = (mode >> 16) << 24 | v & 0xffffff` and
-`opt = (v & 0x20000) >> 16`, then returns before the beefcode check (`src/`
-also returns, but otherwise ignores it). The low 16 bits of the mode word count
+`opt = (v & 0x20000) >> 16`, then returns before the beefcode check. Since
+`16299e0`, `src/` follows bit 16 and the line count, but leaves bit 17 out
+(§9.5). The low 16 bits of the mode word count
 down once per line, and at zero the saved mode comes back from the top byte.
 `opt == 2` forces V7 decryption of the next line and is then cleared. With
 `opt != 0`, the inner decrypt derives a new key from each non-beefcode line:
@@ -466,21 +470,18 @@ Only for context. The firmware is the reference.
 
 ## 8. Caveats
 
-* Primary image v9.2, cracked and modded (§1). A stock-payload v10 loader was
-  added later (§10); it shows the per-line code crypto changed between versions
-  (§11), so v9.2 behaviour does not carry over unchanged, and v7/v8 are unknown.
-  One mod is located: the "RSA Patch ... credits go to
-  misfire" named in the §1 string is the signature verdict in `FUN_00132ed8`
-  (the verifier behind `0x133180`, §9.9). It computes the padded-block compare
-  at `0x14611c` and then throws the result away, forcing the return to 1
-  (`0x132fec`: `addiu v0, zero, 1`). So the signature checks in the §9.9
-  loaders always pass on this image — the PCB firmware-upgrade path would
-  execute any payload. That is the crack, not stock behaviour, so the verify
-  path here says nothing about the real firmware. A genuine forgery question
-  (is the RC4-masked padding scheme sound against `e = 0x10001`?) needs a clean
-  image to study. The retail v10 image now settles what stock does: the same
-  verdict there is `sltiu v0, v0, 1`, so the patch swapped `sltiu`→`addiu`
-  (`2c`→`24`) to force a pass (§10.9).
+* Primary image v9.2, cracked and modded (§1). A v10 payload extracted from
+  a modified loader was added later (§10). Its per-line code crypto differs
+  (§11), so v9.2 behavior does not carry over unchanged; v7/v8 images have not
+  been verified. The v9.2 signature verdict at `0x132fec` forces success after
+  computing the padded-block compare (`0x14611c`), using
+  `addiu v0,zero,1` (`0x24020001`). That makes the inspected signature check
+  ineffective. The v10 tail instead consumes the compare result with
+  `sltiu v0,v0,1` (`0x2c420001`, §10.9). This locates a behavioral difference
+  consistent with the named RSA patch, but neither image was checked against
+  an authenticated retail reference. It does not establish the full scope or
+  exact original bytes of a historical author's patch. The signature scheme's
+  resistance to forgery remains unresolved (§9.4).
 * Nothing run on hardware or in PCSX2. §9 emulates the unpacked image in
   Ghidra, with the R5900-specific instructions hooked.
 * Encryption in `src/` has no firmware counterpart and is only checked as the
@@ -503,9 +504,20 @@ decrypt in Ghidra's emulator and diffed it against `src/` at `d9bab13`.
 | `tools/fwmodel.py` | Python model of `0x1042b0` and callees, including options and the bignum quirk. It can encrypt. `run` writes `Emu.java`'s output format, so `emudiff.py` also works without Ghidra. |
 | `tools/gen.py` | input lists: `random`, `targeted`, `plain` (for the encryption check), `report` (§9.3–9.5 vectors), `optfuzz` (random lists, a quarter option lines) |
 | `compare/examples/emucmp.rs` | runs the crate (`auto`, `decrypt`, `encrypt`) on the same lists, reading the state from `Debug` |
-| `tools/emudiff.py` | firmware vs crate per list (first differing output, else the first state difference; the raw/V1 flag only where it's read), model vs emulation on every line and global, primitives vs exact math, optional round trip against the plain text |
+| `tools/emudiff.py` | firmware vs crate outputs and selected state on every line; summaries count lists with an output difference, else selected-state differences; model vs emulation on every output and logged global/seed CRC; primitives vs exact math; optional round trip against plain text |
 | `tools/coverage.py` | block coverage from the `Emu.java` coverage files |
 | `tools/luirefs.py` | finds `lui`+offset accesses to globals, which Ghidra mostly doesn't resolve |
+
+The output comparison CLIs (`cmpout.py`, `emudiff.py`, `emudiff10.py`) use
+status 0 for identical results or an exact declared baseline, 1 for differences,
+and 2 for malformed or incomplete input. `--expected <json>` declares an exact
+reviewed set of per-line differences bound to the input SHA-256s. Unexpected
+or missing differences still fail. `--write-differences <json>` records
+observations but does not turn a failing comparison into a pass.
+Model-versus-firmware and plaintext round-trip failures cannot be waived by
+an expected-difference file. The commands below therefore report status 1 for
+corpora containing known RSA or bit-17 departures unless an appropriate
+baseline is supplied.
 
 ```
 G=/opt/homebrew/Cellar/ghidra/12.1.4/libexec/support/analyzeHeadless
@@ -517,7 +529,13 @@ python3 -I tools/emudiff.py elf/CBv92.unpacked.elf /tmp/t.out /tmp/t.crate
 python3 -I tools/coverage.py elf/calltree.txt /tmp/t.cov
 ```
 
-Inputs, outputs and coverage of every run are in `elf/emu/`. The
+Inputs, outputs and coverage of the original runs are in `elf/emu/`. In
+the table below, crate “state” means the fields emitted by `emucmp`: line count,
+effective scheme, and conditionally key and `beefcodf`. Crate seeds,
+`initialized`, and `lines_until_v7` are not directly compared. Model checks
+cover all logged globals and the seed CRC, not every byte of firmware memory.
+
+The
 `src/cb7.rs` change that replicates the RSA bug (§9.4, not recommended) is in
 `elf/emu/proposed-fixes.patch`, against `105d376`.
 
@@ -539,8 +557,8 @@ Inputs, outputs and coverage of every run are in `elf/emu/`. The
 | `optfuzz16` (seed 1): the same without bit 17, against `16299e0` | 100 | 3,378 | identical, outputs and state |
 | `optfuzz` seeds 1–20 with `fd0e355`, and `optfuzz16` seeds 1–20 with `16299e0`, `fwmodel.py run` instead of the emulator (seed 1 gives the same output as emulated) | 2,000 each | 65,546 each | identical, outputs and state |
 
-`fwmodel.py` matches the emulation on every line and every global (mode,
-`code_lines`, V1 flag, `beefcodf`, `opt`, key, key copy, CRC of the seeds) in
+`fwmodel.py` matches the emulation on every output and logged state field
+(mode, `code_lines`, V1 flag, `beefcodf`, `opt`, key, key copy, seed CRC) in
 all of these. At `16299e0`, the only remaining differences are RSA (§9.4)
 and lists after an option line with bit 17: 38 of `targeted`, as above in
 `report` and `optfuzz`. With the §9.4 patch and `fd0e355`, there are none.
@@ -559,7 +577,7 @@ with V7 off (9). Coverage (§9.8) doesn't change.
 | `cb7::is_beefcode` | masked compares at `0x104350`, `0x1041f0`, `0x10448c` | identical |
 | `Cb7::beefcode` | `0x1035b0` | identical given the same init decision (§9.6) |
 | `Cb7::decrypt_code_mut` | `0x103f60` | identical except the RSA step (§9.4) and the option paths (key copy, key from line, §9.5), both left out on purpose |
-| `Cb7::encrypt_code_mut` | (inverse of `0x103f60`) | was **not the inverse** when `BEEFC0DF`'s extra line is a beefcode (§9.3, fixed in `23739ac`). In ~2⁻³¹ of codes no inverse exists (§9.4). |
+| `Cb7::encrypt_code_mut` | (inverse of `0x103f60`) | was **not the inverse** when `BEEFC0DF`'s extra line is a beefcode (§9.3, fixed in `23739ac`). The firmware RSA defect prevents some firmware round trips; the crate deliberately uses exact RSA (§9.4). |
 | `mul_decrypt`, `mod_inverse` | `0x103580`, `0x1034e0` | identical on 0, 1, 2, 3, 5, `7fffffff`, `80000000`, `80000001`, `fffffffd`–`ffffffff` and 20 random values (the firmware uses extended Euclid, `src/` Newton) |
 | `rsa_crypt`/`mod_pow` (decrypt) | `0x134020` → `0x133dd0` | **differs**, on purpose (§9.4) |
 | `Rc4` | `0x132c98`/`0x132d30` | identical (context is re-initialized on every use, no carry-over) |
@@ -652,16 +670,18 @@ Primitive level: `!rsa fffffffffffffff4` gives `04f363dfecae2b57` (exact:
 
 The cause is certain from the code (the truncation at `0x133bbc`), and two
 independent derivations agree on it: `fwmodel.py`, written from the listing,
-and the emulator. The limits from §8 apply: nothing run on hardware, one
-image only. The rate is the model's estimate, not a measurement.
+and the emulator. These vectors were emulated from v9.2; §11 verifies the
+same bignum core in the inspected v10 payload. Nothing was run on hardware.
+The frequency is an estimate from the model under its input assumptions, not
+a measured rate on real code lists.
 
 Decision: `src/` keeps exact math. `105d376` documents the divergence at
 `rsa_crypt`. Replicating the bug would:
 
 * treat the symptom, not the cause. The cause is in the firmware, and only
   decryption can copy it. For plain text whose exact cipher value falls in the
-  bad set (about 2⁻³¹ of codes), the firmware decrypts something else, and
-  there may be no cipher text at all that decrypts to it.
+  bad set (whose size is estimated by the model), the firmware decrypts
+  something else, and there may be no cipher text at all that decrypts to it.
 * break `decrypt(encrypt(x)) == x`, which holds in `src/` for every x below n.
 * swap a correct answer for the firmware's garbage. A code that hits the bug
   already misbehaves on a real CodeBreaker. The exact result is what exact
@@ -675,18 +695,18 @@ Not recommended, but available: `elf/emu/proposed-fixes.patch` replicates the
 bug in decryption with `cb_mod_pow`/`cb_mul_mod`/`cb_mod`: square-and-multiply,
 and a 5-word reduction that truncates q, subtracts `q·n` from 3 words, adds n
 back once or twice, then does the window and final `> n` corrections.
-Encryption keeps the exact `mod_pow`. It matches `cb_rsa` on 172,140 values
-(random, the whole bad range, n−1..n−2000, the sporadic ones) and fixes both
-`targeted` RSA lists.
+Encryption keeps the exact `mod_pow`. The recorded check covered 172,140
+values: random inputs, samples within the bad range, `n−1..n−2000`, and inputs
+selected for intermediate-power failures. The roughly `2^31`-value bad range
+was not exhaustively checked. The patch fixes both `targeted` RSA lists.
 
-Not a signature-forgery vector. The same reduction runs in the 2048-bit
-signature check (§9.9), so the defect is reachable there too (the partial
-remainder's top word == the modulus's top limb, ~2⁻³² per step). It buys
-nothing: the signature key at `0x2949b8` is e = `0x10001` over a modulus whose
-top limb is `0x90116783`, so the bug only perturbs the modexp into another
-full-width residue — no algebraic lever, no search-space reduction — and e ≠ 3
-rules out low-exponent forgery. Forging still needs the private key or a
-firmware patch.
+No signature forgery was demonstrated. The same generic reduction routine is
+used by the 2048-bit signature checker (§9.9), but the two-limb, exponent-11
+investigation above does not establish exploitability or unforgeability for
+that different modulus, exponent, and padding scheme. The signature key at
+`0x2949b8` has e = `0x10001` and a modulus whose top limb is `0x90116783`.
+Those facts do not prove that the arithmetic defect provides no leverage;
+the full verifier would need a separate security analysis.
 
 ### 9.5 `FFFFFFFF` encryption options (bit 16 and count since `16299e0`, bit 17 left out)
 
@@ -938,8 +958,10 @@ Union of all runs (`elf/emu/coverage.txt`, blocks from `CallTree.java`):
 | `0x133dd0`, `0x133320`, `0x133670`, `0x133828`, `0x133870`, `0x1333d0`, `0x1338c0`, `0x14cbd8`, `0x14d1a8` | partial | Paths for other operand sizes, zero or multi-word exponents, non-power-of-2 lengths, and `__umoddi3`/`__udivdi3` with large divisors. All dead for the fixed 2-word call from `0x1040a0`, live for the RSA-2048 signature check (§9.9). |
 | memset `0x146358`, memcpy `0x1461b0` | entry | replaced by Java (EE `lq`/`sq`/MMI) |
 
-Nothing reachable is missing from `src/` except option bit 17 (§9.5), and
-nothing else differs except RSA (§9.4). Both are left out on purpose.
+Within the inspected paths and compared corpus, no additional behavioral
+difference was found beyond option bit 17 (§9.5) and RSA (§9.4), both left out
+on purpose. The remaining coverage gaps above are not exhaustive proofs over
+all inputs or state histories.
 
 ### 9.9 Other users of RC4 and the bignum code
 
@@ -959,12 +981,13 @@ real signed execution boundary is PCB (`pcb.c`: 256-byte `rsasig` then an ELF
 loaded at `0x1000000` and jumped to), the `pelican.bin`/`upgrade.bin` path at
 `0x114ea0`/`0x114ff0`.
 
-The *default verdict* for such a v7 file, though, is not stock on this image.
-v9.2 defaults it to 1 — accept — at `DAT_00296080`; stock v10 defaults the same
-global to 0 — reject — at `0x772c80` (both are read-only, never stored). So
-"accept any unsigned v7 CBC" is a v9.2 change, most likely the "Day1 server mod
-... by bfoos" named in §1, not legacy handling. The 1-vs-0 values are verified
-by reading both images; the mod attribution is the 2026-10-29 re-review's.
+The default verdict for such a v7 file differs between the inspected images:
+v9.2 has 1 — accept — at `DAT_00296080`, while v10 has 0 — reject — at
+`0x772c80`. Static searches found no stores to either location. The values
+are verified by reading both images. The v9.2 “Day1 server mod ... by bfoos”
+named in §1 is one possible explanation, but a legitimate version change is
+also possible without a clean v9.2 reference. The attribution remains a
+hypothesis, not a located patch.
 
 The V1 and V7 routines (`0x103410`, `0x103f60`, `0x1035b0`) have no callers
 besides `0x1042b0`, and `0x1042b0` has none besides the list processor
@@ -1000,24 +1023,28 @@ besides `0x1042b0`, and `0x1042b0` has none besides the list processor
 * An `FFFFFFFF` test line right after a beefcode is never an option line.
   Two first-draft vectors were wrong because of that.
 
-## 10. CodeBreaker v10 loader (2026-10-28, corrected 2026-10-29)
+## 10. CodeBreaker v10 loader (2026-10-28, corrected 2026-10-30)
 
-A second image, to compare against the cracked v9.2. It is a self-decrypting
-loader, not a quick string check: the body is RC4-encrypted over zlib, behind a
-key schedule that binds the key to the disc and the console (§10.8). The
-**decrypted payload is stock retail** (`VERSION CodeBreaker PS2 V10.0`, Pelican,
-unpatched signature path; §10.6, §10.9) — but the **loader itself is cracked**:
-a stub hardcodes the disc/console key inputs and a RAM patcher skips a later
-disc-key check (§10.8), so it boots without the original disc and unpacks fully
-offline. `tools/cbv10_unpack.py` reproduces the key and the decrypt.
+A second image, to compare against the modified v9.2. Its body is
+RC4-encrypted over zlib, behind a schedule that mixes an EE floating-point
+result and a read-key reply (§10.5). The supplied **loader is modified**: a
+stub hardcodes both schedule inputs and a RAM patcher skips payload checks
+and an RPC call (§10.8). `tools/cbv10_unpack.py` reconstructs the key and
+unpacks this image fully offline. Boot behavior on an unmodified console or
+in PCSX2 was not tested.
 
-> **Correction (2026-10-29).** §10.5/§10.6/§10.8 first read the key schedule as
-> "anti-analysis decoys" around an intact retail loader. A re-review against the
-> image (every claim below re-verified by disassembly) showed the opposite: the
-> FPU mixer and the SIF-RPC are the *real* anti-copy inputs, and this loader is
-> cracked to bypass them. The derived key, the decrypt and §10.9 are unaffected;
-> the mechanism is re-described below. v10 also shows the per-line code crypto
-> changed between versions (§11).
+The extracted payload identifies itself as `VERSION CodeBreaker PS2 V10.0`.
+Its inspected signature verdict consumes the comparison result (§10.9), and
+the loader's three RAM-patch locations contain the original calls in the
+extraction. Those local observations do not establish pristine retail
+provenance for the whole payload (§10.6).
+
+> **Correction history.** The 2026-10-28 first pass misread the mixer and RPC
+> as decoys. The 2026-10-29 pass located the hardcoded-input stub and RAM
+> patcher. The 2026-10-30 review further established that the read-key bytes
+> match a serial-derived software calculation, narrowed the payload-check
+> description, and withdrew whole-image retail and impossible-emulation
+> claims. The recovered key and payload bytes are unchanged.
 
 ### 10.1 Provenance and image
 
@@ -1029,9 +1056,10 @@ offline. `tools/cbv10_unpack.py` reproduces the key and the decrypt.
 | Format | ELF32 LE MIPS-III (R5900 `e_flags 0x20924001`), one flat `PT_LOAD` at vaddr `0x1000000` (file `0x1000`), entry `0x1000008`, 9 section headers, no ps2-packer/N2E magic |
 | Layout | plaintext loader `0x1000000`–`0x1012ab0` (entropy ≈5.5); RC4+zlib body after (≈8.0), no readable strings |
 
-Corpus (gitignored): `elf/CBv10.BOOT.ELF`, `elf/CBv10.SYSTEM.CNF`, the decrypted
-image `elf/CBv10.unpacked.bin` (9,370,970 bytes, SHA-256 `9cb83c7f…`), and loader
-decompilation `elf/cbv10-loader-decomp.txt`. The `va→file` map is
+Corpus: `elf/CBv10.BOOT.ELF` and the decrypted `elf/CBv10.unpacked.bin`
+(9,370,970 bytes, SHA-256 `9cb83c7f…`) remain gitignored. The text files
+`elf/CBv10.SYSTEM.CNF` and loader decompilation
+`elf/cbv10-loader-decomp.txt` are tracked. The `va→file` map is
 `off = 0x1000 + (vaddr - 0x1000000)`.
 
 ### 10.2 Tooling
@@ -1076,25 +1104,31 @@ it is XORed with a runtime value (§10.5).
 ### 10.5 Key schedule (`FUN_01000248`): solved
 
 The RC4 key is `stored(0x1010940) ⊕ C`, where `C` is the last of three chained
-SHA-1 hashes. Stock, the schedule binds the key to the disc and the console:
+SHA-1 hashes. The retained key-derivation code supplies two inputs:
 
 * Four `FUN_010009c0(constA, constB)` calls build a 32-byte seed at `0x1010980`
-  with a 10-round EE single-precision float bit-mixer (`madd.s`/`msub.s`, EE
-  COP1 extensions, keeping the low 3 bits of each result — where the EE FPU
-  diverges from IEEE). The first `SHA1` hashes that seed to `A` at `0x1012a88`.
-  The mixer is console-intrinsic: the same `A` on any PS2, but reproducing it
-  off-hardware needs an EE-accurate FPU.
-* `FUN_01000150` does a SIF-RPC to the IOP (`0x8000059x`) and lands the reply —
-  the **disc key** — as `const20` at `0x1010980` (a CDVD read-key call).
-* The one non-obvious schedule detail is **byte order**: the firmware's SHA-1
-  writes its five state words EE-native little-endian, not as the standard
-  big-endian digest, so every hash is byte-swapped per word.
+  with a 10-round EE single-precision float bit-mixer (`madd.s`/`msub.s`, keeping
+  low result bits). The first SHA-1 hashes that seed to `A` at `0x1012a88`.
+  Reproducing the unmodified mixer requires the relevant EE arithmetic
+  results; it has not been independently reproduced here. No console-unique
+  identity input or cycle-accuracy requirement was established.
+* `FUN_01000150` performs a SIF-RPC to the IOP (`0x8000059x`) and supplies a
+  20-byte reply as `const20` at `0x1010980`. In this image the frozen reply is
+  a status word followed by 16 read-key bytes. Applying
+  [PCSX2's `cdvdReadKey` calculation](https://github.com/PCSX2/pcsx2/blob/33127ad0df121e5b831494c389068ed9f9f3ad4b/pcsx2/CDVD/CDVD.cpp#L583-L620)
+  to `SLUS-20202` gives `9369953955000000000000000000bc05`, exactly matching
+  the stub's key bytes. With status 1, the full reply matches all five
+  `const20` words. It is reproducible in software, not an inaccessible secret.
+  Original-console optical authentication remains untested.
+* The firmware's SHA-1 writes its five state words EE-native little-endian,
+  rather than the standard big-endian digest, so every hash is byte-swapped
+  per word.
 
 **This image is cracked** (§10.8): a stub at `0x10060f8` hardcodes *both*
 runtime inputs. It writes `const20` and `A` as literal immediates, so the
-disc-key RPC and the FPU mixer are bypassed and the key is fully static. With
-`le_sha1(x)` = per-word byte-swap of a standard SHA-1 digest, and the stub's two
-blocks (verified in §10.8):
+key no longer depends on the live RPC reply or mixer result and is fully
+static. With `le_sha1(x)` = per-word byte-swap of a standard SHA-1 digest, and
+the stub's two blocks (verified in §10.8):
 
 ```
 const20 = {1, 0x39956993, 0x55, 0, 0x05bc0000}            @ 0x1010980
@@ -1112,20 +1146,20 @@ to `elf/CBv10.unpacked.bin` (9,370,970 bytes, SHA-256 `9cb83c7f…`), which is
 full of plaintext CodeBreaker UI strings — decrypted entirely offline, no
 hardware or PCSX2 run.
 
-### 10.6 Cracked loader, stock payload
+### 10.6 Modified loader, extracted v10 payload
 
 The decrypted image says `VERSION CodeBreaker PS2 V10.0`, credits Pelican
 Accessories and `www.codebreaker.com`, and loads `pelican.bin`, with no
-`PS2TG`/`misfire`/`RSA Patch`/`Anti-Modchip` markers. The **payload** is stock
-retail: its signature path is unmodified (§10.9), and the three words the RAM
-patcher (§10.8) changes are intact on disk — `0x115b14` is `jal 0x1310f8` and
-`0x1142c0` is `jal 0x130e18` (verified). So the decrypted image is a faithful
-stock-v10 reference.
+`PS2TG`/`misfire`/`RSA Patch`/`Anti-Modchip` markers found. Its signature tail
+uses the comparison result (§10.9). The three locations later changed by the
+RAM patcher (§10.8) are intact in the extraction: `0x115b14` is
+`jal 0x1310f8; nop`, and `0x1142c0` is `jal 0x130e18`.
 
-The **loader** that wraps it is cracked: it bypasses the disc/console key
-binding (§10.8). So v10 is the mirror image of v9.2 — there the payload is
-patched (misfire's RSA patch, §8) in the clear; here the payload is stock and
-the crack is in the anti-copy loader around it.
+These observations establish the inspected paths, not whole-image
+unmodified status. No clean reference or authenticated vendor digest was
+compared. Use this as the identified v10 artifact for comparison with v9.2,
+without assuming every other byte or release is stock. The surrounding
+loader's hardcoded inputs and RAM patcher are independently located changes.
 
 ### 10.7 Cross-check on hardware
 
@@ -1137,55 +1171,58 @@ just after key derivation) and read `0x14` bytes at `0x01010940` — it should b
 memcpy targets (`0x1d00000`, …) holding the runtime layout. Not run here; the
 offline unpack already produced the image.
 
-### 10.8 The anti-copy key schedule and the crack
+### 10.8 The key schedule and the located modifications
 
-The v10 loader binds its RC4 key to the disc and the console; this image cracks
-that binding. Stock (§10.5): the EE-FPU bit-mixer (`FUN_010009c0`) produces a
-console-intrinsic `A`, a SIF-RPC (`FUN_01000150`) fetches the disc key
-`const20`, and `key = stored ⊕ le_sha1(A ‖ le_sha1(const20))` with the SHA-1
-state written little-endian. Reproducing it legitimately needs the right disc
-(for `const20`) and an EE-accurate FPU (for `A`).
+The retained schedule mixes the EE arithmetic result `A` and read-key reply
+`const20` as `key = stored ⊕ le_sha1(A ‖ le_sha1(const20))` (§10.5). The supplied
+loader freezes both inputs. The read-key bytes are serial-derived; the
+unmodified FPU computation and original-console authentication behavior have
+not been independently reproduced here.
 
-The crack removes both dependencies. All of this is verified against
-`BOOT.ELF` (loader `va→file = 0x1000 + (va − 0x1000000)`):
+The following modifications are verified against `BOOT.ELF` (loader
+`va→file = 0x1000 + (va − 0x1000000)`):
 
-1. **`sceSifCallRpc` is stubbed.** `0x10060f0` is `jr ra; nop` — the RPC returns
-   at once. The stub right after (`0x10060f8`) hardcodes the two inputs the RPC
-   and the mixer would have produced, writing them as literal immediates
+1. **`sceSifCallRpc` is stubbed.** `0x10060f0` is `jr ra; nop`. The stub right
+   after it (`0x10060f8`) writes the two schedule inputs as literal immediates
    (`lui`/`ori`/`sw`, base `0x1010000`):
    * `const20` → `0x1010980`: `{1, 0x39956993, 0x55, 0, 0x05bc0000}`
    * `A` → `0x1012a88`: `{938ca6bf, e620cc81, 137a84c2, 78ae9796, 889dca10}`
 
-   Both buffers are zero in the file, so these constants are the entire key
-   input. That is why the key is static and the unpack runs offline — no disc,
-   no FPU fidelity needed.
-2. **A RAM patcher skips a later disc-key check.** The unpack driver exits via
-   `0x10004c0` (`lui at,0x10; j 0x1006168`) into a patcher at `0x1006168`. It
-   overwrites three words of the just-inflated main image —
-   `0x115b14 ← sw zero,-0x5e98(s0)` and `0x115b18 ← b 0x115b34`
-   (was `jal 0x1310f8; nop`), and `0x1142c0 ← nop` (was `jal 0x130e18`) — then
-   `jr 0x100000` into the patched image. The patches pre-clear the flag the
-   check reads and branch past it. They apply in RAM only: the on-disk decrypted
-   image still holds the original `jal`s (§10.6), and all three words sit outside
-   the code-crypto and signature paths, so §10.9 and §11 read stock behaviour.
+   Both buffers are zero in the file. The writes make the key independent of
+   live results, which is why the unpack can run offline with the same key.
+2. **A RAM patcher changes payload initialization.** The unpack driver exits
+   through `0x10004c0` (`lui at,0x10; j 0x1006168`) into a patcher at
+   `0x1006168`. It overwrites three words of the inflated payload:
+   `0x115b14 ← sw zero,-0x5e98(s0)`, `0x115b18 ← b 0x115b34`
+   (originally `jal 0x1310f8; nop`), and `0x1142c0 ← nop`
+   (originally `jal 0x130e18`), then jumps to `0x100000`.
 
-The little-endian SHA-1 (§10.5) is a genuine schedule detail, not part of the
-crack — it is just what made an offline reconstruction silently wrong until
-noticed. The tooling gap sharpened the misdirection: Ghidra, rizin and llvm
-can't decode the EE COP1/MMI ops, so the FPU mixer reads as an opaque wall.
+   The first two writes clear failure state `0x9ea168` and skip both the
+   serial check at `0x1310f8` and a separate result check at `0x131050`, called
+   at `0x115b30`. The former decodes a read-key reply and checks `SLUS` and
+   decimal `20202`, then opens `SYSTEM.CNF`; the latter tests a byte of another
+   RPC result against `0x20`. Failure handling at `0x114a50` marks error flags;
+   it does not itself halt. The third write removes a function-4 call to
+   custom RPC server `0xfa6a007e`. Its server-side meaning remains unresolved,
+   and the caller at `0x1142c0` does not test its return value.
 
-> The 2026-10-28 first pass mis-read the mixer and the RPC as decoys whose
-> outputs are discarded. They are the real anti-copy inputs; the crack *freezes*
-> their outputs, which looks the same statically — a constant lands in the key
-> slot — but means the opposite.
+The writes apply in RAM only; the extraction still contains those original
+calls (§10.6). All three sites lie outside the inspected code-crypto and
+signature functions. This permits comparison of those functions, but does
+not authenticate the whole payload or establish the final boot/failure
+outcome. The little-endian SHA-1 is a schedule detail, not an extra secret.
+
+The 2026-10-28 first pass mistook frozen results for discarded decoys. The
+located modification freezes inputs that the retained schedule actually
+hashes; it does not show those inputs are inherently impossible to emulate.
 
 ### 10.9 Spot check: v10's signature verdict is intact
 
-With v10 decrypted, one comparison is worth making now (the full v9.2 ↔ v10
-diff is for later): does stock v10 enforce the RSA signature that v9.2's crack
-neutered (§8)? Yes. v10's `memcmp` is at `0x144740`, byte-identical to v9.2's
-`FUN_0014611c`, and its RSA verify — the v10 analog of `FUN_00132ed8`, same
-stack frame — ends (base `0x100000`):
+The extracted v10 payload consumes the final signature comparison, unlike
+the inspected v9.2 image (§8). This is a local verifier observation, not proof
+of whole-image retail status or signature-scheme security. v10's `memcmp` is
+at `0x144740`, byte-identical to v9.2's `FUN_0014611c`, and its RSA verify —
+the v10 analog of `FUN_00132ed8`, same stack frame — ends (base `0x100000`):
 
 ```
 0x1316a8  jal   0x144740         ; memcmp(expected, recovered)
@@ -1195,206 +1232,203 @@ stack frame — ends (base `0x100000`):
 0x1316c8  jr    ra
 ```
 
-The verdict is the compare result, and all three `memcmp` callers in v10 consume
-it (the other two branch on it). v9.2's crack is this same instruction,
-lobotomised:
+The verdict is the compare result, and all three `memcmp` callers in v10
+consume it (the other two branch on it). The corresponding v9.2 location
+returns constant success instead:
 
 | | address | instruction | word |
 |---|---|---|---|
-| v10 retail | `0x1316b4` | `sltiu v0, v0, 1` | `2c420001` |
+| inspected v10 | `0x1316b4` | `sltiu v0, v0, 1` | `2c420001` |
 | v9.2 PS2TG | `0x132fec` | `addiu v0, zero, 1` | `24020001` |
 
-A one-word patch (`sltiu`→`addiu`, `2c`→`24`) turns "pass iff the signature
-matches" into "always pass". This confirms the v10 decrypt is faithful and pins
-exactly what misfire's 2008 patch changed. Anchors for the full comparison:
-v10 base `0x100000`, `memcmp` `0x144740`, verify tail `0x1316a8`.
+The full instruction words differ: `0x2c420001` is `sltiu v0,v0,1`, whereas
+`0x24020001` is `addiu v0,zero,1`. Both the opcode and source-register field
+change; changing only `2c` to `24` would give `addiu v0,v0,1`. Replacing the
+whole word is a one-instruction way to turn the comparison verdict into
+constant success. Comparison across these two releases locates that behavior
+and agrees with the v9.2 patch marker, but does not identify the exact
+pre-patch v9.2 word or every historical patch. Anchors: v10 base `0x100000`,
+`memcmp` `0x144740`, verify tail `0x1316a8`.
 
-### 10.10 The whole protection at a glance
+### 10.10 Key reconstruction and RAM patches at a glance
 
-How the stock (uncracked) anti-copy chain is meant to boot. It is a two-factor
-lock: the RC4 key that decrypts the real program is *derived* at boot, never
-stored, and binds to both the genuine disc and the console hardware. A visual
-version of this is `docs/disc-lock.html` (published privately as
-`https://claude.ai/artifact/Hht3YyqSzyNPXyXtbgSuZS`).
+The schedule combines two inputs, but this is not evidence of two inaccessible
+secrets. The supplied image has literal values for both; the read-key bytes
+also match the software calculation described in §10.5. The local visual
+explainer is `docs/disc-lock.html`. The earlier privately published snapshot
+(`https://claude.ai/artifact/Hht3YyqSzyNPXyXtbgSuZS`) may predate these corrections.
 
 ```mermaid
 flowchart TD
-    CNF["SYSTEM.CNF → BOOT.ELF;1"] --> ELF["BOOT.ELF = plaintext loader<br/>+ RC4-over-zlib body (the real image)"]
-
-    subgraph F1["Factor 1 — console (can't emulate)"]
-      FPU["EE FPU float bit-mixer<br/>FUN_010009c0 · madd.s/msub.s<br/>keeps low 3 bits (non-IEEE)"] --> A["A — console-intrinsic value<br/>(needs an EE-accurate FPU)"]
-    end
-
-    subgraph F2["Factor 2 — disc (can't copy)"]
-      RPC["SIF-RPC to IOP<br/>FUN_01000150 · CDVD read-key"] --> C20["const20 — the disc key<br/>(only a genuine disc returns it)"]
-    end
-
-    subgraph KS["Key schedule — FUN_01000248 (SHA-1 state stored little-endian)"]
-      B["B = le_sha1(const20)"]
-      C["C = le_sha1(A ‖ B)"]
-      KEY["key = stored(0x1010940) ⊕ C"]
-      C20 --> B --> C
-      A --> C --> KEY
-    end
-
+    CNF["SYSTEM.CNF → BOOT.ELF;1"] --> ELF["Plaintext loader + RC4-over-zlib body"]
+    STUB["Literal-input stub @0x10060f8"] --> A["A — frozen EE mixer result"]
+    STUB --> C20["const20 — status + 16 read-key bytes<br/>matches SLUS-20202 calculation"]
+    C20 --> B["B = le_sha1(const20)"]
+    A --> C["C = le_sha1(A ‖ B)"]
+    B --> C
+    C --> KEY["key = stored(0x1010940) ⊕ C"]
     KEY --> RC4["RC4-decrypt body — FUN_010000e0"]
     ELF --> RC4
-    RC4 --> GATE1{"zlib inflate to 0x100000<br/>FUN_01000a58"}
-    GATE1 -->|valid stream| JMP["jr 0x100000 — payload runs"]
-    GATE1 -->|garbage| DEAD["no boot"]
-    JMP --> GATE2{"in-payload disc-key re-check<br/>jal @0x115b14 / @0x1142c0"}
-    GATE2 -->|pass| RUN["CodeBreaker v10 runs"]
-    GATE2 -->|fail| DEAD
-
-    BADDISC["copied disc → wrong const20"] -.-> KEY
-    BADHW["emulator/other HW → wrong A"] -.-> KEY
-    KEY -.wrong key.-> GATE1
+    RC4 --> INF["zlib inflate to 0x100000 — FUN_01000a58"]
+    INF --> PATCH["RAM patcher @0x1006168<br/>skips serial/result checks and removes RPC4 call"]
+    PATCH --> JMP["Jump to 0x100000"]
+    JMP --> UNKNOWN["Final boot behavior not tested here"]
 ```
 
-**Why it defeats a copy.** The payload is *encrypted*, and the only key is a
-function of `A` (console) and `const20` (disc). A plain data copy of the disc
-can't reproduce the authentication disc key, so `const20` is wrong → `C` wrong →
-key wrong → the RC4 output isn't a valid zlib stream → inflate yields garbage →
-nothing to jump to. Same if `A` is wrong (ran without an EE-accurate FPU). Even
-past that, the inflated payload re-checks the disc key at runtime (gate 2).
+The recovered key is `29f32f09 0c66b07d c5b12c51 695e432e b1d8ea10`, and the
+body decrypts and inflates offline. A wrong key normally produces unusable
+compressed data, but that alone does not establish copy protection or a
+particular failure path. The unmodified mixer, optical-media authentication,
+IOP service semantics, and final boot behavior remain separate questions.
 
-**Three walls for a static attacker**, all needed at once: no `A` (needs real
-FPU), no `const20` (needs the disc), and the `le_sha1` little-endian-state twist
-silently breaks a naïve SHA-1 reconstruction even with both inputs guessed.
-
-**How this image defeats it** (the crack cuts every wire above, §10.8) — which
-is why `tools/cbv10_unpack.py` runs fully offline:
-
-```diff
-  Factor 1 (console): FPU mixer → A
-- A computed from the live EE FPU
-+ stub @0x10060f8 writes A = {938ca6bf,e620cc81,137a84c2,78ae9796,889dca10} as literal immediates
-
-  Factor 2 (disc): SIF-RPC → const20
-- sceSifCallRpc fetches the disc key
-+ 0x10060f0 = `jr ra; nop` (RPC stubbed); stub hardcodes const20 = {1,0x39956993,0x55,0,0x05bc0000}
-
-  Gate 2 (in-payload re-check): jal @0x115b14 / @0x1142c0
-+ RAM patcher @0x1006168 pre-clears the flag and branches past both checks, then jr 0x100000
-```
-
-Net: the key collapses to the constant `29f32f09 0c66b07d c5b12c51 695e432e
-b1d8ea10`, so the body decrypts and inflates with no disc and no hardware. This
-is the mirror of v9.2: there the payload is patched in the clear and the loader
-is stock; here the loader is cracked and the payload is stock retail (its RSA
-signature check still intact, §10.9).
-
+The RAM writes in §10.8 have three distinct effects: clear failure state and
+branch past the serial/result checks, remove a separate custom RPC call, and
+then enter the payload. The inspected v10 signature tail still uses its
+comparison result; that limited observation should not be expanded into a
+claim that the extracted payload is wholly untouched retail firmware.
 
 ## 11. v10 vs v9.2: the full code-crypto diff (2026-10-29)
 
-§8 assumed one version's code crypto carried to the others. The stock v10
-payload (§10) lets us check: every function in the per-line decrypt call tree
-was diffed against v9.2, relocation-normalized, and verified against both
-images. The result — the crypto primitives are byte-identical; only four V7
-state-machine functions changed, all pushing the same way.
+The extracted v10 payload (§10) permits an artifact-to-artifact comparison
+with the modified v9.2 image. The inspected code-crypto primitive layer
+matches modulo verified relocations, while four V7 state-machine functions
+differ. This result applies to these identified images; v7/v8 images and
+whole-image retail provenance remain unverified.
 
 ### 11.1 Method
 
-`tools/cbcrypt_diff.py` decodes each function in both images and compares them
-after removing relocations: call targets map to role names; `lui` high halves
-and global addresses are masked, but a struct resolves to the *same* name in
-both images, so a different offset (e.g. `key+0x10` vs `key+0x14`) still shows
-as a diff; registers, constants, branch displacements and pointer-struct
-offsets stay literal. Where two functions normalize equal it also checks that
-every position differs at the raw-word level only in a relocation field, so
-masking cannot hide a change. v9.2 maps `va→file = va−0x100000+0x1000`; v10 is
-raw at base `0x100000`.
+`tools/cbcrypt_diff.py` compares explicitly bounded function ranges and
+normalizes call/data addresses only through verified mappings. Unknown
+addresses retain their identity and unresolved mappings cannot justify an
+“identical” verdict. Function ends are supplied from the inspected ranges,
+not guessed from the first return instruction. The earlier implementation
+could hide changed targets and truncate memcpy (§12, F2).
+
+The script is a static comparison aid, not proof of behavioral equivalence.
+For the complete 896-word bignum core, an independent raw-word check found
+only call-target changes: internal targets move by `−0x1938`, and external
+calls map to the identified primitive counterparts. The full 106-word memcpy
+span is byte-identical. v9.2 uses `va→file = va−0x100000+0x1000`; v10 is raw at
+base `0x100000`.
 
 ```
 cd research && python3 -I tools/cbcrypt_diff.py
 ```
 
+The default status is 1 when functions differ and 2 for invalid input.
+`--allow-differences` permits a version survey containing changed functions,
+but cannot turn an unresolved equality into success. It does not assert that
+the changed functions are expected or behaviorally equivalent. The identified
+images report 12 identical ranges, four changed functions, and no unresolved
+equalities; the details remain in the printed listing.
+
 The static diff is cross-checked by emulation. `tools/ghidra/EmuP.java` is
 `Emu.java` with a per-image address table (`v92`/`v10` argument), so the real
 v10 functions run on real inputs; `tools/fwmodel10.py` is an executable v10
-model, written as a diff-subclass of `fwmodel.py` (the four §11.3 changes as
-code). `tools/emudiff10.py` compares the v10 emulation with the crate and the
-model; `tools/cmpout.py` compares the two images' emulations line by line; and
+model, written as a diff-subclass of `fwmodel.py` (the changed functions in
+§11.3 as code). `tools/emudiff10.py` compares the v10 emulation with the crate
+and model; `tools/cmpout.py` compares the two images' emulations line by line;
 `tools/attrib.py` puts each change behind a flag and confirms all flags off
-reproduces the v9.2 emulation and all on reproduces v10 (so the four changes
-are jointly sufficient and each is necessary). `tools/runemu.sh` drives the
-headless runs, `tools/wrap.py` makes the Ghidra-loadable v10 ELF from the raw
-`.bin`.
+reproduces the v9.2 emulation and all on reproduces v10. Its five flags
+separate reset/init behavior, non-init rekey derivation, outer reinitialization,
+forced-line handling, and the misplaced key word. The attribution applies to
+the checked corpora, not every possible state history. `tools/runemu.sh`
+drives the headless runs, and `tools/wrap.py` makes the Ghidra-loadable v10
+ELF from the raw `.bin`.
 
 ### 11.2 Verdict
 
 | Function | v9.2 | v10 | insns | Verdict |
 |---|---|---|---|---|
 | `num_code_lines` | `0x1033c0` | `0x104470` | 20 | identical (reloc) |
-| V1 decrypt | `0x103410` | `0x1044c0` | 52 | identical |
-| `mod_inverse` | `0x1034e0` | `0x104590` | 40 | identical |
-| `mul_decrypt` | `0x103580` | `0x104630` | 12 | identical |
+| V1 decrypt | `0x103410` | `0x1044c0` | 51 | identical |
+| `mod_inverse` | `0x1034e0` | `0x104590` | 39 | identical |
+| `mul_decrypt` | `0x103580` | `0x104630` | 11 | identical |
 | RC4 init / crypt | `0x132c98` / `0x132d30` | `0x131360` / `0x1313f8` | 37 / 33 | identical |
 | bignum / RSA core | `0x133220`–`0x134020` | `0x1318e8`–`0x1326e8` | 896 | identical |
 | RSA modpow wrapper | `0x134020` | `0x1326e8` | 9 | identical |
-| memcpy / memset | `0x1461b0` / `0x146358` | `0x1447d4` / `0x14497c` | 43 / 43 | identical |
+| memcpy / memset | `0x1461b0` / `0x146358` | `0x1447d4` / `0x14497c` | 106 / 43 | identical |
 | `__udivdi3` / `__umoddi3` | `0x14cbd8` / `0x14d1a8` | `0x14b230` / `0x14b800` | 372 / 336 | identical |
-| **reset** | `0x104548` | `0x1052a8` | 5 → 36 | **changed** |
-| **rekey** | `0x1035b0` | `0x104660` | 620 → 440 | **changed** |
+| **reset** | `0x104548` | `0x1052a8` | 5 → 33 | **changed** |
+| **rekey** | `0x1035b0` | `0x104660` | 620 → 439 | **changed** |
 | **V7 decrypt** | `0x103f60` | `0x104d40` | 212 | **changed (1 insn)** |
-| **auto decrypt** | `0x1042b0` | `0x105090` | 166 → 134 | **changed** |
+| **auto decrypt** | `0x1042b0` | `0x105090` | 165 → 133 | **changed** |
+
+Counts exclude alignment padding after the final return/tail-jump delay slot.
+The bignum row is the complete aggregate code range, not a single function.
 
 The whole crypto primitive layer — V1, RC4, the bignum/RSA core (including the
-§9.4 reduction bug, byte-identical, so **v10 has the same RSA bug**),
+§9.4 reduction defect, so **v10 has the same RSA bug**),
 inverse/multiply, memcpy/memset and the libgcc division — is identical modulo
 relocation. Only the four V7 state functions changed.
 
-### 11.3 The four changes
+### 11.3 The four changed functions
 
 **V7 decrypt (`0x104d40`): one instruction.** The 212-instruction body is
 identical except the key-from-line store: v9.2 `sw v0,0x10(s3)` (`0x10427c`,
 `key[4]`) vs v10 `sw v0,0x14(s3)` (`0x10505c`, `beefcodf`), both after the same
 `(a−v)^kc4`. (The diff also flags the `opt` read at `0x104218`/`0x104ff8`, but
-both reach `opt`; that one is a relocation, not a change.) So a bit-17 key line
-sets `beefcodf` in v10, and the next V7 line becomes a `BEEFC0DF` extra-seed
-line.
+both reach `opt`; that one is a relocation, not a change.) A bit-17 key line
+stores the derived word into `beefcodf` in v10. If it is nonzero, the next V7
+line is taken as a `BEEFC0DF` extra-seed line; zero leaves that behavior unarmed.
 
 **reset (`0x1052a8`): zeroes the default seeds.** v9.2 clears the mode word and
 `code_lines` in 5 instructions. v10 adds a stack frame and five
 `memset(defV7seeds + 0x100·i, 0, 256)` calls (i=0..4), zeroing the default V7
 seed table on every list.
 
-**rekey (`0x104660`): init ignores `val`.** Recompiled (620 → 440 insns: v9.2
+**rekey (`0x104660`): init ignores `val`.** Recompiled (620 → 439 insns: v9.2
 emits per-table aligned+unaligned `ldl/ldr/swl/swr` seed copies — the dead
 unaligned paths of §9.8 — where v10 uses tighter `ld/sd` loops). The behaviour
 change: v10's `init≠0` path overwrites `a1` (the `val` argument) with the
-default-seed pointer at `0x104698` and copies from there, equal to v9.2's
-`rekey(1, 0)` for any `val`. With reset zeroing those defaults, a fresh beefcode
-starts from zeroed seeds.
+default-seed pointer at `0x104698` and copies from there. After reset zeroes
+those defaults, the initialized state equals v9.2's `rekey(1, 0)` for any
+`val`: a fresh beefcode starts from zeroed seeds.
 
-**auto decrypt (`0x105090`): no options, always rekey(1).** 166 → 134 insns (the
-option handling is gone). The V7 test is mode-bit-16 only — no `opt==2` force
-(`movz`), no `if (opt==2) { opt=0; return; }` — and the outer beefcode always
-does `mode|=V7; rekey(1,val)` (`li a0,1` at `0x105254`), where v9.2 does
+The non-init path also changed: `rekey(0,val)` derives key byte `j` from seed
+index `(val + j) & 255`, instead of byte `j` of `val`, and no longer clears
+seeds for `val == 0`. This is visible at `0x104a98` onward and implemented in
+`fwmodel10.py`. The outer reinitialization normally overwrites this
+intermediate work, but it is a real function-level difference (direct-call
+vectors are in §12, F4).
+
+**auto decrypt (`0x105090`): no forced V7 line, always rekey(1).** The V7 test
+uses mode bit 16 only: no `opt==2` force (`movz`) and no
+`if (opt==2) { opt=0; return; }`. The outer beefcode always does
+`mode|=V7; rekey(1,val)` (`li a0,1` at `0x105254`), where v9.2 uses
 `rekey(0,val)` when V7 is already on.
+
+The remaining option handling is retained: `FFFFFFFF` recognition, mode/count
+storage, restoration of the saved mode, bit-17 state, and the key-from-line
+path. See `0x1051a8–0x1051f4` and `0x105204–0x105228`. For example,
+`FFFFFFFF 00000001` still turns V7 off until one counted decrypted line
+restores it (§12, F4).
 
 ### 11.4 Net effect and consequence
 
-* Every beefcode reinitialises to the default state (zeroed seeds, default key,
-  5 RC4 rounds, `opt=0`, `code_lines=1`). `BEEFC0DE vvvvvvvv` behaves like
+* Every decrypted beefcode reaching the outer beefcode check reinitialises
+  to the default state (zeroed seeds, default key, 5 RC4 rounds, `opt=0`,
+  `code_lines=1`). `BEEFC0DE vvvvvvvv` behaves like
   `BEEFC0DE 00000000` — the value is ignored — and a second beefcode resets
   rather than rekeying twice.
 * The line-derived word from a bit-17 key line lands in `beefcodf`, not
-  `key[4]`; the next V7 line is then taken as a `BEEFC0DF` extra-seed line.
+  `key[4]`; if nonzero, it makes the next V7 line an extra-seed line. Options
+  remain recognized, but their forced-line behavior differs as described above.
 * V1 decrypt, line counting, `BEEFC0DF`'s extra line and the RSA bug (§9.4) are
   unchanged.
 
-So `main` (which matches v9.2, §9.2) decrypts and encrypts differently from v10
-for any list with a beefcode carrying a non-zero value, a second beefcode, a
-code count reaching zero on a beefcode, or bit-17 options. Lists with a single
-default `BEEFC0DE 00000000` are identical on both — which covers the official
-cb2util fixtures, where `main` already matches the device. An emulation sweep
-over both images (the 2026-10-29 re-review, a per-image address table over
-`Emu.java`) quantified it: of 120 plain lists re-encrypted for v10, 87 fail to
-round-trip under the v9.2-shaped `main`, while the cb2util game fixtures (50 of
-53; the 3 are synthetic `beef.enc` tests) are unaffected. Those counts are the
-re-review's emulation; the per-function diff above is verified here with
-`tools/cbcrypt_diff.py`.
+The crate follows the v9.2 state machine, with its intentional RSA/bit-17
+differences (§9.2). Sequences with nonzero or repeated beefcodes, counting that
+reaches zero on a beefcode, or bit-17 options can therefore differ from v10.
+A single default initial `BEEFC0DE 00000000`, followed by lines that do not
+exercise differing transitions, reaches the same state on both images.
+
+The 2026-10-29 emulation sweep reported that 87 of 120 plaintext lists
+re-encrypted for v10 fail to round-trip under the v9.2-shaped crate. The
+cb2util fixture sweep agrees on 50 of 53 lists; the remaining three are
+synthetic `beef.enc` tests. These are corpus results, not a guarantee over all
+published codes or firmware releases. §12 records the independent re-review
+of the models, selected firmware vectors, and the raw primitive-core check.
 
 The list→engine converter (`0x102e38` / `0x1034c8`) also changed, but it is
 engine-side formatting, not crypto, and `src/` returns beefcodes to the caller
@@ -1402,25 +1436,23 @@ instead (§6.7). `src/` targets v9.2 and the device as decompiled; no v10 suppor
 is proposed. This is recorded so a future "support v10" task starts from the
 right diff.
 
-### 11.5 Compatibility: why no shipped code breaks
+### 11.5 Compatibility on the checked corpus
 
-If v9.2 and v10 decrypt the same list differently, how did every v7+ device run
-the same published codes? Because the divergence is gated to beefcode shapes
-that distributed codes never used. A list with a single default
-`BEEFC0DE 00000000` at the top (or no beefcode) takes the identical path on both
-images: the value is 0, so v9.2's `rekey(0/1, 0)` and v10's "ignore val, copy
-zeroed defaults" land on the same key schedule, and every following line
-decrypts bit-for-bit the same. That is what CMGSCCC and the scene shipped. The
-divergence needs one of: a beefcode carrying a **non-zero value**, a **second**
-beefcode in the list, a code count reaching **zero on a beefcode**, or **bit-17**
-options — all engine features nobody authored codes for. v10 did not add
-behaviour; it *removed* the value handling (every beefcode hard-resets to the
-default state), which was safe precisely because that path was dead.
+`tools/fixdiff.py <cb2util code lists>` runs both firmware models over a code
+corpus and reports differing games and the relevant beefcode/option forms.
+On the checked cb2util fixtures (`593ea25`), it compares 53 lists and 6,234
+lines. The 50 game lists agree; three synthetic `beef.enc` lists differ on
+11 lines. The game lists do not exercise the nonzero/repeated beefcode or
+option paths responsible for the observed version differences. This does not
+establish that no distributed code ever used those paths.
 
-Reproduce with the committed tools (`tools/compat_demo.py`, run from
-`research/`): a plain `BEEFC0DE 00000000` list decrypts identically on both
-models, while `BEEFC0DE 0000002A` and a repeated `BEEFC0DE 0` diverge from the
-first code line after the offending beefcode:
+There is also a conditional equivalence argument: with the same starting
+state, one default initial beefcode, and no later differing state transition,
+the matched primitives produce the same subsequent outputs. A single default
+beefcode alone is not sufficient when later option handling differs. The
+crate's deliberate RSA and bit-17 departures remain separate limitations.
+
+Reproduce the small examples with `tools/compat_demo.py` from `research/`:
 
 ```
 plain   BEEFC0DE 00000000: v9.2==v10 ? True
@@ -1428,21 +1460,20 @@ value   BEEFC0DE 0000002A: v9.2==v10 ? False   (line 1 on: 01234567 -> 2E432A2B 
 second  BEEFC0DE 0 .. BEEFC0DE 0: v9.2==v10 ? False  (lines after the 2nd beefcode)
 ```
 
-`tools/fixdiff.py <cb2util code lists>` runs both models over a real code corpus
-and reports the games that differ plus how often a non-zero/repeated beefcode or
-a bit-17 line even occurs; on the cb2util game fixtures it finds none (the only
-`beef.enc` differences are the 3 synthetic tests, §11.4). `tools/attrib.py`
-attributes each divergent fuzz list to the specific change. So `src/`, which
-matches v9.2 (§9.2), also matches v10 on every list a published code can be —
-the incompatibility is real but confined to the subset no one used.
+The nonzero and repeated-beefcode examples demonstrate incompatibility;
+`tools/attrib.py` attributes divergent checked fuzz lists to individual state
+changes. Together these explain the matching fixture result without extending
+it to every published code or every v7+ device.
+
 
 
 ## 12. Review of all findings (2026-10-30)
 
-Reviewed `research/` and its claims against the local binaries and `src/` at
-`2e6c9d4` (`research`). This is a report only. No implementation or existing
-research tool was changed. This section records the review; earlier sections
-remain as written. Line references below refer to the reviewed commit.
+This section preserves the review of `research/` and `src/` at `2e6c9d4`
+(`research`). The review itself changed no implementation or existing research
+tool. Its line references and quoted claims below refer to that reviewed
+commit, not the corrected text now in §§1–11. Follow-up changes and remaining
+unknowns are recorded in §12.5.
 Supporting text, logs, source snapshots, and the new rekey probe are checked in
 under `elf/review/`; the REA bundle is `elf/review-rea-v92.json`. Firmware ELF
 and BIN images remain untracked.
@@ -1814,3 +1845,75 @@ model-only fixture checks. No hardware or PCSX2 execution was performed. No
 clean retail reference was acquired, no full IOP service investigation was
 completed, and no signature-forgery analysis was performed. Those are explicit
 remaining unknowns, not reasons to discard the narrower confirmed results.
+
+### 12.5 Follow-up corrections (2026-10-30)
+
+The findings above describe the reviewed snapshot. The affected explanations
+in §§1–11 have now been corrected in place, so readers need not reconstruct
+current conclusions from a later warning alone. `main` was merged into
+`research` in `9272a61`; this includes the public documentation corrections
+and exact RSA boundary assertion (`0bb7c11`).
+
+| Finding | Follow-up | Remaining boundary |
+|---|---|---|
+| F1: inaccessible inputs | §§10.5,10.8,10.10 and the disc-lock page describe the status/read-key reply and its matching serial calculation. The FPU claim is narrowed to required arithmetic results. | Unmodified mixer reproduction and original-console optical authentication remain untested. |
+| F2: masked changes and guessed ends | The normalizer retains unknown address identity, validates mapped coordinates, and uses verified explicit ranges. §11.1 and the instruction counts in §11.2 reflect this. | Static equality is not behavioral equivalence; unsupported mappings remain explicit. |
+| F3: incomplete comparisons and status 0 | Comparison tools reject incomplete/duplicate input and distinguish agreement, differences, and invalid input. Reviewed differences require an exact input-bound baseline; model and plaintext failures cannot be waived. | Expected differences authorize only the recorded inputs and records, not a class of future failures. |
+| F4: v10 option/rekey summary | §§11.3–11.5 retain option recognition, describe the removed force/early-return paths and changed non-init derivation, and condition extra-seed behavior on a nonzero flag. | The model and checked vectors do not exhaust every possible state history. |
+| F5: provenance and attribution | §§8–10 distinguish inspected paths from whole-image authenticity. The CBC default difference is recorded without claiming a located Day1 patch. | Retail provenance and historical attribution remain unestablished. |
+| F6: universal compatibility | §11.5 reports 50 matching game lists out of the 53-list, 6,234-line fixture corpus, with conditional equivalence and explicit counterexamples. | Usage outside that corpus and v7/v8 firmware behavior remain unknown. |
+| F7: boot-gate conflation | §§10.8–10.10 and the visual page separate serial/result checks from the custom function-4 RPC, and distinguish error flags from a halt. | IOP service meaning and final boot/failure outcomes remain unresolved. |
+| F8: signature security assurance | §9.4 withdraws the unforgeability conclusion and limits the result to the demonstrated arithmetic defect. | No forgery was demonstrated and no full verifier security analysis was performed. |
+
+The smaller corrections are also applied: §§5–6 identify the historical
+pre-fix behavior, §9.1 distinguishes selected crate state from logged model
+state, §9.4 calls the bad-range checks samples rather than an exhaustive
+sweep, and §§8/10.9 use the full differing instruction words. The standalone
+comparison prompt was removed in `5c37fb7`; its corrected methodology is
+retained near the start of this document.
+
+New tool regressions, comparison baselines, and verification outputs belong
+under `elf/followup-2026-10-30/`. They are separate from the original
+`elf/emu/` and `elf/review/` evidence, whose bytes and recorded identities are
+preserved. A baseline records reviewed expected differences; generating one
+is not itself evidence that a discrepancy is understood or acceptable.
+
+The implementation commits are `93d03f1` (strict comparisons and exact
+baselines), `281ee64` (validated relocation mappings and complete ranges),
+`16530be` (selected-state records on every line), and `8259a17` (typed JSON
+records, valid crate flags, and protection against hardlinked output targets).
+`3c0735b` corrects the disc-lock page and model/unpacker comments. The 33
+synthetic tool regressions pass without requiring any firmware images:
+
+```
+python3 -m unittest discover -s research/tools/tests -v
+```
+
+The follow-up replay uses the crate after merging `main`, and the original
+firmware observations. It does not claim a new hardware or emulator run:
+
+| Replay | Result | Evidence under `elf/followup-2026-10-30/` |
+|---|---|---|
+| v9.2 `report` | 13 lists, 82 lines; five lists with the known option/RSA output differences; zero model mismatches. Strict status 1, exact expected baseline status 0. | `report-check.txt`, `report.crate`, `report.expected.json` |
+| v10 selected cases | Eight lists, 46 lines; differences confined to nonzero/repeated beefcodes and bit-17 cases; zero model mismatches. Strict status 1, exact expected baseline status 0. | `v10-cases-check.txt`, `v10-cases.crate`, `v10-cases.expected.json` |
+| v9.2 `targeted` | 393 lists, 3,221 lines; 40 lists with output differences and two additional selected-state-only lists. All differences are on bit-17 or RSA paths. Of 129 primitive calls, two RSA results differ from exact math. Zero model mismatches. | `targeted-check.txt`, `targeted.crate`, `targeted.expected.json` |
+| v9.2 `optfuzz16` | 100 lists, 3,378 lines; zero output, selected-state, or model differences. Status 0 without an expectation file. | `optfuzz16-check.txt`, `optfuzz16.crate` |
+| Normalizer | 12 identical, four changed, zero unresolved equalities. Both real in-memory call-target mutations now report changed. | `normalizer-status.txt`, `normalizer-diff.txt`, `normalizer-mutation-probes.txt`, `normalizer-extents-and-tables.txt` |
+| Disc page | At 1280px and 390px: no horizontal overflow, five sections, working theme toggle, no JavaScript exceptions. CSS properties and JavaScript are unchanged. | `disc-page-checks.json` |
+
+The stricter parser also revealed duplicate `cmd3-flip-b22` headers in the
+archived `targeted` files. Those originals remain unchanged. The replay uses
+`targeted-input.txt` and `targeted-firmware.out`, with occurrence suffixes
+applied consistently to duplicate headers only. All other rows are identical
+to their sources; `targeted-labels.json` records the renaming.
+
+For example, from `research/`, the reviewed report baseline is checked with:
+
+```
+python3 -I tools/emudiff.py elf/CBv92.unpacked.elf elf/review/v92/report.out \
+  elf/followup-2026-10-30/report.crate \
+  --expected elf/followup-2026-10-30/report.expected.json
+```
+
+`tool-regressions.txt` records the test results. `manifest.json` records
+source and output hashes so the replay inputs and tool versions are explicit.
