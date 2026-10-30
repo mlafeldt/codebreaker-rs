@@ -1,0 +1,4 @@
+cheats/beef.enc: "Test 6: v7 encrypted (2)" lines=4 differ=3 first=E65B5422 B12543CF: v9.2 9029BEAC 0C0A9225 v10 9F94770C BD360F6C
+cheats/beef.enc: "Test 7: v7 encrypted (3)" lines=5 differ=4 first=862316AB C59C5FB1: v9.2 01234567 89ABCDEF v10 E6EF1FD6 F02B2D12
+cheats/beef.enc: "Test 8: v7 encrypted (4)" lines=6 differ=4 first=2195D855 63FA11A7: v9.2 01234567 89ABCDEF v10 F0B7A417 090DCAA6
+53 games, 6234 lines; 3 games / 11 lines differ v9.2 vs v10; {'beef_nonzero': 3, 'beefcodf': 2, 'beef_in_v7': 1, 'opt': 0}

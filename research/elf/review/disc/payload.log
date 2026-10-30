@@ -1,0 +1,378 @@
+openjdk version "24" 2025-03-18
+OpenJDK Runtime Environment Temurin-24+36 (build 24+36)
+OpenJDK 64-Bit Server VM Temurin-24+36 (build 24+36, mixed mode)
+INFO  Using log config file: jar:file:/opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Framework/Generic/lib/Generic.jar!/generic.log4j.xml (LoggingInitialization)  
+INFO  Using log file: /Users/mathias/Library/ghidra/ghidra_12.1.4_PUBLIC/application.log (LoggingInitialization)  
+INFO  Loading user preferences: /Users/mathias/Library/ghidra/ghidra_12.1.4_PUBLIC/preferences (Preferences)  
+INFO  Loading previous preferences: /Users/mathias/Library/ghidra/ghidra_12.2_PUBLIC/preferences (Preferences)  
+INFO  Searching for classes... (ClassSearcher)  
+INFO  Class search complete (775 ms) (ClassSearcher)  
+INFO  Initializing SSL Context (DefaultSSLContextInitializer)  
+INFO  Initializing Random Number Generator... (SecureRandomFactory)  
+INFO  Random Number Generator initialization complete: NativePRNGNonBlocking (SecureRandomFactory)  
+INFO  Trust manager disabled, cacerts have not been set (DefaultTrustManagerFactory)  
+INFO  Headless startup complete (1716 ms) (AnalyzeHeadless)  
+INFO  Class searcher loaded 59 extension points (20 false positives) (ClassSearcher)  
+WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
+WARNING: sun.misc.Unsafe::staticFieldOffset has been called by org.apache.felix.framework.util.SecureAction (file:/opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Features/Base/lib/org.apache.felix.framework-7.0.5.jar)
+WARNING: Please consider reporting this to the maintainers of class org.apache.felix.framework.util.SecureAction
+WARNING: sun.misc.Unsafe::staticFieldOffset will be removed in a future release
+INFO  HEADLESS Script Paths:
+    /opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Features/GnuDemangler/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Processors/JVM/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Processors/PIC/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Features/PyGhidra/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Debug/Debugger/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Features/WildcardAssembler/ghidra_scripts
+    /tmp/codebreaker-disc-review/scripts
+    /opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Features/PDB/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Features/MicrosoftCodeAnalyzer/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Debug/Debugger-rmi-trace/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Features/VersionTracking/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Features/FunctionID/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Features/BytePatterns/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Features/DecompilerDependent/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Features/BSim/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Features/SwiftDemangler/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Features/Decompiler/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Features/SystemEmulation/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Processors/DATA/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Features/Base/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Features/FileFormats/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Processors/8051/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Processors/Atmel/ghidra_scripts (HeadlessAnalyzer)  
+INFO  HEADLESS: execution starts (HeadlessAnalyzer)  
+INFO  Opening existing project: /tmp/codebreaker-disc-review/project/v10 (HeadlessAnalyzer)  
+INFO  Opening project: /tmp/codebreaker-disc-review/project/v10 (HeadlessProject)  
+INFO  REPORT: Processing read-only project file: /v10.elf (HeadlessAnalyzer)  
+INFO  REPORT: Execute script: DecompAt.java '0x115af0' '0x1142c0' '0x1310f8' '0x130e18' '0x1316b4'  (HeadlessAnalyzer)  
+INFO  SCRIPT: /tmp/codebreaker-disc-review/scripts/DecompAt.java (HeadlessAnalyzer)  
+INFO  DecompAt.java> ===== 0x115af0 in FUN_00115a48 @ 00115a48 ===== (GhidraScript)  
+INFO  DecompAt.java> callers: 00114154(FUN_001140a0) (GhidraScript)  
+INFO  DecompAt.java> 
+void FUN_00115a48(void)
+
+{
+  int iVar1;
+  longlong lVar2;
+  undefined8 uVar3;
+  
+  FUN_00135728(0);
+  FUN_00134e80(0);
+  FUN_00135728(0);
+  FUN_00134728(s_rom0_SIO2MAN_009ed4b0,0,0);
+  FUN_00134728(s_rom0_PADMAN_009ed4c0,0,0);
+  FUN_00134728(s_rom0_MCMAN_009ed4d0,0,0);
+  FUN_00134728(s_rom0_MCSERV_009ed4e0,0,0);
+  FUN_00134728(s_rom0_CDVDFSV_009ed4f0,0,0);
+  FUN_0011b8f8(0);
+  FUN_0011bb88();
+  FUN_001218c8();
+  FUN_0011ba68(0);
+  FUN_00130ef8();
+  if (DAT_009ea168 != 0) {
+    FUN_00114a50(3);
+  }
+  FUN_001310f8();
+  if (DAT_009ea168 != 0) {
+    FUN_00114a50(4);
+  }
+  FUN_00131050();
+  if (DAT_009ea168 != 0) {
+    FUN_00114a50(5);
+  }
+  FUN_00116250(s_USBDRV_BIN_009ed500,&DAT_008320c0,DAT_0083736c);
+  DAT_007716ac = 0;
+  DAT_007716b0 = 0;
+  FUN_00130f28(&DAT_00867bc0,DAT_00869a8c);
+  lVar2 = FUN_00130f28(&DAT_00869ac0,0x27ad);
+  if (-1 < lVar2) {
+    lVar2 = FUN_00130f28(&DAT_008474c0,DAT_00863ee8);
+    if (-1 < lVar2) {
+      DAT_007716ac = 1;
+    }
+    iVar1 = DAT_007716ac;
+    if (DAT_007716ac == 1) {
+      lVar2 = FUN_00130f28(&DAT_00841700,DAT_008474ac);
+      if (-1 < lVar2) {
+        DAT_007716b0 = iVar1;
+      }
+      FUN_00130f28(&DAT_00837380,DAT_008416c8);
+      FUN_0011b268();
+      uVar3 = 4;
+      if (DAT_007716b0 == 1) {
+        uVar3 = 7;
+      }
+      FUN_00132710(uVar3);
+      return;
+    }
+  }
+  return;
+}
+
+ (GhidraScript)  
+INFO  DecompAt.java> ===== 0x1142c0 in FUN_001140a0 @ 001140a0 ===== (GhidraScript)  
+INFO  DecompAt.java> callers: (GhidraScript)  
+INFO  DecompAt.java> 
+void FUN_001140a0(void)
+
+{
+  undefined4 *puVar1;
+  longlong lVar2;
+  int iVar3;
+  
+  FUN_0014b1b0();
+  DAT_007716b8 = 0;
+  DAT_007716bc = 0;
+  DAT_00771dc4 = 0xa0000;
+  DAT_007716c0 = 0;
+  DAT_007716c4 = 0;
+  DAT_007716ac = 0;
+  DAT_007716b0 = 0;
+  FUN_0014497c(&DAT_00772c40,0,10);
+  FUN_001447d4(0x80000,&LAB_00763380,DAT_00764bc0);
+  iVar3 = 9;
+  puVar1 = &DAT_00772a3c;
+  do {
+    *puVar1 = 0xffffffff;
+    iVar3 = iVar3 + -1;
+    puVar1 = puVar1 + -1;
+  } while (-1 < iVar3);
+  FUN_00115a48();
+  FUN_00115c48();
+  if (DAT_007716b0 == 1) {
+    lVar2 = FUN_00115008();
+    DAT_00771690 = (undefined4)lVar2;
+    if (lVar2 < 0) {
+      DAT_007716b0 = 0;
+    }
+  }
+  FUN_00115e78();
+  FUN_001134a8();
+  FUN_001138c0();
+  FUN_00105340();
+  DAT_007716d8 = 7;
+  FUN_0010a7b8(4);
+  FUN_00105340();
+  FUN_00105480();
+  if ((DAT_007716b0 == 1) && (lVar2 = FUN_001150b8(), lVar2 != 0)) {
+    DAT_007716b0 = 0;
+  }
+  FUN_00105340();
+  FUN_001156b8(300);
+  FUN_00116380();
+  FUN_00105340();
+  lVar2 = FUN_00115910();
+  FUN_00105340();
+  if (lVar2 == 0) {
+    FUN_001157c0();
+  }
+  FUN_00105340();
+  FUN_00105548();
+  FUN_00113ff0();
+  FUN_0010a7b8(5);
+  FUN_00105340();
+  FUN_00105480();
+  FUN_001156b8(300);
+  FUN_00105380(s_SETTING_UP_CHEATS_009ed118,s_PLEASE_WAIT_____009ed130,0);
+  FUN_001000e0();
+  FUN_00105340();
+  FUN_00115ce8();
+  if (DAT_00771680 == 1) {
+    FUN_00113010();
+  }
+  DAT_00765988 = 0;
+  FUN_00105548();
+  FUN_00130e18();
+  FUN_00113628();
+  return;
+}
+
+ (GhidraScript)  
+INFO  DecompAt.java> ===== 0x1310f8 in FUN_001310f8 @ 001310f8 ===== (GhidraScript)  
+INFO  DecompAt.java> callers: 00115b14(FUN_00115a48) (GhidraScript)  
+INFO  DecompAt.java> 
+void FUN_001310f8(void)
+
+{
+  longlong lVar1;
+  int iVar2;
+  undefined1 auStack_b0 [4];
+  byte bStack_ac;
+  byte bStack_ab;
+  byte bStack_aa;
+  byte bStack_a9;
+  undefined1 uStack_a8;
+  char cStack_90;
+  char cStack_8f;
+  char cStack_8e;
+  char cStack_8d;
+  undefined1 uStack_8c;
+  int aiStack_80 [4];
+  
+  iVar2 = 0;
+  aiStack_80[0] = 0;
+  do {
+    FUN_00132890(0,0,0x4b,auStack_b0);
+    if (bStack_ac != 0) {
+      FUN_00131090(&cStack_90,aiStack_80,uStack_a8,
+                   (uint)bStack_ac | (uint)bStack_a9 << 0x18 |
+                   (uint)bStack_aa << 0x10 | (uint)bStack_ab << 8);
+      uStack_8c = 0;
+      if ((((cStack_90 != 'S') || (cStack_8f != 'L')) || (cStack_8e != 'U')) || (cStack_8d != 'S'))
+      {
+        DAT_009ea168 = DAT_009ea168 + 1;
+      }
+      if (aiStack_80[0] != 0x4eea) {
+        DAT_009ea168 = DAT_009ea168 + 1;
+      }
+      break;
+    }
+    iVar2 = iVar2 + 1;
+  } while (iVar2 < 5);
+  if (iVar2 == 5) {
+    DAT_009ea168 = DAT_009ea168 + 1;
+  }
+  lVar1 = FUN_001303b8(s_cdrom0__SYSTEM_CNF_1_009eefe8,1);
+  if (lVar1 < 0) {
+    DAT_009ea168 = DAT_009ea168 + 1;
+  }
+  else {
+    FUN_00130458(lVar1);
+    FUN_00130e18();
+  }
+  return;
+}
+
+ (GhidraScript)  
+INFO  DecompAt.java> ===== 0x130e18 in FUN_00130e18 @ 00130e18 ===== (GhidraScript)  
+INFO  DecompAt.java> callers: 001142c0(FUN_001140a0) 00131238(FUN_001310f8) 00109010(FUN_00108f70) (GhidraScript)  
+INFO  DecompAt.java> 
+int FUN_00130e18(void)
+
+{
+  int iVar1;
+  
+  if (((DAT_009ea170 != 0) || (iVar1 = FUN_001327a8(), -1 < iVar1)) &&
+     (iVar1 = FUN_001353d0(&DAT_00b82b80,4,0,0), -1 < iVar1)) {
+    iVar1 = DAT_00b82c00;
+  }
+  return iVar1;
+}
+
+ (GhidraScript)  
+INFO  DecompAt.java> ===== 0x1316b4 in FUN_001315a0 @ 001315a0 ===== (GhidraScript)  
+INFO  DecompAt.java> callers: 00131878(FUN_00131848) (GhidraScript)  
+INFO  DecompAt.java> 
+bool FUN_001315a0(undefined8 param_1,undefined4 *param_2,undefined8 param_3)
+
+{
+  longlong lVar1;
+  undefined8 *puVar2;
+  undefined8 *puVar3;
+  undefined8 uVar4;
+  undefined8 uVar5;
+  undefined8 uVar6;
+  undefined1 auStack_350 [256];
+  undefined1 auStack_250 [256];
+  undefined8 auStack_150 [32];
+  
+  puVar2 = (undefined8 *)(param_2 + 1);
+  if (((uint)puVar2 & 7) == 0) {
+    puVar3 = auStack_150;
+    do {
+      uVar4 = puVar2[1];
+      uVar5 = puVar2[2];
+      uVar6 = puVar2[3];
+      *puVar3 = *puVar2;
+      puVar3[1] = uVar4;
+      puVar3[2] = uVar5;
+      puVar3[3] = uVar6;
+      puVar2 = puVar2 + 4;
+      puVar3 = puVar3 + 4;
+    } while (puVar2 != (undefined8 *)(param_2 + 0x41));
+  }
+  else {
+    puVar3 = auStack_150;
+    do {
+      uVar4 = puVar2[1];
+      uVar5 = puVar2[2];
+      uVar6 = puVar2[3];
+      *puVar3 = *puVar2;
+      puVar3[1] = uVar4;
+      puVar3[2] = uVar5;
+      puVar3[3] = uVar6;
+      puVar2 = puVar2 + 4;
+      puVar3 = puVar3 + 4;
+    } while (puVar2 != (undefined8 *)(param_2 + 0x41));
+  }
+  FUN_00131500(auStack_350,param_3,0x100);
+  FUN_001326e8(auStack_250,param_1,auStack_150,*param_2);
+  lVar1 = FUN_00144740(auStack_350,auStack_250,0x100);
+  return lVar1 == 0;
+}
+
+ (GhidraScript)  
+INFO  REPORT: Execute script: ListRange.java '0x115ad0' '0x115b50' '0x114270' '0x1142e0'  (HeadlessAnalyzer)  
+INFO  SCRIPT: /tmp/codebreaker-disc-review/scripts/ListRange.java (HeadlessAnalyzer)  
+INFO  ListRange.java> ---- 0x115ad0..0x115b50 (GhidraScript)  
+INFO  ListRange.java> 00115ad0  jal 0x00134728 (GhidraScript)  
+INFO  ListRange.java> 00115ad4  _clear a2 (GhidraScript)  
+INFO  ListRange.java> 00115ad8  jal 0x0011b8f8 (GhidraScript)  
+INFO  ListRange.java> 00115adc  _clear a0 (GhidraScript)  
+INFO  ListRange.java> 00115ae0  jal 0x0011bb88 (GhidraScript)  
+INFO  ListRange.java> 00115ae4  _nop (GhidraScript)  
+INFO  ListRange.java> 00115ae8  jal 0x001218c8 (GhidraScript)  
+INFO  ListRange.java> 00115aec  _nop (GhidraScript)  
+INFO  ListRange.java> 00115af0  jal 0x0011ba68 (GhidraScript)  
+INFO  ListRange.java> 00115af4  _clear a0 (GhidraScript)  
+INFO  ListRange.java> 00115af8  jal 0x00130ef8 (GhidraScript)  
+INFO  ListRange.java> 00115afc  _nop (GhidraScript)  
+INFO  ListRange.java> 00115b00  lw v0,-0x5e98(s0) (GhidraScript)  
+INFO  ListRange.java> 00115b04  beq v0,zero,0x00115b14 (GhidraScript)  
+INFO  ListRange.java> 00115b08  _nop (GhidraScript)  
+INFO  ListRange.java> 00115b0c  jal 0x00114a50 (GhidraScript)  
+INFO  ListRange.java> 00115b10  _li a0,0x3 (GhidraScript)  
+INFO  ListRange.java> 00115b14  jal 0x001310f8 (GhidraScript)  
+INFO  ListRange.java> 00115b18  _nop (GhidraScript)  
+INFO  ListRange.java> 00115b1c  lw v0,-0x5e98(s0) (GhidraScript)  
+INFO  ListRange.java> 00115b20  beq v0,zero,0x00115b30 (GhidraScript)  
+INFO  ListRange.java> 00115b24  _nop (GhidraScript)  
+INFO  ListRange.java> 00115b28  jal 0x00114a50 (GhidraScript)  
+INFO  ListRange.java> 00115b2c  _li a0,0x4 (GhidraScript)  
+INFO  ListRange.java> 00115b30  jal 0x00131050 (GhidraScript)  
+INFO  ListRange.java> 00115b34  _nop (GhidraScript)  
+INFO  ListRange.java> 00115b38  lw v0,-0x5e98(s0) (GhidraScript)  
+INFO  ListRange.java> 00115b3c  beq v0,zero,0x00115b50 (GhidraScript)  
+INFO  ListRange.java> 00115b40  _lui v0,0x83 (GhidraScript)  
+INFO  ListRange.java> 00115b44  jal 0x00114a50 (GhidraScript)  
+INFO  ListRange.java> 00115b48  _li a0,0x5 (GhidraScript)  
+INFO  ListRange.java> 00115b4c  lui v0,0x83 (GhidraScript)  
+INFO  ListRange.java> ---- 0x114270..0x1142e0 (GhidraScript)  
+INFO  ListRange.java> 00114270  addiu a0,a0,-0x2ee8 (GhidraScript)  
+INFO  ListRange.java> 00114274  addiu a1,a1,-0x2ed0 (GhidraScript)  
+INFO  ListRange.java> 00114278  jal 0x00105380 (GhidraScript)  
+INFO  ListRange.java> 0011427c  _clear a2 (GhidraScript)  
+INFO  ListRange.java> 00114280  jal 0x001000e0 (GhidraScript)  
+INFO  ListRange.java> 00114284  _nop (GhidraScript)  
+INFO  ListRange.java> 00114288  jal 0x00105340 (GhidraScript)  
+INFO  ListRange.java> 0011428c  _nop (GhidraScript)  
+INFO  ListRange.java> 00114290  jal 0x00115ce8 (GhidraScript)  
+INFO  ListRange.java> 00114294  _nop (GhidraScript)  
+INFO  ListRange.java> 00114298  lui v1,0x77 (GhidraScript)  
+INFO  ListRange.java> 0011429c  li v0,0x1 (GhidraScript)  
+INFO  ListRange.java> 001142a0  lw a0,0x1680(v1) (GhidraScript)  
+INFO  ListRange.java> 001142a4  bne a0,v0,0x001142b8 (GhidraScript)  
+INFO  ListRange.java> 001142a8  _lui v0,0x76 (GhidraScript)  
+INFO  ListRange.java> 001142ac  jal 0x00113010 (GhidraScript)  
+INFO  ListRange.java> 001142b0  _nop (GhidraScript)  
+INFO  ListRange.java> 001142b4  lui v0,0x76 (GhidraScript)  
+INFO  ListRange.java> 001142b8  jal 0x00105548 (GhidraScript)  
+INFO  ListRange.java> 001142bc  _sw zero,0x5988(v0) (GhidraScript)  
+INFO  ListRange.java> 001142c0  jal 0x00130e18 (GhidraScript)  
+INFO  ListRange.java> 001142c4  _nop (GhidraScript)  
+INFO  ListRange.java> 001142c8  ld ra,0x20(sp) (GhidraScript)  
+INFO  ListRange.java> 001142cc  ld s1,0x10(sp) (GhidraScript)  
+INFO  ListRange.java> 001142d0  ld s0,0x0(sp) (GhidraScript)  
+INFO  ListRange.java> 001142d4  j 0x00113628 (GhidraScript)  
+INFO  ListRange.java> 001142d8  _addiu sp,sp,0x30 (GhidraScript)  

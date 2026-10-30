@@ -1,0 +1,7 @@
+
+======================================================================
+mutated-bignum-call: v9.2 0x133220..0x134020 (896)  v10 0x1318e8..0x1326e8 (896)
+  IDENTICAL modulo relocation
+Mutation exists only in a Python bytearray: jal 0x133428 -> jal 0x123450 at v92 0x13351c.
+Complete memcpy span to memset entry: 106 words; raw identical: True
+First-return scanner checks only: 43 words

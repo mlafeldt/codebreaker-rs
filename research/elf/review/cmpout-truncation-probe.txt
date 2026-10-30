@@ -1,0 +1,3 @@
+Left list: 2 output rows; right list: 1 matching prefix row.
+1 lists, 1 lines: 0 lists output differ, 0 state-only, 0 primitive differ
+Exit status: 0

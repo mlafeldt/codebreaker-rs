@@ -1,0 +1,746 @@
+openjdk version "25.0.5.0.3" 2026-10-24
+OpenJDK Runtime Environment Homebrew (build 25.0.5.0.3)
+OpenJDK 64-Bit Server VM Homebrew (build 25.0.5.0.3, mixed mode)
+INFO  Using log config file: jar:file:/opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Framework/Generic/lib/Generic.jar!/generic.log4j.xml (LoggingInitialization)  
+INFO  Using log file: /Users/mathias/Library/ghidra/ghidra_12.1.4_PUBLIC/application.log (LoggingInitialization)  
+INFO  Loading user preferences: /Users/mathias/Library/ghidra/ghidra_12.1.4_PUBLIC/preferences (Preferences)  
+INFO  Loading previous preferences: /Users/mathias/Library/ghidra/ghidra_12.2_PUBLIC/preferences (Preferences)  
+INFO  Searching for classes... (ClassSearcher)  
+INFO  Class search complete (778 ms) (ClassSearcher)  
+INFO  Initializing SSL Context (DefaultSSLContextInitializer)  
+INFO  Initializing Random Number Generator... (SecureRandomFactory)  
+INFO  Random Number Generator initialization complete: NativePRNGNonBlocking (SecureRandomFactory)  
+INFO  Trust manager disabled, cacerts have not been set (DefaultTrustManagerFactory)  
+INFO  Headless startup complete (2386 ms) (AnalyzeHeadless)  
+INFO  Class searcher loaded 59 extension points (20 false positives) (ClassSearcher)  
+WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
+WARNING: sun.misc.Unsafe::staticFieldOffset has been called by org.apache.felix.framework.util.SecureAction (file:/opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Features/Base/lib/org.apache.felix.framework-7.0.5.jar)
+WARNING: Please consider reporting this to the maintainers of class org.apache.felix.framework.util.SecureAction
+WARNING: sun.misc.Unsafe::staticFieldOffset will be removed in a future release
+INFO  HEADLESS Script Paths:
+    /opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Features/GnuDemangler/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Processors/JVM/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Processors/PIC/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Features/PyGhidra/ghidra_scripts
+    /tmp/codebreaker-v10-audit/scripts
+    /opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Debug/Debugger/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Features/WildcardAssembler/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Features/PDB/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Features/MicrosoftCodeAnalyzer/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Debug/Debugger-rmi-trace/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Features/VersionTracking/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Features/FunctionID/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Features/BytePatterns/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Features/DecompilerDependent/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Features/BSim/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Features/SwiftDemangler/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Features/Decompiler/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Features/SystemEmulation/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Processors/DATA/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Features/Base/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Features/FileFormats/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Processors/8051/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Processors/Atmel/ghidra_scripts (HeadlessAnalyzer)  
+INFO  HEADLESS: execution starts (HeadlessAnalyzer)  
+INFO  Creating project: /tmp/codebreaker-v10-audit/proj/v10 (HeadlessAnalyzer)  
+INFO  Creating project: /tmp/codebreaker-v10-audit/proj/v10 (DefaultProject)  
+INFO  REPORT: Processing input files:  (HeadlessAnalyzer)  
+INFO       project: /tmp/codebreaker-v10-audit/proj/v10 (HeadlessAnalyzer)  
+INFO  IMPORTING: file:///private/tmp/codebreaker-v10-audit/v10.elf (HeadlessAnalyzer)  
+INFO  Using Loader: Executable and Linking Format (ELF) (ProgramLoader)  
+INFO  Using Language/Compiler: MIPS:LE:64:64-32addr:default (ProgramLoader)  
+INFO  Using Library Search Path: [., /System/Library/dyld/dyld_shared_cache_arm64e, /System/Library/dyld/dyld_shared_cache_x86_64, /System/Library/dyld/dyld_shared_cache_x86_64h, /System/Cryptexes/OS/System/Library/dyld/dyld_shared_cache_arm64e, /System/Cryptexes/OS/System/Library/dyld/dyld_shared_cache_x86_64, /System/Cryptexes/OS/System/Library/dyld/dyld_shared_cache_x86_64h, /Users/mathias/Library/Java/Extensions, /Library/Java/Extensions, /Network/Library/Java/Extensions, /System/Library/Java/Extensions, /usr/lib/java] (ProgramLoader)  
+INFO  Additional info:
+Loading file:///private/tmp/codebreaker-v10-audit/v10.elf?MD5=ffc017e211865509fe1f9f3442030f67...
+------------------------------------------------
+
+ (ProgramLoader)  
+INFO  IMPORTING: Loaded 0 additional files (HeadlessAnalyzer)  
+INFO  ANALYZING all memory and code: file:///private/tmp/codebreaker-v10-audit/v10.elf (HeadlessAnalyzer)  
+ERROR Pcode error at 00146e94: Program does not contain referenced instruction: 00146e98 (SleighInstructionPrototype)  
+ERROR Pcode error at 0014792c: Program does not contain referenced instruction: 00147930 (SleighInstructionPrototype)  
+ERROR Pcode error at 00143e6c: Program does not contain referenced instruction: 00143e70 (SleighInstructionPrototype)  
+ERROR Pcode error at 0013eed0: Program does not contain referenced instruction: 0013eed4 (SleighInstructionPrototype)  
+ERROR Pcode error at 00144050: Program does not contain referenced instruction: 00144054 (SleighInstructionPrototype)  
+ERROR Pcode error at 00146e94: Program does not contain referenced instruction: 00146e98 (SleighInstructionPrototype)  
+ERROR Pcode error at 0014792c: Program does not contain referenced instruction: 00147930 (SleighInstructionPrototype)  
+WARN  Decompiling 001241c8, pcode error at 001242d0: Unable to resolve constructor at 001242d0 (DecompileCallback)  
+ERROR Pcode error at 0010d1f8: Program does not contain referenced instruction: 0010d1fc (SleighInstructionPrototype)  
+WARN  Decompiling 0011e10c: Unable to read bytes at ram:000034a0 (DecompileCallback)  
+WARN  Decompiling 00869cd0, pcode error at 000001e4: Could not follow disassembly flow into non-existing memory at 000001e4 (DecompileCallback)  
+WARN  Decompiling 0084fab4, pcode error at 000085f4: Could not follow disassembly flow into non-existing memory at 000085f4 (DecompileCallback)  
+WARN  Decompiling 0084fab4, pcode error at 00008b14: Could not follow disassembly flow into non-existing memory at 00008b14 (DecompileCallback)  
+WARN  Decompiling 0084fab4: Unable to read bytes at ram:00014fb0 (DecompileCallback)  
+WARN  Decompiling 0084d354, pcode error at 00005ef8: Could not follow disassembly flow into non-existing memory at 00005ef8 (DecompileCallback)  
+WARN  Decompiling 0084d354, pcode error at 00005e74: Could not follow disassembly flow into non-existing memory at 00005e74 (DecompileCallback)  
+WARN  Decompiling 0084d354, pcode error at 00005ef4: Could not follow disassembly flow into non-existing memory at 00005ef4 (DecompileCallback)  
+WARN  Decompiling 0084d354, pcode error at 00005e78: Could not follow disassembly flow into non-existing memory at 00005e78 (DecompileCallback)  
+WARN  Decompiling 0084d354, pcode error at 00005e28: Could not follow disassembly flow into non-existing memory at 00005e28 (DecompileCallback)  
+WARN  Decompiling 0084d354, pcode error at 00006050: Could not follow disassembly flow into non-existing memory at 00006050 (DecompileCallback)  
+WARN  Decompiling 0084d354: Unable to read bytes at ram:00014f60 (DecompileCallback)  
+WARN  Decompiling 0011d0b4: Unable to read bytes at ram:00003488 (DecompileCallback)  
+WARN  Decompiling 00852b84: Unable to read bytes at ram:00014ff0 (DecompileCallback)  
+ERROR Pcode error at 0012e858: Block does not contain cross-build instruction: 0012e858 -> 0012e85c (SleighInstructionPrototype)  
+ERROR Pcode error at 0012e728: Block does not contain cross-build instruction: 0012e728 -> 0012e72c (SleighInstructionPrototype)  
+ERROR Pcode error at 0012e43c: Block does not contain cross-build instruction: 0012e43c -> 0012e440 (SleighInstructionPrototype)  
+ERROR Pcode error at 0012e2f0: Block does not contain cross-build instruction: 0012e2f0 -> 0012e2f4 (SleighInstructionPrototype)  
+ERROR Pcode error at 0012e214: Block does not contain cross-build instruction: 0012e214 -> 0012e218 (SleighInstructionPrototype)  
+ERROR Pcode error at 0012df6c: Block does not contain cross-build instruction: 0012df6c -> 0012df70 (SleighInstructionPrototype)  
+ERROR Pcode error at 0012df6c: Program does not contain referenced instruction: 0012df70 (SleighInstructionPrototype)  
+ERROR Pcode error at 0012e214: Program does not contain referenced instruction: 0012e218 (SleighInstructionPrototype)  
+ERROR Pcode error at 0012e2f0: Program does not contain referenced instruction: 0012e2f4 (SleighInstructionPrototype)  
+ERROR Pcode error at 0012e43c: Program does not contain referenced instruction: 0012e440 (SleighInstructionPrototype)  
+ERROR Pcode error at 0012e728: Program does not contain referenced instruction: 0012e72c (SleighInstructionPrototype)  
+ERROR Pcode error at 0012e78c: Program does not contain referenced instruction: 0012e790 (SleighInstructionPrototype)  
+ERROR Pcode error at 0012e858: Program does not contain referenced instruction: 0012e85c (SleighInstructionPrototype)  
+WARN  Decompiling 0010c9f8, pcode error at 0010cdd0: Unable to resolve constructor at 0010cdd0 (DecompileCallback)  
+ERROR Pcode error at 0010d1f8: Program does not contain referenced instruction: 0010d1fc (SleighInstructionPrototype)  
+WARN  Decompiling 0010c9f8, pcode error at 0010d21c: Unable to resolve constructor at 0010d21c (DecompileCallback)  
+WARN  Decompiling 0010c9f8, pcode error at 0010ccf0: Unable to resolve constructor at 0010ccf0 (DecompileCallback)  
+WARN  Decompiling 0010b710, pcode error at 0010bd40: Unable to resolve constructor at 0010bd40 (DecompileCallback)  
+WARN  Decompiling 0010b710, pcode error at 0010c2b8: Unable to resolve constructor at 0010c2b8 (DecompileCallback)  
+ERROR Pcode error at 0010d1f8: Program does not contain referenced instruction: 0010d1fc (SleighInstructionPrototype)  
+ERROR Pcode error at 00146e94: Program does not contain referenced instruction: 00146e98 (SleighInstructionPrototype)  
+ERROR Pcode error at 0014792c: Program does not contain referenced instruction: 00147930 (SleighInstructionPrototype)  
+ERROR Pcode error at 0012e858: Program does not contain referenced instruction: 0012e85c (SleighInstructionPrototype)  
+ERROR Pcode error at 0012e728: Program does not contain referenced instruction: 0012e72c (SleighInstructionPrototype)  
+ERROR Pcode error at 0012e43c: Program does not contain referenced instruction: 0012e440 (SleighInstructionPrototype)  
+ERROR Pcode error at 0012e2f0: Program does not contain referenced instruction: 0012e2f4 (SleighInstructionPrototype)  
+ERROR Pcode error at 0012e214: Program does not contain referenced instruction: 0012e218 (SleighInstructionPrototype)  
+ERROR Pcode error at 0012df6c: Program does not contain referenced instruction: 0012df70 (SleighInstructionPrototype)  
+ERROR Pcode error at 00143e6c: Program does not contain referenced instruction: 00143e70 (SleighInstructionPrototype)  
+ERROR Pcode error at 0013eed0: Program does not contain referenced instruction: 0013eed4 (SleighInstructionPrototype)  
+ERROR Pcode error at 00144050: Program does not contain referenced instruction: 00144054 (SleighInstructionPrototype)  
+INFO  Packed database cache: /var/tmp/mathias-ghidra/packed-db-cache (PackedDatabaseCache)  
+INFO  Applied data type archive: generic_clib (ApplyDataArchiveAnalyzer)  
+ERROR Pcode error at 0010d1f8: Program does not contain referenced instruction: 0010d1fc (SleighInstructionPrototype)  
+ERROR Pcode error at 00146e94: Program does not contain referenced instruction: 00146e98 (SleighInstructionPrototype)  
+ERROR Pcode error at 0014792c: Program does not contain referenced instruction: 00147930 (SleighInstructionPrototype)  
+ERROR Pcode error at 0012e858: Program does not contain referenced instruction: 0012e85c (SleighInstructionPrototype)  
+ERROR Pcode error at 0012e728: Program does not contain referenced instruction: 0012e72c (SleighInstructionPrototype)  
+ERROR Pcode error at 0012e43c: Program does not contain referenced instruction: 0012e440 (SleighInstructionPrototype)  
+ERROR Pcode error at 0012e2f0: Program does not contain referenced instruction: 0012e2f4 (SleighInstructionPrototype)  
+ERROR Pcode error at 0012e214: Program does not contain referenced instruction: 0012e218 (SleighInstructionPrototype)  
+ERROR Pcode error at 0012df6c: Program does not contain referenced instruction: 0012df70 (SleighInstructionPrototype)  
+ERROR Pcode error at 00143e6c: Program does not contain referenced instruction: 00143e70 (SleighInstructionPrototype)  
+ERROR Pcode error at 0013eed0: Program does not contain referenced instruction: 0013eed4 (SleighInstructionPrototype)  
+ERROR Pcode error at 00144050: Program does not contain referenced instruction: 00144054 (SleighInstructionPrototype)  
+INFO  -----------------------------------------------------
+    ASCII Strings                              0.495 secs
+    Apply Data Archives                        0.328 secs
+    Call Convention ID                         0.009 secs
+    Call-Fixup Installer                       0.017 secs
+    Create Address Tables                      0.460 secs
+    Create Address Tables - One Time           0.171 secs
+    Create Function                            0.327 secs
+    Data Reference                             0.077 secs
+    Decompiler Switch Analysis                 5.504 secs
+    Demangler GNU                              0.010 secs
+    Disassemble                                1.290 secs
+    Disassemble Entry Points                   0.057 secs
+    Embedded Media                             0.076 secs
+    External Entry References                  0.000 secs
+    Function ID                                0.024 secs
+    Function Start Search                      0.152 secs
+    Function Start Search delayed - One Time   0.004 secs
+    MIPS Constant Reference Analyzer           2.440 secs
+    MIPS Symbol                                0.001 secs
+    MIPS UnAlligned Instruction Fix            0.119 secs
+    Non-Returning Functions - Discovered       0.299 secs
+    Non-Returning Functions - Known            0.001 secs
+    Reference                                  0.153 secs
+    Shared Return Calls                        0.111 secs
+    Stack                                      2.091 secs
+    Subroutine References                      0.126 secs
+    Subroutine References - One Time           0.000 secs
+-----------------------------------------------------
+     Total Time   14 secs
+-----------------------------------------------------
+ (AutoAnalysisManager)  
+INFO  REPORT: Analysis succeeded for file: file:///private/tmp/codebreaker-v10-audit/v10.elf (HeadlessAnalyzer)  
+INFO  REPORT: Execute script: DecompAt.java '0x104660' '0x104d40' '0x105090' '0x1052a8'  (HeadlessAnalyzer)  
+INFO  SCRIPT: /tmp/codebreaker-v10-audit/scripts/DecompAt.java (HeadlessAnalyzer)  
+INFO  DecompAt.java> ===== 0x104660 in FUN_00104660 @ 00104660 ===== (GhidraScript)  
+INFO  DecompAt.java> callers: 00105260(FUN_00105090) 00104fe4(FUN_00104d40) (GhidraScript)  
+INFO  DecompAt.java> 
+/* WARNING: Removing unreachable block (ram,0x00104920) */
+/* WARNING: Removing unreachable block (ram,0x00104974) */
+/* WARNING: Removing unreachable block (ram,0x001047cc) */
+/* WARNING: Removing unreachable block (ram,0x00104820) */
+/* WARNING: Removing unreachable block (ram,0x00104874) */
+/* WARNING: Removing unreachable block (ram,0x001048c8) */
+/* WARNING: Removing unreachable block (ram,0x001049c8) */
+/* WARNING: Removing unreachable block (ram,0x00104a1c) */
+/* WARNING: Removing unreachable block (ram,0x001046bc) */
+/* WARNING: Removing unreachable block (ram,0x001046f0) */
+/* WARNING: Removing unreachable block (ram,0x00104744) */
+/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+
+void FUN_00104660(longlong param_1,uint param_2)
+
+{
+  undefined8 *puVar1;
+  undefined8 uVar2;
+  undefined8 *puVar3;
+  uint uVar4;
+  undefined8 uVar5;
+  uint uVar6;
+  uint uVar7;
+  undefined8 uVar8;
+  
+  if (param_1 == 0) {
+    uVar6 = param_2 + 2 & 0xff;
+    uVar4 = param_2 + 3 & 0xff;
+    uVar7 = param_2 + 1 & 0xff;
+    param_2 = param_2 & 0xff;
+    _DAT_009f0568 =
+         CONCAT44((uint)(byte)(&DAT_009f0048)[param_2] | (uint)(byte)(&DAT_009eff48)[uVar4] << 0x18
+                  | (uint)(byte)(&DAT_009f0248)[uVar6] << 0x10 |
+                    (uint)(byte)(&DAT_009f0148)[uVar7] << 8,
+                  (uint)(byte)(&DAT_009eff48)[param_2] | (uint)(byte)(&DAT_009f0248)[uVar4] << 0x18
+                  | (uint)(byte)(&DAT_009f0148)[uVar6] << 0x10 |
+                    (uint)(byte)(&DAT_009f0048)[uVar7] << 8);
+    _DAT_009f0570 =
+         CONCAT44((uint)(byte)(&DAT_009f0248)[param_2] | (uint)(byte)(&DAT_009f0148)[uVar4] << 0x18
+                  | (uint)(byte)(&DAT_009f0048)[uVar6] << 0x10 |
+                    (uint)(byte)(&DAT_009eff48)[uVar7] << 8,
+                  (uint)(byte)(&DAT_009f0148)[param_2] | (uint)(byte)(&DAT_009f0048)[uVar4] << 0x18
+                  | (uint)(byte)(&DAT_009eff48)[uVar6] << 0x10 |
+                    (uint)(byte)(&DAT_009f0248)[uVar7] << 8);
+  }
+  else {
+    puVar1 = &DAT_00764ca0;
+    puVar3 = (undefined8 *)&DAT_009eff48;
+    _DAT_009f0580 = 0;
+    _DAT_009f057c = 0;
+    do {
+      uVar2 = puVar1[1];
+      uVar5 = puVar1[2];
+      uVar8 = puVar1[3];
+      *puVar3 = *puVar1;
+      puVar3[1] = uVar2;
+      puVar3[2] = uVar5;
+      puVar3[3] = uVar8;
+      puVar1 = puVar1 + 4;
+      puVar3 = puVar3 + 4;
+    } while (puVar1 != &DAT_00764da0);
+    puVar1 = &DAT_00764da0;
+    puVar3 = (undefined8 *)&DAT_009f0048;
+    do {
+      uVar2 = puVar1[1];
+      uVar5 = puVar1[2];
+      uVar8 = puVar1[3];
+      *puVar3 = *puVar1;
+      puVar3[1] = uVar2;
+      puVar3[2] = uVar5;
+      puVar3[3] = uVar8;
+      puVar1 = puVar1 + 4;
+      puVar3 = puVar3 + 4;
+    } while (puVar1 != &DAT_00764ea0);
+    puVar1 = &DAT_00764ea0;
+    puVar3 = (undefined8 *)&DAT_009f0148;
+    do {
+      uVar2 = puVar1[1];
+      uVar5 = puVar1[2];
+      uVar8 = puVar1[3];
+      *puVar3 = *puVar1;
+      puVar3[1] = uVar2;
+      puVar3[2] = uVar5;
+      puVar3[3] = uVar8;
+      puVar1 = puVar1 + 4;
+      puVar3 = puVar3 + 4;
+    } while (puVar1 != &DAT_00764fa0);
+    puVar1 = &DAT_00764fa0;
+    puVar3 = (undefined8 *)&DAT_009f0248;
+    do {
+      uVar5 = puVar1[1];
+      uVar8 = puVar1[2];
+      uVar2 = puVar1[3];
+      *puVar3 = *puVar1;
+      puVar3[1] = uVar5;
+      puVar3[2] = uVar8;
+      puVar3[3] = uVar2;
+      puVar1 = puVar1 + 4;
+      puVar3 = puVar3 + 4;
+    } while (puVar1 != &DAT_007650a0);
+    puVar1 = &DAT_007650a0;
+    puVar3 = (undefined8 *)&DAT_009f0348;
+    do {
+      uVar8 = puVar1[1];
+      uVar2 = puVar1[2];
+      uVar5 = puVar1[3];
+      *puVar3 = *puVar1;
+      puVar3[1] = uVar8;
+      puVar3[2] = uVar2;
+      puVar3[3] = uVar5;
+      puVar1 = puVar1 + 4;
+      puVar3 = puVar3 + 4;
+    } while (puVar1 != &DAT_007651a0);
+    _DAT_009f0568 = DAT_007651a0;
+    _DAT_009f0570 = DAT_007651a8;
+    _DAT_009f0578 = DAT_007651b0;
+  }
+  FUN_00131360(0x9f0460,&DAT_009f0568,0x14);
+  FUN_001313f8(0x9f0460,&DAT_009eff48,0x100);
+  FUN_001313f8(0x9f0460,&DAT_009f0568,0x14);
+  FUN_00131360(0x9f0460,&DAT_009f0568,0x14);
+  FUN_001313f8(0x9f0460,&DAT_009f0048,0x100);
+  FUN_001313f8(0x9f0460,&DAT_009f0568,0x14);
+  FUN_00131360(0x9f0460,&DAT_009f0568,0x14);
+  FUN_001313f8(0x9f0460,&DAT_009f0148,0x100);
+  FUN_001313f8(0x9f0460,&DAT_009f0568,0x14);
+  FUN_00131360(0x9f0460,&DAT_009f0568,0x14);
+  FUN_001313f8(0x9f0460,&DAT_009f0248,0x100);
+  FUN_001313f8(0x9f0460,&DAT_009f0568,0x14);
+  FUN_00131360(0x9f0460,&DAT_009f0568,0x14);
+  FUN_001313f8(0x9f0460,&DAT_009f0348,0x100);
+  FUN_001313f8(0x9f0460,&DAT_009f0568,0x14);
+  _DAT_009f0454 = _DAT_009f0574;
+  _DAT_009f0458 = _DAT_009f0578;
+  _DAT_009f0448 = _DAT_009f0568;
+  _DAT_009f044c = _DAT_009f056c;
+  _DAT_009f0450 = _DAT_009f0570;
+  return;
+}
+
+ (GhidraScript)  
+INFO  DecompAt.java> ===== 0x104d40 in FUN_00104d40 @ 00104d40 ===== (GhidraScript)  
+INFO  DecompAt.java> callers: 0010517c(FUN_00105090) (GhidraScript)  
+INFO  DecompAt.java> 
+/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+
+void FUN_00104d40(uint *param_1,uint *param_2)
+
+{
+  int iVar1;
+  uint uVar2;
+  uint uVar3;
+  int *piVar4;
+  uint *puVar5;
+  uint *puVar6;
+  int iVar7;
+  uint *puVar8;
+  int *piVar9;
+  uint uStack_e0;
+  uint uStack_dc;
+  uint uStack_d0;
+  uint uStack_cc;
+  undefined4 uStack_c0;
+  undefined4 uStack_bc;
+  uint uStack_b0;
+  uint uStack_ac;
+  
+  piVar9 = (int *)&DAT_009f0244;
+  puVar8 = (uint *)&DAT_009f0044;
+  piVar4 = (int *)&DAT_009f0344;
+  puVar5 = (uint *)&DAT_009f0144;
+  puVar6 = (uint *)&DAT_009f0444;
+  iVar7 = 0x3f;
+  do {
+    iVar7 = iVar7 + -1;
+    iVar1 = *piVar4;
+    piVar4 = piVar4 + -1;
+    uVar3 = (*param_2 - (*param_1 ^ *puVar6) ^ *puVar5) + iVar1;
+    puVar5 = puVar5 + -1;
+    *param_2 = uVar3;
+    uVar2 = *puVar6;
+    puVar6 = puVar6 + -1;
+    iVar1 = *piVar9;
+    piVar9 = piVar9 + -1;
+    uStack_b0 = (*param_1 + (uVar3 ^ uVar2) ^ *puVar8) - iVar1;
+    puVar8 = puVar8 + -1;
+    *param_1 = uStack_b0;
+  } while (-1 < iVar7);
+  uStack_ac = *param_2;
+  if (CONCAT44(uStack_b0,*param_2) < 0xfffffffffffffff5) {
+    uStack_c0 = DAT_009eb330;
+    uStack_bc = 0xffffffff;
+    uStack_d0 = uStack_ac;
+    uStack_cc = uStack_b0;
+    FUN_001326e8(&uStack_e0,&uStack_d0,&uStack_c0,0xb);
+    *param_2 = uStack_e0;
+    *param_1 = uStack_dc;
+    uStack_ac = *param_2;
+    uStack_b0 = uStack_dc;
+  }
+  FUN_00131360(0x9f0460,&DAT_009f0568,0x14);
+  FUN_001313f8(0x9f0460,&uStack_b0,8);
+  *param_1 = uStack_b0;
+  *param_2 = uStack_ac;
+  uVar2 = FUN_00104630(*param_1,_DAT_009f0448 - _DAT_009f044c);
+  *param_1 = uVar2;
+  uVar2 = FUN_00104630(*param_2,_DAT_009f0450 + _DAT_009f0454);
+  *param_2 = uVar2;
+  if (_DAT_009f057c == 0) {
+    if ((*param_1 & 0xfffffffe) == 0xbeefc0de) {
+      FUN_00104660(0);
+      _DAT_009f057c = 1;
+    }
+    else if (_DAT_009f0580 != 0) {
+      _DAT_009f0568 = *param_1 ^ _DAT_009f0448;
+      _DAT_009f056c = *param_2 ^ _DAT_009f044c;
+      _DAT_009f0570 = *param_1 - _DAT_009f0450;
+      _DAT_009f0574 = *param_2 + _DAT_009f0454;
+      _DAT_009f057c = *param_1 - *param_2 ^ _DAT_009f0458;
+    }
+  }
+  else {
+    _DAT_009f0588 = *param_1;
+    _DAT_009f058c = *param_2;
+    FUN_00131360(0x9f0460,&DAT_009f0588,8);
+    FUN_001313f8(0x9f0460,&DAT_009eff48,0x100);
+    FUN_001313f8(0x9f0460,&DAT_009f0048,0x100);
+    FUN_001313f8(0x9f0460,&DAT_009f0148,0x100);
+    FUN_001313f8(0x9f0460,&DAT_009f0248,0x100);
+    FUN_001313f8(0x9f0460,&DAT_009f0348,0x100);
+    _DAT_009f057c = 0;
+    _DAT_009f0580 = 0;
+  }
+  return;
+}
+
+ (GhidraScript)  
+INFO  DecompAt.java> ===== 0x105090 in FUN_00105090 @ 00105090 ===== (GhidraScript)  
+INFO  DecompAt.java> callers: 00103558(FUN_001034c8) (GhidraScript)  
+INFO  DecompAt.java> 
+/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+
+void FUN_00105090(uint *param_1,uint *param_2)
+
+{
+  longlong lVar1;
+  uint uVar2;
+  
+  if ((DAT_00764bd0 & 0x10000) == 0) {
+    if (DAT_00764bd4 == 0) {
+      DAT_00764bd4 = FUN_00104470(*param_1);
+      if ((*param_1 >> 0x18 & 0xe) == 0) {
+        DAT_00764bd4 = DAT_00764bd4 + -1;
+        DAT_00764bd8 = 0;
+        return;
+      }
+      if ((*param_1 & 0xfffffffe) == 0xbeefc0de) {
+        DAT_00764bd4 = DAT_00764bd4 + 1;
+        DAT_00764bd8 = 0;
+        return;
+      }
+      DAT_00764bd8 = 1;
+    }
+    else if (DAT_00764bd8 == 0) {
+      DAT_00764bd4 = DAT_00764bd4 + -1;
+      return;
+    }
+    FUN_001044c0(param_1,param_2);
+  }
+  else {
+    if ((DAT_00764bd0 & 0x10000) != 0x10000) goto LAB_0010520c;
+    FUN_00104d40(param_1,param_2);
+    if (DAT_00764bd4 == 0) {
+      lVar1 = FUN_00104470(*param_1);
+      DAT_00764bd4 = (int)lVar1;
+      if ((lVar1 == 1) && (*param_1 == 0xffffffff)) {
+        DAT_00764bd0 = (DAT_00764bd0 >> 0x10) << 0x18 | *param_2 & 0xffffff;
+        DAT_00764bd4 = 0;
+        _DAT_009f0580 = (*param_2 & 0x20000) >> 0x10;
+        return;
+      }
+    }
+  }
+  DAT_00764bd4 = DAT_00764bd4 + -1;
+LAB_0010520c:
+  uVar2 = DAT_00764bd0 - 1;
+  if (((DAT_00764bd0 & 0xffff) != 0) && (DAT_00764bd0 = uVar2, (uVar2 & 0xffff) == 0)) {
+    DAT_00764bd0 = (uVar2 >> 0x18) << 0x10;
+  }
+  if ((*param_1 & 0xfffffffe) == 0xbeefc0de) {
+    DAT_00764bd0 = DAT_00764bd0 | 0x10000;
+    FUN_00104660(1,*param_2);
+    _DAT_009f057c = *param_1 & 1;
+    DAT_00764bd4 = 1;
+  }
+  return;
+}
+
+ (GhidraScript)  
+INFO  DecompAt.java> ===== 0x1052a8 in FUN_001052a8 @ 001052a8 ===== (GhidraScript)  
+INFO  DecompAt.java> callers: 0010353c(FUN_001034c8) (GhidraScript)  
+INFO  DecompAt.java> 
+void FUN_001052a8(void)
+
+{
+  DAT_00764bd4 = 0;
+  DAT_00764bd0 = 0;
+  FUN_0014497c(&DAT_00764ca0,0,0x100);
+  FUN_0014497c(&DAT_00764da0,0,0x100);
+  FUN_0014497c(&DAT_00764ea0,0,0x100);
+  FUN_0014497c(&DAT_00764fa0,0,0x100);
+  FUN_0014497c(&DAT_007650a0,0,0x100);
+  return;
+}
+
+ (GhidraScript)  
+INFO  REPORT: Execute script: ListRange.java '0x104a98' '0x104c00' '0x105090' '0x105338'  (HeadlessAnalyzer)  
+INFO  SCRIPT: /tmp/codebreaker-v10-audit/scripts/ListRange.java (HeadlessAnalyzer)  
+INFO  ListRange.java> ---- 0x104a98..0x104c00 (GhidraScript)  
+INFO  ListRange.java> 00104a98  addiu a3,a1,0x2 (GhidraScript)  
+INFO  ListRange.java> 00104a9c  lui s8,0x9f (GhidraScript)  
+INFO  ListRange.java> 00104aa0  andi a3,a3,0xff (GhidraScript)  
+INFO  ListRange.java> 00104aa4  addiu s1,s8,0x148 (GhidraScript)  
+INFO  ListRange.java> 00104aa8  addiu t0,a1,0x1 (GhidraScript)  
+INFO  ListRange.java> 00104aac  addiu a2,a1,0x3 (GhidraScript)  
+INFO  ListRange.java> 00104ab0  lui t5,0x9f (GhidraScript)  
+INFO  ListRange.java> 00104ab4  lui s7,0x9f (GhidraScript)  
+INFO  ListRange.java> 00104ab8  addiu s2,t5,0x248 (GhidraScript)  
+INFO  ListRange.java> 00104abc  andi a2,a2,0xff (GhidraScript)  
+INFO  ListRange.java> 00104ac0  andi t0,t0,0xff (GhidraScript)  
+INFO  ListRange.java> 00104ac4  addiu t7,s7,0x48 (GhidraScript)  
+INFO  ListRange.java> 00104ac8  addu a0,a3,s1 (GhidraScript)  
+INFO  ListRange.java> 00104acc  lui s6,0x9f (GhidraScript)  
+INFO  ListRange.java> 00104ad0  lbu v1,0x0(a0) (GhidraScript)  
+INFO  ListRange.java> 00104ad4  andi s0,a1,0xff (GhidraScript)  
+INFO  ListRange.java> 00104ad8  addiu t1,s6,-0xb8 (GhidraScript)  
+INFO  ListRange.java> 00104adc  addu v0,a2,s2 (GhidraScript)  
+INFO  ListRange.java> 00104ae0  addu t2,t0,t7 (GhidraScript)  
+INFO  ListRange.java> 00104ae4  addu t3,s0,t1 (GhidraScript)  
+INFO  ListRange.java> 00104ae8  lbu a0,0x0(t2) (GhidraScript)  
+INFO  ListRange.java> 00104aec  sll v1,v1,0x10 (GhidraScript)  
+INFO  ListRange.java> 00104af0  lbu a1,0x0(v0) (GhidraScript)  
+INFO  ListRange.java> 00104af4  lui s5,0x9f (GhidraScript)  
+INFO  ListRange.java> 00104af8  lbu v0,0x0(t3) (GhidraScript)  
+INFO  ListRange.java> 00104afc  sll a0,a0,0x8 (GhidraScript)  
+INFO  ListRange.java> 00104b00  sll a1,a1,0x18 (GhidraScript)  
+INFO  ListRange.java> 00104b04  or v1,v1,a0 (GhidraScript)  
+INFO  ListRange.java> 00104b08  or v0,v0,a1 (GhidraScript)  
+INFO  ListRange.java> 00104b0c  addu s3,t0,t1 (GhidraScript)  
+INFO  ListRange.java> 00104b10  or v0,v0,v1 (GhidraScript)  
+INFO  ListRange.java> 00104b14  addu a1,a3,t7 (GhidraScript)  
+INFO  ListRange.java> 00104b18  sw v0,0x568(s5) (GhidraScript)  
+INFO  ListRange.java> 00104b1c  addu v1,a3,s2 (GhidraScript)  
+INFO  ListRange.java> 00104b20  addu v0,a2,t1 (GhidraScript)  
+INFO  ListRange.java> 00104b24  addu s4,a2,s1 (GhidraScript)  
+INFO  ListRange.java> 00104b28  addu a0,t0,s1 (GhidraScript)  
+INFO  ListRange.java> 00104b2c  addu a2,a2,t7 (GhidraScript)  
+INFO  ListRange.java> 00104b30  addu a3,a3,t1 (GhidraScript)  
+INFO  ListRange.java> 00104b34  addu t0,t0,s2 (GhidraScript)  
+INFO  ListRange.java> 00104b38  lbu t5,0x0(a0) (GhidraScript)  
+INFO  ListRange.java> 00104b3c  addu s2,s0,s2 (GhidraScript)  
+INFO  ListRange.java> 00104b40  lbu t1,0x0(a3) (GhidraScript)  
+INFO  ListRange.java> 00104b44  addu t7,s0,t7 (GhidraScript)  
+INFO  ListRange.java> 00104b48  lbu t6,0x0(v0) (GhidraScript)  
+INFO  ListRange.java> 00104b4c  addu s0,s0,s1 (GhidraScript)  
+INFO  ListRange.java> 00104b50  lbu t3,0x0(v1) (GhidraScript)  
+INFO  ListRange.java> 00104b54  sll t5,t5,0x8 (GhidraScript)  
+INFO  ListRange.java> 00104b58  lbu t4,0x0(a2) (GhidraScript)  
+INFO  ListRange.java> 00104b5c  sll t6,t6,0x18 (GhidraScript)  
+INFO  ListRange.java> 00104b60  lbu a3,0x0(s4) (GhidraScript)  
+INFO  ListRange.java> 00104b64  sll t3,t3,0x10 (GhidraScript)  
+INFO  ListRange.java> 00104b68  lbu a0,0x0(a1) (GhidraScript)  
+INFO  ListRange.java> 00104b6c  sll t4,t4,0x18 (GhidraScript)  
+INFO  ListRange.java> 00104b70  lbu v0,0x0(s3) (GhidraScript)  
+INFO  ListRange.java> 00104b74  sll t1,t1,0x10 (GhidraScript)  
+INFO  ListRange.java> 00104b78  lbu t2,0x0(t0) (GhidraScript)  
+INFO  ListRange.java> 00104b7c  sll a3,a3,0x18 (GhidraScript)  
+INFO  ListRange.java> 00104b80  lbu a2,0x0(s0) (GhidraScript)  
+INFO  ListRange.java> 00104b84  sll v0,v0,0x8 (GhidraScript)  
+INFO  ListRange.java> 00104b88  lbu v1,0x0(s2) (GhidraScript)  
+INFO  ListRange.java> 00104b8c  sll t2,t2,0x8 (GhidraScript)  
+INFO  ListRange.java> 00104b90  lbu a1,0x0(t7) (GhidraScript)  
+INFO  ListRange.java> 00104b94  sll a0,a0,0x10 (GhidraScript)  
+INFO  ListRange.java> 00104b98  or a0,a0,v0 (GhidraScript)  
+INFO  ListRange.java> 00104b9c  or t3,t3,t5 (GhidraScript)  
+INFO  ListRange.java> 00104ba0  or a1,a1,t6 (GhidraScript)  
+INFO  ListRange.java> 00104ba4  or a2,a2,t4 (GhidraScript)  
+INFO  ListRange.java> 00104ba8  or t1,t1,t2 (GhidraScript)  
+INFO  ListRange.java> 00104bac  or v1,v1,a3 (GhidraScript)  
+INFO  ListRange.java> 00104bb0  addiu v0,s5,0x568 (GhidraScript)  
+INFO  ListRange.java> 00104bb4  or a1,a1,t3 (GhidraScript)  
+INFO  ListRange.java> 00104bb8  or a2,a2,t1 (GhidraScript)  
+INFO  ListRange.java> 00104bbc  or v1,v1,a0 (GhidraScript)  
+INFO  ListRange.java> 00104bc0  sw v1,0xc(v0) (GhidraScript)  
+INFO  ListRange.java> 00104bc4  lui s2,0x9f (GhidraScript)  
+INFO  ListRange.java> 00104bc8  sw a1,0x4(v0) (GhidraScript)  
+INFO  ListRange.java> 00104bcc  lui s0,0x9f (GhidraScript)  
+INFO  ListRange.java> 00104bd0  sw a2,0x8(v0) (GhidraScript)  
+INFO  ListRange.java> 00104bd4  lui s4,0x9f (GhidraScript)  
+INFO  ListRange.java> 00104bd8  lui s3,0x9f (GhidraScript)  
+INFO  ListRange.java> 00104bdc  addiu s0,s0,0x460 (GhidraScript)  
+INFO  ListRange.java> 00104be0  addiu s1,s5,0x568 (GhidraScript)  
+INFO  ListRange.java> 00104be4  daddu a0,s0,zero (GhidraScript)  
+INFO  ListRange.java> 00104be8  daddu a1,s1,zero (GhidraScript)  
+INFO  ListRange.java> 00104bec  jal 0x00131360 (GhidraScript)  
+INFO  ListRange.java> 00104bf0  _li a2,0x14 (GhidraScript)  
+INFO  ListRange.java> 00104bf4  addiu a1,s6,-0xb8 (GhidraScript)  
+INFO  ListRange.java> 00104bf8  daddu a0,s0,zero (GhidraScript)  
+INFO  ListRange.java> 00104bfc  jal 0x001313f8 (GhidraScript)  
+INFO  ListRange.java> ---- 0x105090..0x105338 (GhidraScript)  
+INFO  ListRange.java> 00105090  addiu sp,sp,-0x60 (GhidraScript)  
+INFO  ListRange.java> 00105094  lui v1,0x1 (GhidraScript)  
+INFO  ListRange.java> 00105098  sd s2,0x20(sp) (GhidraScript)  
+INFO  ListRange.java> 0010509c  lui s2,0x76 (GhidraScript)  
+INFO  ListRange.java> 001050a0  sd s4,0x40(sp) (GhidraScript)  
+INFO  ListRange.java> 001050a4  lw v0,0x4bd0(s2) (GhidraScript)  
+INFO  ListRange.java> 001050a8  daddu s4,s2,zero (GhidraScript)  
+INFO  ListRange.java> 001050ac  sd s3,0x30(sp) (GhidraScript)  
+INFO  ListRange.java> 001050b0  sd s0,0x0(sp) (GhidraScript)  
+INFO  ListRange.java> 001050b4  daddu s3,a1,zero (GhidraScript)  
+INFO  ListRange.java> 001050b8  sd ra,0x50(sp) (GhidraScript)  
+INFO  ListRange.java> 001050bc  daddu s0,a0,zero (GhidraScript)  
+INFO  ListRange.java> 001050c0  and v0,v0,v1 (GhidraScript)  
+INFO  ListRange.java> 001050c4  beq v0,zero,0x001050dc (GhidraScript)  
+INFO  ListRange.java> 001050c8  _sd s1,0x10(sp) (GhidraScript)  
+INFO  ListRange.java> 001050cc  beq v0,v1,0x00105178 (GhidraScript)  
+INFO  ListRange.java> 001050d0  _lw v1,0x4bd0(s2) (GhidraScript)  
+INFO  ListRange.java> 001050d4  b 0x0010520c (GhidraScript)  
+INFO  ListRange.java> 001050d8  _andi v0,v1,0xffff (GhidraScript)  
+INFO  ListRange.java> 001050dc  lui s1,0x76 (GhidraScript)  
+INFO  ListRange.java> 001050e0  lw a0,0x4bd4(s1) (GhidraScript)  
+INFO  ListRange.java> 001050e4  bne a0,zero,0x0010514c (GhidraScript)  
+INFO  ListRange.java> 001050e8  _lui v0,0x76 (GhidraScript)  
+INFO  ListRange.java> 001050ec  jal 0x00104470 (GhidraScript)  
+INFO  ListRange.java> 001050f0  _lw a0,0x0(s0) (GhidraScript)  
+INFO  ListRange.java> 001050f4  daddu a0,v0,zero (GhidraScript)  
+INFO  ListRange.java> 001050f8  sw a0,0x4bd4(s1) (GhidraScript)  
+INFO  ListRange.java> 001050fc  lw a1,0x0(s0) (GhidraScript)  
+INFO  ListRange.java> 00105100  srl v0,a1,0x18 (GhidraScript)  
+INFO  ListRange.java> 00105104  andi v0,v0,0xe (GhidraScript)  
+INFO  ListRange.java> 00105108  beq v0,zero,0x00105130 (GhidraScript)  
+INFO  ListRange.java> 0010510c  _addiu v0,a0,-0x1 (GhidraScript)  
+INFO  ListRange.java> 00105110  lui v0,0xffff (GhidraScript)  
+INFO  ListRange.java> 00105114  lui v1,0xbeef (GhidraScript)  
+INFO  ListRange.java> 00105118  ori v0,v0,0xfffe (GhidraScript)  
+INFO  ListRange.java> 0010511c  ori v1,v1,0xc0de (GhidraScript)  
+INFO  ListRange.java> 00105120  and v0,a1,v0 (GhidraScript)  
+INFO  ListRange.java> 00105124  bne v0,v1,0x00105140 (GhidraScript)  
+INFO  ListRange.java> 00105128  _lui v1,0x76 (GhidraScript)  
+INFO  ListRange.java> 0010512c  addiu v0,a0,0x1 (GhidraScript)  
+INFO  ListRange.java> 00105130  lui v1,0x76 (GhidraScript)  
+INFO  ListRange.java> 00105134  sw v0,0x4bd4(s1) (GhidraScript)  
+INFO  ListRange.java> 00105138  b 0x00105284 (GhidraScript)  
+INFO  ListRange.java> 0010513c  _sw zero,0x4bd8(v1) (GhidraScript)  
+INFO  ListRange.java> 00105140  li v0,0x1 (GhidraScript)  
+INFO  ListRange.java> 00105144  b 0x00105164 (GhidraScript)  
+INFO  ListRange.java> 00105148  _sw v0,0x4bd8(v1) (GhidraScript)  
+INFO  ListRange.java> 0010514c  lw v1,0x4bd8(v0) (GhidraScript)  
+INFO  ListRange.java> 00105150  bnel v1,zero,0x00105168 (GhidraScript)  
+INFO  ListRange.java> 00105154  _daddu a0,s0,zero (GhidraScript)  
+INFO  ListRange.java> 00105158  addiu v0,a0,-0x1 (GhidraScript)  
+INFO  ListRange.java> 0010515c  b 0x00105284 (GhidraScript)  
+INFO  ListRange.java> 00105160  _sw v0,0x4bd4(s1) (GhidraScript)  
+INFO  ListRange.java> 00105164  daddu a0,s0,zero (GhidraScript)  
+INFO  ListRange.java> 00105168  jal 0x001044c0 (GhidraScript)  
+INFO  ListRange.java> 0010516c  _daddu a1,s3,zero (GhidraScript)  
+INFO  ListRange.java> 00105170  b 0x001051fc (GhidraScript)  
+INFO  ListRange.java> 00105174  _lw v0,0x4bd4(s1) (GhidraScript)  
+INFO  ListRange.java> 00105178  daddu a0,s0,zero (GhidraScript)  
+INFO  ListRange.java> 0010517c  jal 0x00104d40 (GhidraScript)  
+INFO  ListRange.java> 00105180  _daddu a1,s3,zero (GhidraScript)  
+INFO  ListRange.java> 00105184  lui s1,0x76 (GhidraScript)  
+INFO  ListRange.java> 00105188  lw v0,0x4bd4(s1) (GhidraScript)  
+INFO  ListRange.java> 0010518c  bne v0,zero,0x00105200 (GhidraScript)  
+INFO  ListRange.java> 00105190  _addiu v0,v0,-0x1 (GhidraScript)  
+INFO  ListRange.java> 00105194  jal 0x00104470 (GhidraScript)  
+INFO  ListRange.java> 00105198  _lw a0,0x0(s0) (GhidraScript)  
+INFO  ListRange.java> 0010519c  li v1,0x1 (GhidraScript)  
+INFO  ListRange.java> 001051a0  bne v0,v1,0x001051f8 (GhidraScript)  
+INFO  ListRange.java> 001051a4  _sw v0,0x4bd4(s1) (GhidraScript)  
+INFO  ListRange.java> 001051a8  lui v0,0xffff (GhidraScript)  
+INFO  ListRange.java> 001051ac  lw v1,0x0(s0) (GhidraScript)  
+INFO  ListRange.java> 001051b0  ori v0,v0,0xffff (GhidraScript)  
+INFO  ListRange.java> 001051b4  bne v1,v0,0x001051fc (GhidraScript)  
+INFO  ListRange.java> 001051b8  _lw v0,0x4bd4(s1) (GhidraScript)  
+INFO  ListRange.java> 001051bc  lw v1,0x4bd0(s2) (GhidraScript)  
+INFO  ListRange.java> 001051c0  lui v0,0xff (GhidraScript)  
+INFO  ListRange.java> 001051c4  lw a0,0x0(s3) (GhidraScript)  
+INFO  ListRange.java> 001051c8  ori v0,v0,0xffff (GhidraScript)  
+INFO  ListRange.java> 001051cc  srl v1,v1,0x10 (GhidraScript)  
+INFO  ListRange.java> 001051d0  lui a1,0x9f (GhidraScript)  
+INFO  ListRange.java> 001051d4  and a0,a0,v0 (GhidraScript)  
+INFO  ListRange.java> 001051d8  sll v1,v1,0x18 (GhidraScript)  
+INFO  ListRange.java> 001051dc  or v1,v1,a0 (GhidraScript)  
+INFO  ListRange.java> 001051e0  sw zero,0x4bd4(s1) (GhidraScript)  
+INFO  ListRange.java> 001051e4  srl v0,v1,0x10 (GhidraScript)  
+INFO  ListRange.java> 001051e8  sw v1,0x4bd0(s2) (GhidraScript)  
+INFO  ListRange.java> 001051ec  andi v0,v0,0x2 (GhidraScript)  
+INFO  ListRange.java> 001051f0  b 0x00105284 (GhidraScript)  
+INFO  ListRange.java> 001051f4  _sw v0,0x580(a1) (GhidraScript)  
+INFO  ListRange.java> 001051f8  lw v0,0x4bd4(s1) (GhidraScript)  
+INFO  ListRange.java> 001051fc  addiu v0,v0,-0x1 (GhidraScript)  
+INFO  ListRange.java> 00105200  sw v0,0x4bd4(s1) (GhidraScript)  
+INFO  ListRange.java> 00105204  lw v1,0x4bd0(s2) (GhidraScript)  
+INFO  ListRange.java> 00105208  andi v0,v1,0xffff (GhidraScript)  
+INFO  ListRange.java> 0010520c  beq v0,zero,0x0010522c (GhidraScript)  
+INFO  ListRange.java> 00105210  _addiu v1,v1,-0x1 (GhidraScript)  
+INFO  ListRange.java> 00105214  andi v0,v1,0xffff (GhidraScript)  
+INFO  ListRange.java> 00105218  bne v0,zero,0x0010522c (GhidraScript)  
+INFO  ListRange.java> 0010521c  _sw v1,0x4bd0(s4) (GhidraScript)  
+INFO  ListRange.java> 00105220  srl v0,v1,0x18 (GhidraScript)  
+INFO  ListRange.java> 00105224  sll v0,v0,0x10 (GhidraScript)  
+INFO  ListRange.java> 00105228  sw v0,0x4bd0(s4) (GhidraScript)  
+INFO  ListRange.java> 0010522c  lw v0,0x0(s0) (GhidraScript)  
+INFO  ListRange.java> 00105230  lui v1,0xffff (GhidraScript)  
+INFO  ListRange.java> 00105234  ori v1,v1,0xfffe (GhidraScript)  
+INFO  ListRange.java> 00105238  lui a0,0xbeef (GhidraScript)  
+INFO  ListRange.java> 0010523c  and v0,v0,v1 (GhidraScript)  
+INFO  ListRange.java> 00105240  ori a0,a0,0xc0de (GhidraScript)  
+INFO  ListRange.java> 00105244  bne v0,a0,0x00105288 (GhidraScript)  
+INFO  ListRange.java> 00105248  _ld ra,0x50(sp) (GhidraScript)  
+INFO  ListRange.java> 0010524c  lw v0,0x4bd0(s2) (GhidraScript)  
+INFO  ListRange.java> 00105250  lui v1,0x1 (GhidraScript)  
+INFO  ListRange.java> 00105254  li a0,0x1 (GhidraScript)  
+INFO  ListRange.java> 00105258  or v0,v0,v1 (GhidraScript)  
+INFO  ListRange.java> 0010525c  sw v0,0x4bd0(s2) (GhidraScript)  
+INFO  ListRange.java> 00105260  jal 0x00104660 (GhidraScript)  
+INFO  ListRange.java> 00105264  _lw a1,0x0(s3) (GhidraScript)  
+INFO  ListRange.java> 00105268  lw v0,0x0(s0) (GhidraScript)  
+INFO  ListRange.java> 0010526c  lui a1,0x9f (GhidraScript)  
+INFO  ListRange.java> 00105270  lui a0,0x76 (GhidraScript)  
+INFO  ListRange.java> 00105274  li v1,0x1 (GhidraScript)  
+INFO  ListRange.java> 00105278  andi v0,v0,0x1 (GhidraScript)  
+INFO  ListRange.java> 0010527c  sw v1,0x4bd4(a0) (GhidraScript)  
+INFO  ListRange.java> 00105280  sw v0,0x57c(a1) (GhidraScript)  
+INFO  ListRange.java> 00105284  ld ra,0x50(sp) (GhidraScript)  
+INFO  ListRange.java> 00105288  ld s4,0x40(sp) (GhidraScript)  
+INFO  ListRange.java> 0010528c  ld s3,0x30(sp) (GhidraScript)  
+INFO  ListRange.java> 00105290  ld s2,0x20(sp) (GhidraScript)  
+INFO  ListRange.java> 00105294  ld s1,0x10(sp) (GhidraScript)  
+INFO  ListRange.java> 00105298  ld s0,0x0(sp) (GhidraScript)  
+INFO  ListRange.java> 0010529c  jr ra (GhidraScript)  
+INFO  ListRange.java> 001052a0  _addiu sp,sp,0x60 (GhidraScript)  
+INFO  ListRange.java> 001052a8  addiu sp,sp,-0x10 (GhidraScript)  
+INFO  ListRange.java> 001052ac  lui v1,0x76 (GhidraScript)  
+INFO  ListRange.java> 001052b0  lui v0,0x76 (GhidraScript)  
+INFO  ListRange.java> 001052b4  lui a0,0x76 (GhidraScript)  
+INFO  ListRange.java> 001052b8  sd ra,0x0(sp) (GhidraScript)  
+INFO  ListRange.java> 001052bc  addiu a0,a0,0x4ca0 (GhidraScript)  
+INFO  ListRange.java> 001052c0  sw zero,0x4bd4(v0) (GhidraScript)  
+INFO  ListRange.java> 001052c4  clear a1 (GhidraScript)  
+INFO  ListRange.java> 001052c8  sw zero,0x4bd0(v1) (GhidraScript)  
+INFO  ListRange.java> 001052cc  jal 0x0014497c (GhidraScript)  
+INFO  ListRange.java> 001052d0  _li a2,0x100 (GhidraScript)  
+INFO  ListRange.java> 001052d4  lui a0,0x76 (GhidraScript)  
+INFO  ListRange.java> 001052d8  clear a1 (GhidraScript)  
+INFO  ListRange.java> 001052dc  addiu a0,a0,0x4da0 (GhidraScript)  
+INFO  ListRange.java> 001052e0  jal 0x0014497c (GhidraScript)  
+INFO  ListRange.java> 001052e4  _li a2,0x100 (GhidraScript)  
+INFO  ListRange.java> 001052e8  lui a0,0x76 (GhidraScript)  
+INFO  ListRange.java> 001052ec  clear a1 (GhidraScript)  
+INFO  ListRange.java> 001052f0  addiu a0,a0,0x4ea0 (GhidraScript)  
+INFO  ListRange.java> 001052f4  jal 0x0014497c (GhidraScript)  
+INFO  ListRange.java> 001052f8  _li a2,0x100 (GhidraScript)  
+INFO  ListRange.java> 001052fc  lui a0,0x76 (GhidraScript)  
+INFO  ListRange.java> 00105300  clear a1 (GhidraScript)  
+INFO  ListRange.java> 00105304  addiu a0,a0,0x4fa0 (GhidraScript)  
+INFO  ListRange.java> 00105308  jal 0x0014497c (GhidraScript)  
+INFO  ListRange.java> 0010530c  _li a2,0x100 (GhidraScript)  
+INFO  ListRange.java> 00105310  lui a0,0x76 (GhidraScript)  
+INFO  ListRange.java> 00105314  ld ra,0x0(sp) (GhidraScript)  
+INFO  ListRange.java> 00105318  clear a1 (GhidraScript)  
+INFO  ListRange.java> 0010531c  addiu a0,a0,0x50a0 (GhidraScript)  
+INFO  ListRange.java> 00105320  li a2,0x100 (GhidraScript)  
+INFO  ListRange.java> 00105324  j 0x0014497c (GhidraScript)  
+INFO  ListRange.java> 00105328  _addiu sp,sp,0x10 (GhidraScript)  
+INFO  ANALYZING changes made by post scripts: file:///private/tmp/codebreaker-v10-audit/v10.elf (HeadlessAnalyzer)  
+INFO  REPORT: Post-analysis succeeded for file: file:///private/tmp/codebreaker-v10-audit/v10.elf (HeadlessAnalyzer)  
+INFO  /v10.elf: file created (mathias) (LocalFileSystem)  
+INFO  REPORT: Save succeeded for: /v10.elf (v10:/v10.elf) (HeadlessAnalyzer)  
+INFO  REPORT: Import succeeded (HeadlessAnalyzer)  

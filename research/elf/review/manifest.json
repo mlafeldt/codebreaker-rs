@@ -1,0 +1,74 @@
+{
+  "cmpout-truncation-probe.txt": {
+    "bytes": 150,
+    "sha256": "054ffa1c9b6ff39b29e6a40da7f8ae47e249365a9f3b73f566f9d2dacf7bc2db"
+  },
+  "disc/PCSX2-CDVD.cpp": {
+    "bytes": 95877,
+    "sha256": "3d5133209f33ba36747d5ec9637775259d9bcd948fafb41ab62527c6befb11c4"
+  },
+  "disc/payload.log": {
+    "bytes": 14705,
+    "sha256": "8ec00cd98b438594b96048e09a12fb0b556a11dfc8b470082b9d72776cf79d58"
+  },
+  "disc/payload2.log": {
+    "bytes": 12654,
+    "sha256": "cc97bc3e8c71f2b9ef4abba4df6b4e888bee712afc7b6d5b25f254fae854b45e"
+  },
+  "disc/serial-reproduction.txt": {
+    "bytes": 398,
+    "sha256": "2ceb8bcd8a91202db39288367bd589f45dd182c792582a2cadb695775d58a55a"
+  },
+  "normalizer-probe.txt": {
+    "bytes": 385,
+    "sha256": "a09486d644eae352a58a953922268e920edc185c480bace3bde2b23d0f4e302a"
+  },
+  "v10/EmuRekey.java": {
+    "bytes": 783,
+    "sha256": "78a70713e5a3ece89a21b28814d15ae4375f73e79687cfe2e4b8f26338643a8a"
+  },
+  "v10/cases.cov": {
+    "bytes": 26786,
+    "sha256": "ec010b13e5f8cc217218099e3ae9a6a5fcdb40fecbf018f8917cb6a60fb99520"
+  },
+  "v10/cases.out": {
+    "bytes": 9159,
+    "sha256": "2462c40c6a887090defdc4d05ceba44e30c97b833099588ebebbffa3a6780410"
+  },
+  "v10/cases.txt": {
+    "bytes": 950,
+    "sha256": "42e46d152711b0cbcdb196b0835dc525f9ea1b74534eef04658b7f6b15cf954d"
+  },
+  "v10/diff.txt": {
+    "bytes": 32467,
+    "sha256": "b370a5512695d1a926e6972606716af1d9f48b21a82ac4635a2c245a13a82517"
+  },
+  "v10/emulation.log": {
+    "bytes": 4412,
+    "sha256": "ed11622fffcaf72e026bb188ea1fd47dd19ac50d967c61541f89675ad5d20574"
+  },
+  "v10/fixtures.txt": {
+    "bytes": 516,
+    "sha256": "3f80c018442c6d60fa3c1e2485aae0d610c77639f25866cb0bc85272d76434c4"
+  },
+  "v10/ghidra.log": {
+    "bytes": 42733,
+    "sha256": "b0ac258ffcff3615dede971a0e8295ac652ef5aac662a642828b41d6e85e3444"
+  },
+  "v10/rekey.log": {
+    "bytes": 4660,
+    "sha256": "0aa1cb38465c47fef0843fa17d994a1e96becb445ec1db273c22cb24af11cc78"
+  },
+  "v92/ghidra.log": {
+    "bytes": 4593,
+    "sha256": "e1d16e4e2b4831fd04ab94afd78aac2baef6290a393477f778fee26045312397"
+  },
+  "v92/report.cov": {
+    "bytes": 38126,
+    "sha256": "951b167b9dd66336b46d0804457cdbe2b6f76427699ed1743f5344f31eb07236"
+  },
+  "v92/report.out": {
+    "bytes": 16303,
+    "sha256": "eb1b11b276f0c48dbe24ae1b020456c0f77fcb4e760bb1492d675dc89d4b801c"
+  }
+}
