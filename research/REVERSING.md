@@ -44,6 +44,51 @@ stable and citable:
   `ffffffff-encryption-options` (§9.5). Cite it by hash too.
 
 
+## Methodology for further comparisons
+
+Use the identified binary as the reference for that build. Read the existing
+findings, evidence, and fix history first; other implementations provide
+context, not proof of firmware behavior. Keep implementation changes separate
+from a review unless they are part of the requested work. Follow the branch
+policy above so cited hashes stay stable.
+
+1. **Identify the artifact.** Record its hash, version, provenance, packer,
+   unpacking procedure, and signs of modification. Distinguish inspected paths
+   from whole-image authenticity. Keep ELF/BIN images untracked and preserve
+   supporting text evidence with its source identity.
+2. **Locate and verify the crypto.** Find routines by beefcode immediates,
+   seed tables, RC4 keys, and the RSA modulus rather than assuming another
+   version's addresses. Compare every constant table with `src/`.
+3. **Compare in both directions.** Match each Rust function and branch to
+   firmware instructions, then sweep the firmware's branches, callees, and
+   globals for missing behavior. Check signedness, shifts, masks, byte order,
+   overflow, loop bounds, early returns, and state-update order. Map each state
+   field and its initialization/reset rules. Use listings where EE instructions
+   make decompilation unreliable.
+4. **Differentially exercise the firmware.** Run reset and per-line decrypt on
+   random lists and targeted command/line-count cases, beefcodes in each mode,
+   extra seed lines, options, and arithmetic boundaries. Validate emulator
+   hooks. Compare complete list lengths and outputs; state exactly which state
+   fields were compared. Inspect diagnostics rather than trusting exit status
+   or normalized equality alone (§12, F2/F3).
+5. **Explain coverage gaps.** Record reached blocks and construct inputs for
+   unreached paths. Classify each gap as proven unreachable, reachable but
+   untested, or unresolved; failure to reach a block does not prove dead code.
+   State which paths were modeled, hooked, or actually emulated.
+6. **Check encryption and version differences.** Check encryption as an inverse
+   of explicit decryption, separating intentional firmware divergences from
+   defects. Do not assume auto-detection is an inverse. Compare other versions
+   with verified function boundaries and relocation mappings. Trace other
+   crypto callers to identify file, loader, or network behavior outside the
+   code-line API.
+7. **Report reproducible conclusions.** Give a verdict per function, addresses
+   and listing evidence, feature status (implemented, intentionally omitted,
+   missing, or out of scope), and concrete input/firmware/crate output vectors
+   for differences. Include coverage, version changes, tooling limitations,
+   and remaining unknowns. Keep observations, model results, and inferences
+   distinct; bound compatibility claims to the paths or corpus checked.
+
+
 ## 1. The ELF
 
 | | |
@@ -1691,11 +1736,13 @@ crate defect:
   comparison is `0x2c420001` versus `0x24020001`. The shorthand `2c→24`
   omits the changed source-register bits (`42→02`); changing only the opcode
   would not produce the documented unconditional `addiu v0,zero,1`.
-- **The reusable prompt contradicts current branch policy.**
-  `COMPARE_PROMPT.md:19` says rebase, while `REVERSING.md:31–40` says merge and
-  never rebase to preserve cited hashes. The prompt also forces unreached
-  blocks into “missing or dead” at lines 52–54. A rare reachable path or an
-  insufficient corpus is another possibility, already illustrated by §9.8.
+- **The former reusable prompt contradicted branch policy.** At the reviewed
+  commit, `COMPARE_PROMPT.md:19` said rebase, while `REVERSING.md:31–40` said
+  merge and never rebase to preserve cited hashes. The prompt also forced
+  unreached blocks into “missing or dead” at lines 52–54. A rare reachable
+  path or an insufficient corpus is another possibility, already illustrated
+  by §9.8. The prompt has since been removed and its useful checklist folded
+  into “Methodology for further comparisons” above, with these rules corrected.
 
 ### 12.3 What remains supported
 
@@ -1719,7 +1766,7 @@ crate defect:
 | §§11.1–11.4: version comparison | Same primitive core and four changed state functions are supported, with normalizer limitations and the corrected option/rekey semantics in F2/F4. |
 | §11.5: compatibility | Corpus result and counterexamples reproduce; universal published-code compatibility is unproven. |
 | `docs/disc-lock.html` | Key equation and supplied-image constants remain useful; secrecy, impossibility, provenance, and boot-gate claims need the corrections above. |
-| `COMPARE_PROMPT.md` and tools | Broad binary-first method is useful; F2/F3 and the smaller policy/coverage corrections must be considered before reuse. |
+| Comparison methodology and tools | The former prompt's checklist is consolidated above with corrected branch and coverage guidance. Tool limitations F2/F3 still apply. |
 
 ### 12.4 Checks performed and evidence
 
