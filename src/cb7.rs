@@ -539,14 +539,11 @@ mod tests {
         // reduction defect, and we leave it out on purpose: this crate uses
         // exact math, so the same boundary input decrypts cleanly and round
         // trips. (0xffff_ffff_ffff_fff4 = modulus - 1, so it is < modulus.)
+        // With the odd decryption exponent, (n - 1)^11 mod n = n - 1.
         let (addr0, val0) = (0xffff_ffff_u32, 0xffff_fff4_u32);
         let (mut addr, mut val) = (addr0, val0);
         rsa_crypt(&mut addr, &mut val, RSA_DEC_KEY, RSA_MODULUS);
-        assert_ne!(
-            u64::from(addr) << 32 | u64::from(val),
-            0x04f3_63df_ecae_2b57,
-            "must not reproduce the firmware's wrong reduction"
-        );
+        assert_eq!((addr, val), (addr0, val0), "exact RSA must decrypt n - 1 to n - 1");
         rsa_crypt(&mut addr, &mut val, RSA_ENC_KEY, RSA_MODULUS);
         assert_eq!((addr, val), (addr0, val0), "exact RSA must round-trip");
     }
