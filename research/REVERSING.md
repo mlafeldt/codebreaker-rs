@@ -25,8 +25,9 @@ with `src/`. Results:
 §9 adds a second pass that emulates the firmware in Ghidra and diffs it
 against `src/` on about 10,600 lines.
 
-Binaries and raw tool output are in `elf/` (gitignored, copyrighted). Scripts
-are in `tools/` and `compare/`.
+Firmware images and raw tool output are in `elf/`. ELF/BIN images are
+gitignored; supporting text evidence can be committed. Scripts are in `tools/`
+and `compare/`.
 
 **Branches.** `research/` lives only on the `research` branch. `main` never
 sees it; instead `main` is merged into `research` when it advances (never the

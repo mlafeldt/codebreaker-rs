@@ -1,0 +1,825 @@
+INFO  DecompAt.java> ===== 0x1000008 in entry @ 01000008 ===== (GhidraScript)  
+INFO  DecompAt.java> callers: Entry Point(?) _elfHeader::00000018(?) (GhidraScript)  
+WARN  Decompiling 01000008, pcode error at 01000098: Unable to resolve constructor at 01000098 (DecompileCallback)  
+INFO  DecompAt.java> 
+/* WARNING: Control flow encountered bad instruction data */
+
+void entry(undefined4 param_1)
+
+{
+  bool bVar1;
+  undefined4 *puVar2;
+  
+  puVar2 = &DAT_01383680;
+  do {
+    bVar1 = puVar2 < (undefined4 *)0x1385710;
+    puVar2 = puVar2 + 4;
+  } while (bVar1);
+  syscall(0);
+  syscall(0);
+  DAT_01010900 = param_1;
+  FUN_01006ae4(0,0xffffffffffffffff,0x300000,&DAT_01383700);
+                    /* WARNING: Bad instruction - Truncating control flow here */
+  halt_baddata();
+}
+
+ (GhidraScript)  
+INFO  DecompAt.java> ===== 0x10003a8 in FUN_010003a8 @ 010003a8 ===== (GhidraScript)  
+INFO  DecompAt.java> callers: (GhidraScript)  
+INFO  DecompAt.java> 
+/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+
+void FUN_010003a8(void)
+
+{
+  undefined4 uVar1;
+  ulonglong auStack_60 [2];
+  
+  FUN_0100e450();
+  FUN_01000248();
+  FUN_010000e0(&DAT_01012ab0,DAT_01383580);
+  uVar1 = DAT_01012ab4;
+  auStack_60[0] = (ulonglong)DAT_01012ab0;
+  FUN_01008f2c(0x80000,0,0x1c00);
+  FUN_01000a58(0x100000,auStack_60,&DAT_01012ab8,uVar1);
+  FUN_01008e80(0x1d00000,&DAT_010fc3d0,DAT_01142b90);
+  FUN_01008e80(0x1d64000,&DAT_01142ba0,DAT_0114d900);
+  FUN_01008e80(0x1d7d000,&DAT_0114d910,DAT_011a98fc);
+  FUN_01008e80(0x1de1000,&DAT_011a9900,DAT_011bff70);
+  FUN_01008e80(0x1500010,&DAT_011bff80,DAT_01381634);
+  _DAT_01500000 = DAT_01381634;
+  FUN_010009b0(0);
+  FUN_010009b0(2);
+  FUN_01006420();
+  FUN_01006168();
+  return;
+}
+
+ (GhidraScript)  
+INFO  DecompAt.java> ===== 0x1003dc0 in FUN_01003dc0 @ 01003dc0 ===== (GhidraScript)  
+INFO  DecompAt.java> callers: 01000110(FUN_010000e0) (GhidraScript)  
+INFO  DecompAt.java> 
+void FUN_01003dc0(byte *param_1,int param_2,int param_3)
+
+{
+  byte bVar1;
+  byte *pbVar2;
+  int iVar3;
+  byte *pbVar4;
+  uint uVar5;
+  
+  param_1[0x100] = 0;
+  iVar3 = 0xff;
+  param_1[0x101] = 0;
+  pbVar2 = param_1 + 0xff;
+  do {
+    *pbVar2 = (byte)iVar3;
+    pbVar2 = pbVar2 + -1;
+    iVar3 = iVar3 + -1;
+  } while (-1 < iVar3);
+  uVar5 = 0;
+  iVar3 = 0;
+  pbVar2 = param_1;
+  do {
+    pbVar4 = (byte *)(param_2 + iVar3);
+    bVar1 = *pbVar2;
+    iVar3 = iVar3 + 1;
+    if (iVar3 == param_3) {
+      iVar3 = 0;
+    }
+    uVar5 = uVar5 + (uint)*pbVar4 + (uint)bVar1 & 0xff;
+    *pbVar2 = param_1[uVar5];
+    pbVar2 = pbVar2 + 1;
+    param_1[uVar5] = bVar1;
+  } while ((int)pbVar2 < (int)(param_1 + 0x100));
+  return;
+}
+
+ (GhidraScript)  
+INFO  DecompAt.java> ===== 0x1003e58 in FUN_01003e58 @ 01003e58 ===== (GhidraScript)  
+INFO  DecompAt.java> callers: 01000120(FUN_010000e0) (GhidraScript)  
+INFO  DecompAt.java> 
+void FUN_01003e58(int param_1,byte *param_2,int param_3)
+
+{
+  char cVar1;
+  byte bVar2;
+  char *pcVar3;
+  char *pcVar4;
+  byte bVar5;
+  byte bVar6;
+  
+  for (; param_3 != 0; param_3 = param_3 + -1) {
+    bVar6 = *(char *)(param_1 + 0x100) + 1;
+    pcVar4 = (char *)(param_1 + (uint)bVar6);
+    cVar1 = *pcVar4;
+    bVar5 = *(char *)(param_1 + 0x101) + cVar1;
+    pcVar3 = (char *)(param_1 + (uint)bVar5);
+    *pcVar4 = *pcVar3;
+    *pcVar3 = cVar1;
+    bVar2 = *(byte *)(param_1 + (uint)(byte)(*pcVar4 + cVar1));
+    *(byte *)(param_1 + 0x100) = bVar6;
+    *(byte *)(param_1 + 0x101) = bVar5;
+    *param_2 = *param_2 ^ bVar2;
+    param_2 = param_2 + 1;
+  }
+  return;
+}
+
+ (GhidraScript)  
+INFO  REPORT: Save succeeded for processed file: /BOOT.ELF (HeadlessAnalyzer)  
+openjdk version "24" 2025-03-18
+OpenJDK Runtime Environment Temurin-24+36 (build 24+36)
+OpenJDK 64-Bit Server VM Temurin-24+36 (build 24+36, mixed mode)
+INFO  Using log config file: jar:file:/opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Framework/Generic/lib/Generic.jar!/generic.log4j.xml (LoggingInitialization)  
+INFO  Using log file: /Users/mathias/Library/ghidra/ghidra_12.1.4_PUBLIC/application.log (LoggingInitialization)  
+INFO  Loading user preferences: /Users/mathias/Library/ghidra/ghidra_12.1.4_PUBLIC/preferences (Preferences)  
+INFO  Loading previous preferences: /Users/mathias/Library/ghidra/ghidra_12.2_PUBLIC/preferences (Preferences)  
+INFO  Searching for classes... (ClassSearcher)  
+INFO  Class search complete (752 ms) (ClassSearcher)  
+INFO  Initializing SSL Context (DefaultSSLContextInitializer)  
+INFO  Initializing Random Number Generator... (SecureRandomFactory)  
+INFO  Random Number Generator initialization complete: NativePRNGNonBlocking (SecureRandomFactory)  
+INFO  Trust manager disabled, cacerts have not been set (DefaultTrustManagerFactory)  
+INFO  Headless startup complete (1510 ms) (AnalyzeHeadless)  
+INFO  Class searcher loaded 59 extension points (20 false positives) (ClassSearcher)  
+WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
+WARNING: sun.misc.Unsafe::staticFieldOffset has been called by org.apache.felix.framework.util.SecureAction (file:/opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Features/Base/lib/org.apache.felix.framework-7.0.5.jar)
+WARNING: Please consider reporting this to the maintainers of class org.apache.felix.framework.util.SecureAction
+WARNING: sun.misc.Unsafe::staticFieldOffset will be removed in a future release
+INFO  HEADLESS Script Paths:
+    /opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Features/GnuDemangler/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Processors/JVM/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Processors/PIC/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Features/PyGhidra/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Debug/Debugger/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Features/WildcardAssembler/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Features/PDB/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Features/MicrosoftCodeAnalyzer/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Debug/Debugger-rmi-trace/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Features/VersionTracking/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Features/FunctionID/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Features/BytePatterns/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Features/DecompilerDependent/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Features/BSim/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Features/SwiftDemangler/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Features/Decompiler/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Features/SystemEmulation/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Processors/DATA/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Features/Base/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Features/FileFormats/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Processors/8051/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Processors/Atmel/ghidra_scripts
+    /private/tmp/claude-501/-Users-mathias-devel-homebrew-codebreaker-rs/3ff5f070-6a95-4927-9e5f-cdc36d6be56c/scratchpad/cbv10/scripts (HeadlessAnalyzer)  
+INFO  HEADLESS: execution starts (HeadlessAnalyzer)  
+INFO  Opening existing project: /private/tmp/claude-501/-Users-mathias-devel-homebrew-codebreaker-rs/3ff5f070-6a95-4927-9e5f-cdc36d6be56c/scratchpad/cbv10/proj/cbv10 (HeadlessAnalyzer)  
+INFO  Opening project: /private/tmp/claude-501/-Users-mathias-devel-homebrew-codebreaker-rs/3ff5f070-6a95-4927-9e5f-cdc36d6be56c/scratchpad/cbv10/proj/cbv10 (HeadlessProject)  
+INFO  REPORT: Processing project file: /BOOT.ELF (HeadlessAnalyzer)  
+INFO  REPORT: Execute script: DecompAt.java '0x10000e0' '0x1008e80' '0x1000a58' '0x1008f2c'  (HeadlessAnalyzer)  
+INFO  SCRIPT: /private/tmp/claude-501/-Users-mathias-devel-homebrew-codebreaker-rs/3ff5f070-6a95-4927-9e5f-cdc36d6be56c/scratchpad/cbv10/scripts/DecompAt.java (HeadlessAnalyzer)  
+INFO  DecompAt.java> ===== 0x10000e0 in FUN_010000e0 @ 010000e0 ===== (GhidraScript)  
+INFO  DecompAt.java> callers: 010003e0(FUN_010003a8) (GhidraScript)  
+INFO  DecompAt.java> 
+void FUN_010000e0(undefined8 param_1,undefined8 param_2)
+
+{
+  FUN_01003dc0(&DAT_01012980,&DAT_01010940,0x14);
+  FUN_01003e58(&DAT_01012980,param_1,param_2);
+  FUN_010009b0(0);
+  FUN_010009b0(2);
+  return;
+}
+
+ (GhidraScript)  
+INFO  DecompAt.java> ===== 0x1008e80 in FUN_01008e80 @ 01008e80 ===== (GhidraScript)  
+INFO  DecompAt.java> callers: 01000428(FUN_010003a8) 01000444(FUN_010003a8) 01000460(FUN_010003a8) 0100047c(FUN_010003a8) 01000494(FUN_010003a8) 01002548(FUN_01002530) 01003cf4(FUN_01003c40) 01003d84(FUN_01003c40) 01008268(FUN_010080d0) 0100bd54(FUN_0100af38) 0100ce98(FUN_0100cdd8) 01001bfc(FUN_01001820) (GhidraScript)  
+WARN  Decompiling 01008e80, pcode error at 01008ea4: Unable to resolve constructor at 01008ea4 (DecompileCallback)  
+INFO  DecompAt.java> 
+/* WARNING: Control flow encountered bad instruction data */
+
+undefined1 * FUN_01008e80(undefined1 *param_1,undefined1 *param_2,ulonglong param_3)
+
+{
+  undefined1 uVar1;
+  undefined1 *puVar2;
+  int iVar3;
+  
+  iVar3 = (int)param_3;
+  puVar2 = param_1;
+  if ((0x1f < param_3) && ((((uint)param_2 | (uint)param_1) & 0xf) == 0)) {
+                    /* WARNING: Bad instruction - Truncating control flow here */
+    halt_baddata();
+  }
+  while (iVar3 = iVar3 + -1, iVar3 != -1) {
+    uVar1 = *param_2;
+    param_2 = param_2 + 1;
+    *puVar2 = uVar1;
+    puVar2 = puVar2 + 1;
+  }
+  return param_1;
+}
+
+ (GhidraScript)  
+INFO  DecompAt.java> ===== 0x1000a58 in FUN_01000a58 @ 01000a58 ===== (GhidraScript)  
+INFO  DecompAt.java> callers: 01000410(FUN_010003a8) (GhidraScript)  
+INFO  DecompAt.java> 
+longlong FUN_01000a58(undefined4 param_1,ulonglong *param_2,undefined4 param_3,ulonglong param_4)
+
+{
+  longlong lVar1;
+  longlong lVar2;
+  undefined4 uStack_80;
+  undefined4 uStack_7c;
+  undefined4 uStack_70;
+  uint uStack_6c;
+  ulonglong uStack_68;
+  undefined4 uStack_58;
+  undefined4 uStack_54;
+  
+  uStack_7c = (undefined4)param_4;
+  if (((param_4 & 0xffffffff) == param_4) &&
+     (uStack_6c = (uint)*param_2, (ulonglong)uStack_6c == *param_2)) {
+    uStack_58 = 0;
+    uStack_54 = 0;
+    uStack_80 = param_3;
+    uStack_70 = param_1;
+    lVar1 = FUN_01000d40(&uStack_80,s_1_1_4_01383588,0x48);
+    if (lVar1 == 0) {
+      lVar2 = FUN_01000d68(&uStack_80,4);
+      if (lVar2 == 1) {
+        *param_2 = uStack_68;
+        lVar1 = FUN_01000b88(&uStack_80);
+      }
+      else {
+        FUN_01000b88(&uStack_80);
+        lVar1 = -5;
+        if (lVar2 != 0) {
+          lVar1 = lVar2;
+        }
+      }
+    }
+  }
+  else {
+    lVar1 = -5;
+  }
+  return lVar1;
+}
+
+ (GhidraScript)  
+INFO  DecompAt.java> ===== 0x1008f2c in FUN_01008f2c @ 01008f2c ===== (GhidraScript)  
+INFO  DecompAt.java> callers: 01005be0(FUN_01005ba0) 010003fc(FUN_010003a8) 01008858(FUN_010086b0) (GhidraScript)  
+INFO  DecompAt.java> 
+undefined8 * FUN_01008f2c(undefined8 *param_1,undefined1 param_2,uint param_3)
+
+{
+  bool bVar1;
+  undefined8 uVar2;
+  undefined8 *puVar3;
+  
+  puVar3 = param_1;
+  if ((7 < param_3) && (((uint)param_1 & 0xf) == 0)) {
+    uVar2 = special2(0,(ulonglong)CONCAT11(param_2,param_2),0x1b,0x29);
+    bVar1 = param_3 < 8;
+    if (0x1f < param_3) {
+      special2(uVar2,uVar2,0xe,9);
+      do {
+        param_3 = param_3 - 0x20;
+        puVar3 = puVar3 + 4;
+      } while (0x1f < param_3);
+      bVar1 = param_3 < 8;
+    }
+    while (!bVar1) {
+      *puVar3 = uVar2;
+      param_3 = param_3 - 8;
+      puVar3 = puVar3 + 1;
+      bVar1 = param_3 < 8;
+    }
+  }
+  while (param_3 = param_3 - 1, param_3 != 0xffffffff) {
+    *(undefined1 *)puVar3 = param_2;
+    puVar3 = (undefined8 *)((int)puVar3 + 1);
+  }
+  return param_1;
+}
+
+ (GhidraScript)  
+INFO  REPORT: Save succeeded for processed file: /BOOT.ELF (HeadlessAnalyzer)  
+openjdk version "24" 2025-03-18
+OpenJDK Runtime Environment Temurin-24+36 (build 24+36)
+OpenJDK 64-Bit Server VM Temurin-24+36 (build 24+36, mixed mode)
+INFO  Using log config file: jar:file:/opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Framework/Generic/lib/Generic.jar!/generic.log4j.xml (LoggingInitialization)  
+INFO  Using log file: /Users/mathias/Library/ghidra/ghidra_12.1.4_PUBLIC/application.log (LoggingInitialization)  
+INFO  Loading user preferences: /Users/mathias/Library/ghidra/ghidra_12.1.4_PUBLIC/preferences (Preferences)  
+INFO  Loading previous preferences: /Users/mathias/Library/ghidra/ghidra_12.2_PUBLIC/preferences (Preferences)  
+INFO  Searching for classes... (ClassSearcher)  
+INFO  Class search complete (714 ms) (ClassSearcher)  
+INFO  Initializing SSL Context (DefaultSSLContextInitializer)  
+INFO  Initializing Random Number Generator... (SecureRandomFactory)  
+INFO  Random Number Generator initialization complete: NativePRNGNonBlocking (SecureRandomFactory)  
+INFO  Trust manager disabled, cacerts have not been set (DefaultTrustManagerFactory)  
+INFO  Headless startup complete (1466 ms) (AnalyzeHeadless)  
+INFO  Class searcher loaded 59 extension points (20 false positives) (ClassSearcher)  
+WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
+WARNING: sun.misc.Unsafe::staticFieldOffset has been called by org.apache.felix.framework.util.SecureAction (file:/opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Features/Base/lib/org.apache.felix.framework-7.0.5.jar)
+WARNING: Please consider reporting this to the maintainers of class org.apache.felix.framework.util.SecureAction
+WARNING: sun.misc.Unsafe::staticFieldOffset will be removed in a future release
+INFO  HEADLESS Script Paths:
+    /opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Features/GnuDemangler/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Processors/JVM/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Processors/PIC/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Features/PyGhidra/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Debug/Debugger/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Features/WildcardAssembler/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Features/PDB/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Features/MicrosoftCodeAnalyzer/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Debug/Debugger-rmi-trace/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Features/VersionTracking/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Features/FunctionID/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Features/BytePatterns/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Features/DecompilerDependent/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Features/BSim/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Features/SwiftDemangler/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Features/Decompiler/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Features/SystemEmulation/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Processors/DATA/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Features/Base/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Features/FileFormats/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Processors/8051/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Processors/Atmel/ghidra_scripts
+    /private/tmp/claude-501/-Users-mathias-devel-homebrew-codebreaker-rs/3ff5f070-6a95-4927-9e5f-cdc36d6be56c/scratchpad/cbv10/scripts (HeadlessAnalyzer)  
+INFO  HEADLESS: execution starts (HeadlessAnalyzer)  
+INFO  Opening existing project: /private/tmp/claude-501/-Users-mathias-devel-homebrew-codebreaker-rs/3ff5f070-6a95-4927-9e5f-cdc36d6be56c/scratchpad/cbv10/proj/cbv10 (HeadlessAnalyzer)  
+INFO  Opening project: /private/tmp/claude-501/-Users-mathias-devel-homebrew-codebreaker-rs/3ff5f070-6a95-4927-9e5f-cdc36d6be56c/scratchpad/cbv10/proj/cbv10 (HeadlessProject)  
+INFO  REPORT: Processing project file: /BOOT.ELF (HeadlessAnalyzer)  
+INFO  REPORT: Execute script: DecompAt.java '0x100e450' '0x1000248' '0x10009b0' '0x100e450'  (HeadlessAnalyzer)  
+INFO  SCRIPT: /private/tmp/claude-501/-Users-mathias-devel-homebrew-codebreaker-rs/3ff5f070-6a95-4927-9e5f-cdc36d6be56c/scratchpad/cbv10/scripts/DecompAt.java (HeadlessAnalyzer)  
+INFO  DecompAt.java> ===== 0x100e450 in FUN_0100e450 @ 0100e450 ===== (GhidraScript)  
+INFO  DecompAt.java> callers: 010003c0(FUN_010003a8) (GhidraScript)  
+INFO  DecompAt.java> 
+void FUN_0100e450(void)
+
+{
+  if (DAT_013856e0 == 0) {
+    DAT_013856e0 = 1;
+    FUN_0100e3a0();
+    return;
+  }
+  return;
+}
+
+ (GhidraScript)  
+INFO  DecompAt.java> ===== 0x1000248 in FUN_01000248 @ 01000248 ===== (GhidraScript)  
+INFO  DecompAt.java> callers: 010003cc(FUN_010003a8) (GhidraScript)  
+INFO  DecompAt.java> 
+/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+
+void FUN_01000248(void)
+
+{
+  longlong lVar1;
+  byte *pbVar2;
+  int iVar3;
+  byte *pbVar4;
+  undefined1 auStack_a0 [96];
+  
+  _DAT_01010980 = FUN_010009c0(0x420887fb,0x4260db20);
+  _DAT_01010988 = FUN_010009c0(0x425b220c,0x41b1e90c);
+  _DAT_01010990 = FUN_010009c0(0x4236ee0e,0x42c0af7b);
+  DAT_01010998 = FUN_010009c0(0x427597cb,0x429caf82);
+  FUN_01003ff0(auStack_a0);
+  FUN_01004038(auStack_a0,&DAT_01010980,0x20);
+  FUN_010040f8(auStack_a0,&DAT_01012a88);
+  do {
+    lVar1 = FUN_01000150();
+  } while (lVar1 == 0);
+  FUN_01003ff0(auStack_a0);
+  FUN_01004038(auStack_a0,&DAT_01010980,0x14);
+  FUN_010040f8(auStack_a0,&DAT_01010980);
+  FUN_01003ff0(auStack_a0);
+  FUN_01004038(auStack_a0,&DAT_01012a88,0x14);
+  FUN_01004038(auStack_a0,&DAT_01010980,0x14);
+  FUN_010040f8(auStack_a0,&DAT_01010980);
+  iVar3 = 0;
+  pbVar4 = &DAT_01010940;
+  do {
+    pbVar2 = (byte *)((int)&DAT_01010980 + iVar3);
+    iVar3 = iVar3 + 1;
+    *pbVar4 = *pbVar4 ^ *pbVar2;
+    pbVar4 = pbVar4 + 1;
+  } while (iVar3 < 0x14);
+  return;
+}
+
+ (GhidraScript)  
+INFO  DecompAt.java> ===== 0x10009b0 in FUN_010009b0 @ 010009b0 ===== (GhidraScript)  
+INFO  DecompAt.java> callers: 010004a8(FUN_010003a8) 010004b0(FUN_010003a8) 01000128(FUN_010000e0) 01000144(FUN_010000e0) (GhidraScript)  
+INFO  DecompAt.java> 
+void FUN_010009b0(void)
+
+{
+  syscall(0);
+  return;
+}
+
+ (GhidraScript)  
+INFO  REPORT: Save succeeded for processed file: /BOOT.ELF (HeadlessAnalyzer)  
+openjdk version "24" 2025-03-18
+OpenJDK Runtime Environment Temurin-24+36 (build 24+36)
+OpenJDK 64-Bit Server VM Temurin-24+36 (build 24+36, mixed mode)
+INFO  Using log config file: jar:file:/opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Framework/Generic/lib/Generic.jar!/generic.log4j.xml (LoggingInitialization)  
+INFO  Using log file: /Users/mathias/Library/ghidra/ghidra_12.1.4_PUBLIC/application.log (LoggingInitialization)  
+INFO  Loading user preferences: /Users/mathias/Library/ghidra/ghidra_12.1.4_PUBLIC/preferences (Preferences)  
+INFO  Loading previous preferences: /Users/mathias/Library/ghidra/ghidra_12.2_PUBLIC/preferences (Preferences)  
+INFO  Searching for classes... (ClassSearcher)  
+INFO  Class search complete (717 ms) (ClassSearcher)  
+INFO  Initializing SSL Context (DefaultSSLContextInitializer)  
+INFO  Initializing Random Number Generator... (SecureRandomFactory)  
+INFO  Random Number Generator initialization complete: NativePRNGNonBlocking (SecureRandomFactory)  
+INFO  Trust manager disabled, cacerts have not been set (DefaultTrustManagerFactory)  
+INFO  Headless startup complete (1474 ms) (AnalyzeHeadless)  
+INFO  Class searcher loaded 59 extension points (20 false positives) (ClassSearcher)  
+WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
+WARNING: sun.misc.Unsafe::staticFieldOffset has been called by org.apache.felix.framework.util.SecureAction (file:/opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Features/Base/lib/org.apache.felix.framework-7.0.5.jar)
+WARNING: Please consider reporting this to the maintainers of class org.apache.felix.framework.util.SecureAction
+WARNING: sun.misc.Unsafe::staticFieldOffset will be removed in a future release
+INFO  HEADLESS Script Paths:
+    /opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Features/GnuDemangler/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Processors/JVM/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Processors/PIC/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Features/PyGhidra/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Debug/Debugger/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Features/WildcardAssembler/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Features/PDB/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Features/MicrosoftCodeAnalyzer/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Debug/Debugger-rmi-trace/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Features/VersionTracking/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Features/FunctionID/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Features/BytePatterns/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Features/DecompilerDependent/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Features/BSim/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Features/SwiftDemangler/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Features/Decompiler/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Features/SystemEmulation/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Processors/DATA/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Features/Base/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Features/FileFormats/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Processors/8051/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Processors/Atmel/ghidra_scripts
+    /private/tmp/claude-501/-Users-mathias-devel-homebrew-codebreaker-rs/3ff5f070-6a95-4927-9e5f-cdc36d6be56c/scratchpad/cbv10/scripts (HeadlessAnalyzer)  
+INFO  HEADLESS: execution starts (HeadlessAnalyzer)  
+INFO  Opening existing project: /private/tmp/claude-501/-Users-mathias-devel-homebrew-codebreaker-rs/3ff5f070-6a95-4927-9e5f-cdc36d6be56c/scratchpad/cbv10/proj/cbv10 (HeadlessAnalyzer)  
+INFO  Opening project: /private/tmp/claude-501/-Users-mathias-devel-homebrew-codebreaker-rs/3ff5f070-6a95-4927-9e5f-cdc36d6be56c/scratchpad/cbv10/proj/cbv10 (HeadlessProject)  
+INFO  REPORT: Processing project file: /BOOT.ELF (HeadlessAnalyzer)  
+INFO  REPORT: Execute script: DecompAt.java '0x10009c0' '0x1003ff0' '0x1004038' '0x10040f8' '0x1000150'  (HeadlessAnalyzer)  
+INFO  SCRIPT: /private/tmp/claude-501/-Users-mathias-devel-homebrew-codebreaker-rs/3ff5f070-6a95-4927-9e5f-cdc36d6be56c/scratchpad/cbv10/scripts/DecompAt.java (HeadlessAnalyzer)  
+INFO  DecompAt.java> ===== 0x10009c0 in FUN_010009c0 @ 010009c0 ===== (GhidraScript)  
+INFO  DecompAt.java> callers: 0100026c(FUN_01000248) 0100028c(FUN_01000248) 010002a4(FUN_01000248) 010002bc(FUN_01000248) (GhidraScript)  
+WARN  Decompiling 010009c0, pcode error at 010009dc: Unable to resolve constructor at 010009dc (DecompileCallback)  
+INFO  DecompAt.java> 
+/* WARNING: Control flow encountered bad instruction data */
+
+void FUN_010009c0(void)
+
+{
+  special2(0,0,0x10,0x28);
+  special2(0,0,0x10,0x28);
+                    /* WARNING: Bad instruction - Truncating control flow here */
+  halt_baddata();
+}
+
+ (GhidraScript)  
+INFO  DecompAt.java> ===== 0x1003ff0 in FUN_01003ff0 @ 01003ff0 ===== (GhidraScript)  
+INFO  DecompAt.java> callers: 010002cc(FUN_01000248) 01000300(FUN_01000248) 01000324(FUN_01000248) (GhidraScript)  
+INFO  DecompAt.java> 
+void FUN_01003ff0(undefined4 *param_1)
+
+{
+  *param_1 = 0x67452301;
+  param_1[1] = 0xefcdab89;
+  param_1[2] = 0x98badcfe;
+  param_1[3] = 0x10325476;
+  param_1[4] = 0xc3d2e1f0;
+  *(undefined8 *)(param_1 + 0x16) = 0;
+  param_1[0x15] = 0;
+  return;
+}
+
+ (GhidraScript)  
+INFO  DecompAt.java> ===== 0x1004038 in FUN_01004038 @ 01004038 ===== (GhidraScript)  
+INFO  DecompAt.java> callers: 010002dc(FUN_01000248) 01000310(FUN_01000248) 01000334(FUN_01000248) 01000344(FUN_01000248) (GhidraScript)  
+INFO  DecompAt.java> 
+void FUN_01004038(int param_1,undefined1 *param_2,uint param_3)
+
+{
+  undefined1 uVar1;
+  
+  while( true ) {
+    if (param_3 == 0) {
+      return;
+    }
+    if ((*(int *)(param_1 + 0x54) == 0) && (((uint)param_2 & 3) == 0)) {
+      for (; 0x3f < param_3; param_3 = param_3 - 0x40) {
+        FUN_010041c0(param_2,param_1,1);
+        param_2 = param_2 + 0x40;
+        *(longlong *)(param_1 + 0x58) = *(longlong *)(param_1 + 0x58) + 0x40;
+      }
+    }
+    if (param_3 == 0) break;
+    uVar1 = *param_2;
+    param_2 = param_2 + 1;
+    param_3 = param_3 - 1;
+    FUN_01003f60(param_1,uVar1);
+    *(longlong *)(param_1 + 0x58) = *(longlong *)(param_1 + 0x58) + 1;
+  }
+  return;
+}
+
+ (GhidraScript)  
+INFO  DecompAt.java> ===== 0x10040f8 in FUN_010040f8 @ 010040f8 ===== (GhidraScript)  
+INFO  DecompAt.java> callers: 010002e8(FUN_01000248) 0100031c(FUN_01000248) 01000350(FUN_01000248) (GhidraScript)  
+INFO  DecompAt.java> 
+void FUN_010040f8(undefined8 *param_1,undefined8 *param_2)
+
+{
+  int iVar1;
+  undefined4 uVar2;
+  longlong lVar3;
+  undefined8 uVar4;
+  ulonglong uVar5;
+  longlong lVar6;
+  
+  lVar3 = param_1[0xb];
+  FUN_01003f60(param_1,0x80);
+  iVar1 = *(int *)((int)param_1 + 0x54);
+  while (iVar1 != 0x38) {
+    FUN_01003f60(param_1,0);
+    iVar1 = *(int *)((int)param_1 + 0x54);
+  }
+  lVar6 = 0x38;
+  do {
+    uVar5 = (ulonglong)(lVar3 << 3) >> lVar6;
+    lVar6 = (longlong)((int)lVar6 + -8);
+    FUN_01003f60(param_1,uVar5 & 0xff);
+  } while (-1 < lVar6);
+  uVar4 = param_1[1];
+  uVar2 = *(undefined4 *)(param_1 + 2);
+  *param_2 = *param_1;
+  param_2[1] = uVar4;
+  *(undefined4 *)(param_2 + 2) = uVar2;
+  return;
+}
+
+ (GhidraScript)  
+INFO  DecompAt.java> ===== 0x1000150 in FUN_01000150 @ 01000150 ===== (GhidraScript)  
+INFO  DecompAt.java> callers: 010002f0(FUN_01000248) (GhidraScript)  
+INFO  DecompAt.java> 
+bool FUN_01000150(void)
+
+{
+  longlong lVar1;
+  uint uVar2;
+  
+  FUN_01006448(0);
+  FUN_01005ba0(0);
+  FUN_01006448(0);
+  FUN_010005d8(0);
+  FUN_01000748(0);
+  do {
+    lVar1 = FUN_01005f48(&DAT_01010958,0xffffffff80000595,0);
+    if (lVar1 < 0) break;
+  } while (DAT_0101097c == 0);
+  uVar2 = 0;
+  do {
+    DAT_01010980 = 0;
+    DAT_01010984 = 0;
+    DAT_01010988 = 0x4b;
+    FUN_010060f8(&DAT_01010958,0xb,0,&DAT_01010980);
+    if ((char)DAT_01010980 != '\0') break;
+    uVar2 = uVar2 + 1;
+  } while (uVar2 < 0x1e);
+  return uVar2 < 0x1e;
+}
+
+ (GhidraScript)  
+INFO  REPORT: Save succeeded for processed file: /BOOT.ELF (HeadlessAnalyzer)  
+openjdk version "24" 2025-03-18
+OpenJDK Runtime Environment Temurin-24+36 (build 24+36)
+OpenJDK 64-Bit Server VM Temurin-24+36 (build 24+36, mixed mode)
+INFO  Using log config file: jar:file:/opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Framework/Generic/lib/Generic.jar!/generic.log4j.xml (LoggingInitialization)  
+INFO  Using log file: /Users/mathias/Library/ghidra/ghidra_12.1.4_PUBLIC/application.log (LoggingInitialization)  
+INFO  Loading user preferences: /Users/mathias/Library/ghidra/ghidra_12.1.4_PUBLIC/preferences (Preferences)  
+INFO  Loading previous preferences: /Users/mathias/Library/ghidra/ghidra_12.2_PUBLIC/preferences (Preferences)  
+INFO  Searching for classes... (ClassSearcher)  
+INFO  Class search complete (762 ms) (ClassSearcher)  
+INFO  Initializing SSL Context (DefaultSSLContextInitializer)  
+INFO  Initializing Random Number Generator... (SecureRandomFactory)  
+INFO  Random Number Generator initialization complete: NativePRNGNonBlocking (SecureRandomFactory)  
+INFO  Trust manager disabled, cacerts have not been set (DefaultTrustManagerFactory)  
+INFO  Headless startup complete (1519 ms) (AnalyzeHeadless)  
+INFO  Class searcher loaded 59 extension points (20 false positives) (ClassSearcher)  
+WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
+WARNING: sun.misc.Unsafe::staticFieldOffset has been called by org.apache.felix.framework.util.SecureAction (file:/opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Features/Base/lib/org.apache.felix.framework-7.0.5.jar)
+WARNING: Please consider reporting this to the maintainers of class org.apache.felix.framework.util.SecureAction
+WARNING: sun.misc.Unsafe::staticFieldOffset will be removed in a future release
+INFO  HEADLESS Script Paths:
+    /opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Features/GnuDemangler/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Processors/JVM/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Processors/PIC/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Features/PyGhidra/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Debug/Debugger/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Features/WildcardAssembler/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Features/PDB/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Features/MicrosoftCodeAnalyzer/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Debug/Debugger-rmi-trace/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Features/VersionTracking/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Features/FunctionID/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Features/BytePatterns/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Features/DecompilerDependent/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Features/BSim/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Features/SwiftDemangler/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Features/Decompiler/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Features/SystemEmulation/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Processors/DATA/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Features/Base/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Features/FileFormats/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Processors/8051/ghidra_scripts
+    /opt/homebrew/Cellar/ghidra/12.1.4/libexec/Ghidra/Processors/Atmel/ghidra_scripts
+    /private/tmp/claude-501/-Users-mathias-devel-homebrew-codebreaker-rs/3ff5f070-6a95-4927-9e5f-cdc36d6be56c/scratchpad/cbv10/scripts (HeadlessAnalyzer)  
+INFO  HEADLESS: execution starts (HeadlessAnalyzer)  
+INFO  Opening existing project: /private/tmp/claude-501/-Users-mathias-devel-homebrew-codebreaker-rs/3ff5f070-6a95-4927-9e5f-cdc36d6be56c/scratchpad/cbv10/proj/cbv10 (HeadlessAnalyzer)  
+INFO  Opening project: /private/tmp/claude-501/-Users-mathias-devel-homebrew-codebreaker-rs/3ff5f070-6a95-4927-9e5f-cdc36d6be56c/scratchpad/cbv10/proj/cbv10 (HeadlessProject)  
+INFO  REPORT: Processing project file: /BOOT.ELF (HeadlessAnalyzer)  
+INFO  REPORT: Execute script: DecompAt.java '0x1005ba0' '0x10060f8' '0x1005f48' '0x10005d8' '0x1000748'  (HeadlessAnalyzer)  
+INFO  SCRIPT: /private/tmp/claude-501/-Users-mathias-devel-homebrew-codebreaker-rs/3ff5f070-6a95-4927-9e5f-cdc36d6be56c/scratchpad/cbv10/scripts/DecompAt.java (HeadlessAnalyzer)  
+INFO  DecompAt.java> ===== 0x1005ba0 in FUN_01005ba0 @ 01005ba0 ===== (GhidraScript)  
+INFO  DecompAt.java> callers: 0100017c(FUN_01000150) (GhidraScript)  
+INFO  DecompAt.java> 
+undefined8 FUN_01005ba0(void)
+
+{
+  longlong lVar1;
+  undefined8 uVar2;
+  ulonglong uVar3;
+  undefined4 *puStack_50;
+  undefined4 uStack_4c;
+  undefined4 uStack_48;
+  undefined4 uStack_44;
+  
+  FUN_01006448(0);
+  FUN_01006420();
+  FUN_01006b34();
+  FUN_01008f2c(&DAT_013827c0,0,0x68);
+  DAT_013827c0 = 0x68;
+  puStack_50 = &DAT_013827c0;
+  DAT_013827c8 = 0x80000003;
+  uStack_4c = FUN_01006bac(0xffffffff80000000);
+  uStack_48 = 0x68;
+  uStack_44 = 0x44;
+  FUN_01006be8(&DAT_013827c0,0x68);
+  lVar1 = FUN_01006b48(&puStack_50,1);
+  if (lVar1 == 0) {
+    uVar2 = 0;
+  }
+  else {
+    FUN_01006b98(4,0x10000);
+    FUN_01006b98(4,0x20000);
+    FUN_01006b98(0xffffffff80000002,0);
+    FUN_01006b98(0xffffffff80000000,0);
+    while (uVar3 = FUN_01006bac(4), (uVar3 & 0x40000) != 0) {
+      FUN_01006b98(4,0x40000);
+    }
+    uVar2 = 1;
+  }
+  return uVar2;
+}
+
+ (GhidraScript)  
+INFO  DecompAt.java> ===== 0x10060f8 in FUN_010060f8 @ 010060f8 ===== (GhidraScript)  
+INFO  DecompAt.java> callers: 01000200(FUN_01000150) (GhidraScript)  
+INFO  DecompAt.java> 
+void FUN_010060f8(void)
+
+{
+  DAT_01010980 = 1;
+  DAT_01010984 = 0x39956993;
+  DAT_01010988 = 0x55;
+  DAT_0101098c = 0;
+  MULEU_S.PH.QBL(0x1010000,0);
+  DAT_01010990 = 0x5bc0000;
+  DAT_01012a88 = 0x938ca6bf;
+  DAT_01012a8c = 0xe620cc81;
+  DAT_01012a90 = 0x137a84c2;
+  DAT_01012a94 = 0x78ae9796;
+  DAT_01012a98 = 0x889dca10;
+  return;
+}
+
+ (GhidraScript)  
+INFO  DecompAt.java> ===== 0x1005f48 in FUN_01005f48 @ 01005f48 ===== (GhidraScript)  
+INFO  DecompAt.java> callers: 010001ac(FUN_01000150) 0100063c(FUN_010005d8) 010006c8(FUN_010005d8) 01000718(FUN_010005d8) (GhidraScript)  
+INFO  DecompAt.java> 
+undefined8 FUN_01005f48(int *param_1,undefined4 param_2,ulonglong param_3)
+
+{
+  int iVar1;
+  int iVar2;
+  undefined8 uVar3;
+  longlong lVar4;
+  undefined1 auStack_70 [4];
+  undefined4 uStack_6c;
+  undefined4 uStack_68;
+  
+  param_1[4] = 0;
+  param_1[9] = 0;
+  iVar2 = FUN_01005d68(&DAT_01383880);
+  uVar3 = 0xffffffffffffffff;
+  if (iVar2 != 0) {
+    iVar1 = *(int *)(iVar2 + 0x18);
+    *param_1 = iVar2;
+    param_1[1] = iVar1;
+    *(undefined4 *)(iVar2 + 0x20) = param_2;
+    *(int *)(iVar2 + 0x14) = iVar2;
+    *(int **)(iVar2 + 0x1c) = param_1;
+    if ((param_3 & 1) == 0) {
+      uStack_68 = 0;
+      uStack_6c = 1;
+      lVar4 = FUN_01006a80(auStack_70);
+      param_1[2] = (int)lVar4;
+      if (lVar4 < 0) {
+        uVar3 = 0xfffffffffffffffd;
+      }
+      else {
+        lVar4 = FUN_01006e90(0xffffffff80000009,iVar2,0x40,0);
+        uVar3 = 0xfffffffffffffffe;
+        if (lVar4 != 0) {
+          FUN_01006aa8(param_1[2]);
+          FUN_01006a94(param_1[2]);
+          uVar3 = 0;
+        }
+      }
+    }
+    else {
+      param_1[2] = -1;
+      lVar4 = FUN_01006e90(0xffffffff80000009,iVar2,0x40,0);
+      uVar3 = 0xfffffffffffffffe;
+      if (lVar4 != 0) {
+        uVar3 = 0;
+      }
+    }
+  }
+  return uVar3;
+}
+
+ (GhidraScript)  
+INFO  DecompAt.java> ===== 0x10005d8 in FUN_010005d8 @ 010005d8 ===== (GhidraScript)  
+INFO  DecompAt.java> callers: 0100018c(FUN_01000150) (GhidraScript)  
+INFO  DecompAt.java> 
+void FUN_010005d8(undefined4 param_1)
+
+{
+  int iVar1;
+  
+  FUN_01006448(0);
+  while( true ) {
+    FUN_01005f48(&DAT_010fc240,0xffffffff80000592,0);
+    iVar1 = 0x10000;
+    if (DAT_010fc264 != 0) break;
+    do {
+      iVar1 = iVar1 + -1;
+    } while (iVar1 != -1);
+  }
+  DAT_010fc3c0 = param_1;
+  FUN_01006be8(&DAT_010fc3c0,4);
+  FUN_010060f0(&DAT_010fc240,0,0,&DAT_010fc3c0);
+  while (FUN_01005f48(&DAT_010fc280,0xffffffff8000059a,0), DAT_010fc2a4 == 0) {
+    iVar1 = 0x10000;
+    do {
+      iVar1 = iVar1 + -1;
+    } while (iVar1 != -1);
+  }
+  while (FUN_01005f48(&DAT_010fc2c0,0xffffffff80000593,0), DAT_010fc2e4 == 0) {
+    iVar1 = 0x10000;
+    do {
+      iVar1 = iVar1 + -1;
+    } while (iVar1 != -1);
+  }
+  return;
+}
+
+ (GhidraScript)  
+INFO  DecompAt.java> ===== 0x1000748 in FUN_01000748 @ 01000748 ===== (GhidraScript)  
+INFO  DecompAt.java> callers: 01000194(FUN_01000150) (GhidraScript)  
+INFO  DecompAt.java> 
+/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+
+undefined4 FUN_01000748(undefined4 param_1)
+
+{
+  DAT_010fc380 = param_1;
+  FUN_01006be8(&DAT_010fc380,4);
+  FUN_010060f0(&DAT_010fc280,0,0,&DAT_010fc380);
+  return _DAT_210fc340;
+}
+
+ (GhidraScript)  
+INFO  REPORT: Save succeeded for processed file: /BOOT.ELF (HeadlessAnalyzer)  

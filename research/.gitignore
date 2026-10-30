@@ -1,4 +1,9 @@
-# Copyrighted CodeBreaker binaries and output derived from them
-elf/
+# Firmware images; keep text evidence in elf/ visible to Git
+*.[eE][lL][fF]
+*.[bB][iI][nN]
+
+# Generated build and Python cache files
 compare/target/
 compare/Cargo.lock
+__pycache__/
+*.py[cod]

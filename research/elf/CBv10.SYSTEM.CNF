@@ -1,0 +1,4 @@
+BOOT2 = cdrom0:\BOOT.ELF;1
+VER = 1.00
+VMODE = PAL/NTSC
+
