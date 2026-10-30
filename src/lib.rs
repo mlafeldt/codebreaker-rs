@@ -33,16 +33,18 @@
 //! The CB v7 implementation intentionally preserves byte-level behavior from
 //! the original C code.
 //!
-//! # Firmware versions
+//! # Compatibility
 //!
-//! The CB v7 logic matches the firmware's own decryption, and that firmware
-//! crypto is byte-identical across the v7, v9.2 and stock v10 payloads
-//! (verified by diffing the decrypted images). The versions differ only in how
-//! a few unusual beefcode lists rekey: a beefcode carrying a non-zero value, a
-//! second beefcode in one list, a code count that reaches zero on a beefcode,
-//! or the bit-17 option. None of those appear in distributed codes, and a plain
-//! `BEEFC0DE 00000000` list decrypts identically on every version, so this
-//! crate matches every real code on every v7+ device.
+//! CB v7 state transitions follow CodeBreaker v9.2, subject to the limitations
+//! below. Some beefcode and encryption-option sequences behave differently on
+//! v10.
+//!
+//! - Encryption-option bit 17 (`0x00020000` in an `FFFFFFFF` option line), which
+//!   requests a new V7 key from the following line in v9.2, is unsupported.
+//!   Lists using it can decrypt differently.
+//! - V7 RSA uses exact modular exponentiation rather than reproducing the
+//!   firmware's reduction bug. Affected codes decrypt differently from the
+//!   device.
 
 #![deny(clippy::all, clippy::nursery)]
 #![deny(nonstandard_style, rust_2018_idioms)]
@@ -109,7 +111,7 @@ impl Codebreaker {
         }
     }
 
-    /// Returns a new processor for all CB v7 codes published on CMGSCCC.com.
+    /// Returns a new processor using the default CB v7 key and seeds.
     ///
     /// Lets you omit `B4336FA9 4DFEFB79` as the first code in the list.
     pub fn new_v7() -> Self {
@@ -242,6 +244,8 @@ impl Codebreaker {
     /// Like CodeBreaker, it also follows `FFFFFFFF 0000nnnn`, which turns CB v7
     /// off for the next nnnn decrypted lines, or for good if nnnn is 0. That's
     /// how raw and CB v1 codes can follow CB v7 codes in the same list.
+    /// Encryption-option bit 17 (`0x00020000`), which requests a new V7 key
+    /// from the following line in v9.2, is unsupported.
     ///
     /// # Example
     /// ```

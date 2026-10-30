@@ -1,4 +1,7 @@
 //! Encrypt and decrypt cheat codes for CodeBreaker PS2 v7+.
+//!
+//! RSA uses exact modular exponentiation rather than reproducing the firmware's
+//! reduction bug. Affected codes decrypt differently from the device.
 
 use crate::rc4::Rc4;
 
@@ -295,12 +298,12 @@ const fn mod_inverse(x: u32) -> u32 {
 // This is exact math, which CodeBreaker's own bignum code isn't. That code is
 // a generic 32-bit-limb bignum, not a known crypto library: Karatsuba multiply
 // and a Knuth-D reduction, with the 64-by-32-bit division from libgcc's
-// __udivdi3/__umoddi3. Its reduction (at 0x133bbc in v9.2, byte-identical in the
-// stock v10 payload) takes each quotient digit as the low 32 bits of that
-// division and skips Knuth's step D3 clamp to
-// 0xffffffff. The top word of our modulus is 0xffffffff, so the digit wraps
-// whenever the partial
-// remainder's top word is 0xffffffff as well, and the result is wrong. When
+// __udivdi3/__umoddi3. The reduction at 0x133bbc in the inspected v9.2 image
+// is identical modulo relocation in the inspected v10 payload. It takes each
+// quotient digit as the low 32 bits of that division and skips Knuth's step D3
+// clamp to 0xffffffff. The top word of our modulus is 0xffffffff, so the digit
+// wraps whenever the partial remainder's top word is 0xffffffff as well, and
+// the result is wrong. When
 // decrypting, that happens for every input in 0xffff_ffff_8000_0000..modulus
 // and sporadically for others whose intermediate powers hit the same case, an
 // estimated 1 in 10^9 codes. For example, CodeBreaker computes
@@ -532,8 +535,8 @@ mod tests {
     fn test_rsa_is_exact_near_the_modulus() {
         // The firmware's bignum RSA mis-reduces near the modulus (see the note
         // on rsa_crypt): decrypting 0xffff_ffff_ffff_fff4 its reduction yields
-        // 0x04f3_63df_ecae_2b57. That bug is byte-identical in v9.2 and the
-        // stock v10 payload, and we leave it out on purpose: this crate uses
+        // 0x04f3_63df_ecae_2b57. The inspected v9.2 and v10 images share that
+        // reduction defect, and we leave it out on purpose: this crate uses
         // exact math, so the same boundary input decrypts cleanly and round
         // trips. (0xffff_ffff_ffff_fff4 = modulus - 1, so it is < modulus.)
         let (addr0, val0) = (0xffff_ffff_u32, 0xffff_fff4_u32);
