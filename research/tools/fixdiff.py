@@ -1,7 +1,7 @@
 # Auto-decrypts cb2util-style code lists with the v9.2 and v10 firmware models
 # and reports the games whose decrypted output differs between the two, plus
 # how often real codes use the beefcode features that diverge. This is the
-# empirical basis for REVERSING.md §11.4's "the cb2util game fixtures are
+# empirical basis for V10.md §2.4's "the cb2util game fixtures are
 # unaffected": the checked game fixtures stay on the single default BEEFC0DE
 # path. This does not establish compatibility for every published code.
 #

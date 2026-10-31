@@ -4,7 +4,7 @@
 # that all flags off reproduces the v9.2 emulation and all flags on reproduces
 # the v10 emulation, then counts the lists each single change alters (vs v9.2)
 # and whether each change is still needed once the others are on. This is the
-# evidence behind REVERSING.md §11.3/§11.4. The five flags cover behavior changes
+# evidence behind V10.md §§2.3–2.4. The five flags cover behavior changes
 # in four functions; initval combines reset zeroing and the init-copy decision:
 #   initval  reset zeroes default seeds; rekey(1) copies them and ignores val
 #   rekey0   rekey(0) uses the (val + j) index, ignoring the val == 0 case

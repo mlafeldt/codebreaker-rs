@@ -8,7 +8,7 @@
 #                    options, RSA boundaries), plus primitive calls
 #          plain     plain text programs for the encryption check (encrypted
 #                    by emucmp.rs, not here)
-#          report    the short lists used as test vectors in REVERSING.md
+#          report    the short lists used as test vectors in V9.md
 #          optfuzz   random lists full of FFFFFFFF option lines
 #          optfuzz16 the same without bit 17
 import os, random, sys
@@ -291,7 +291,7 @@ def optfuzz_lists(t, n, b17=True):
 
 
 def report_lists(t):
-    """Short lists used as test vectors in REVERSING.md."""
+    """Short lists used as test vectors in V9.md."""
     out = []
 
     def prog(name, lines):

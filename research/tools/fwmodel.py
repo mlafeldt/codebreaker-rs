@@ -1,5 +1,5 @@
 # Model of CodeBreaker v9.2's per-line auto decrypt (0x1042b0 and callees),
-# written from the listings (research/REVERSING.md) and checked against the
+# written from the listings (research/V9.md) and checked against the
 # Ghidra emulation (tools/ghidra/Emu.java). It can also encrypt, which gen.py
 # uses to build inputs that reach particular paths.
 #

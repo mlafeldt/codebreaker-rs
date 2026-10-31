@@ -1,4 +1,4 @@
-# Reproduce REVERSING.md §11.5 with the committed tools, using gen.py's correct
+# Reproduce V10.md §2.5 with the committed tools, using gen.py's correct
 # encryptor (Prog): a plain BEEFC0DE 0 list decrypts identically on both
 # images; a BEEFC0DE <nonzero> list and a second beefcode do not.
 #

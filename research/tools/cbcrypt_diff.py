@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # Relocation-aware normalized diff of the CB code-crypto call tree, v9.2 vs v10
-# (REVERSING.md section 11).
+# (V10.md section 2).
 #
 # This is a static comparison aid for the identified images, not a proof of
 # behavioral equivalence. Only explicitly mapped code/data coordinates are

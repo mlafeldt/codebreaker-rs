@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
-# Unpack the CodeBreaker v10 BOOT.ELF body (REVERSING.md §10).
+# Unpack the CodeBreaker v10 BOOT.ELF body (V10.md §1).
 #
 # The body is zlib-compressed then RC4-encrypted. This recovers the RC4 key
 # statically and writes the decompressed image. Its offsets and hardcoded
-# inputs are specific to the supplied modified loader (§10.6, §10.8), whose
+# inputs are specific to the supplied modified loader (V10.md §§1.6,1.8), whose
 # BOOT.ELF SHA-256 is aafabd9b9ef8b74349ee6aa4272e4efa3fc1fd9838ceed78a23afff2521f3f04.
 #
 # Key derivation (FUN_01000248) combines two inputs:
 # an EE single-precision float bit-mixer (FUN_010009c0, madd.s/msub.s) feeds the
 # SHA-1 digest A, and a SIF-RPC (FUN_01000150) obtains const20: a status word
 # followed by 16 read-key bytes. The constants below match the software-derived reply
-# for serial SLUS-20202 (§12, F1); they are not an inaccessible physical secret.
+# for serial SLUS-20202 (REVIEW.md F1); they are not an inaccessible physical secret.
 # Reproducing the unmodified EE mixer in software remains unverified here.
 # This image is modified: a stub at 0x10060f8 hardcodes BOTH A and const20 as
 # literal immediates (the 0x1010980/0x1012a88 buffers are zero in the file), so

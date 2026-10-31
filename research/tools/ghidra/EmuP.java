@@ -8,7 +8,7 @@
 // line and the crypto globals after each call. coverage.txt gets every
 // executed instruction address with the first list/line that reached it.
 //
-// Addresses are for CB v9.2 (research/REVERSING.md §4). The EE differs from
+// Addresses are for CB v9.2 (research/V9.md §4). The EE differs from
 // Ghidra's MIPS64 in places that these functions hit:
 // - three-operand mult/multu (rd = LO). Ghidra drops rd or fails to decode
 //   the instruction, so every mult/multu with rd != 0 is executed here.
