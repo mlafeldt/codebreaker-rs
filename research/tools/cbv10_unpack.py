@@ -24,6 +24,7 @@
 #     key     = (stored @ 0x1010940) XOR C
 #             = 29f32f090c66b07dc5b12c51695e432eb1d8ea10  (this image)
 import argparse, struct, zlib, hashlib
+from pathlib import Path
 
 BASE, FOFF = 0x1000000, 0x1000
 def o(va): return FOFF + (va - BASE)
@@ -37,6 +38,8 @@ def derive_key(d):
     A = struct.pack("<5I", 0x938ca6bf, 0xe620cc81, 0x137a84c2, 0x78ae9796, 0x889dca10)
     C = le_sha1(A + le_sha1(const20))
     stored = d[o(0x1010940):o(0x1010940) + 0x14]
+    if len(stored) != 20:
+        raise ValueError("loader is truncated before the stored RC4 key")
     return bytes(a ^ b for a, b in zip(stored, C))
 
 def rc4(key, data):
@@ -55,20 +58,34 @@ def main():
     ap.add_argument("--key", help="override the derived 20-byte RC4 key (40 hex)")
     ap.add_argument("-o", "--out", default="CBv10.unpacked.bin")
     a = ap.parse_args()
-    d = open(a.boot_elf, "rb").read()
-    key = bytes.fromhex(a.key) if a.key else derive_key(d)
-    print("RC4 key:", key.hex())
-    rc4_len = struct.unpack_from("<I", d, o(0x1383580))[0]
-    blob = d[o(0x1012ab0):o(0x1012ab0) + rc4_len]
-    dec = rc4(key, blob)
-    comp = dec[8:8 + struct.unpack_from("<I", dec, 4)[0]]
-    if comp[:1] != b"\x78":
-        print("RC4 output is not zlib (first byte %#x); wrong key." % comp[0]); return
-    out = zlib.decompress(comp)
-    want = struct.unpack_from("<I", dec, 0)[0]      # body header: inflated size
-    if len(out) != want:
-        print("warning: inflated %d bytes, header says %d" % (len(out), want))
-    open(a.out, "wb").write(out)
+    try:
+        d = Path(a.boot_elf).read_bytes()
+        key = bytes.fromhex(a.key) if a.key is not None else derive_key(d)
+        if len(key) != 20:
+            raise ValueError("RC4 key must contain exactly 20 bytes (40 hex digits)")
+        print("RC4 key:", key.hex())
+        if len(d) < o(0x1383580) + 4:
+            raise ValueError("loader is truncated before the encrypted-body length")
+        rc4_len = struct.unpack_from("<I", d, o(0x1383580))[0]
+        if rc4_len < 8 or o(0x1012ab0) + rc4_len > len(d):
+            raise ValueError("encrypted-body length is outside the loader or lacks its header")
+        blob = d[o(0x1012ab0):o(0x1012ab0) + rc4_len]
+        dec = rc4(key, blob)
+        want, comp_len = struct.unpack_from("<II", dec)
+        if comp_len == 0 or comp_len > len(dec) - 8:
+            raise ValueError("invalid compressed-body length; wrong key or damaged image")
+        comp = dec[8:8 + comp_len]
+        inflater = zlib.decompressobj()
+        # Stop if the stream exceeds its declared size rather than accepting a
+        # mismatch and writing the result. A complete stream needs no flush.
+        out = inflater.decompress(comp, want + 1)
+        if len(out) != want:
+            raise ValueError("inflated %d bytes, header says %d" % (len(out), want))
+        if not inflater.eof or inflater.unused_data or inflater.unconsumed_tail:
+            raise ValueError("incomplete zlib stream or trailing compressed data")
+        Path(a.out).write_bytes(out)
+    except (OSError, ValueError, zlib.error) as error:
+        ap.error(str(error))
     print("inflated %d bytes -> %s" % (len(out), a.out))
 
 if __name__ == "__main__":
