@@ -1,0 +1,25 @@
+name: Research
+
+on:
+  push:
+    branches: [research]
+    paths:
+      - .github/workflows/research.yaml
+      - research/tools/**
+  pull_request:
+    branches: [research]
+    paths:
+      - .github/workflows/research.yaml
+      - research/tools/**
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  tools:
+    name: Research tool regressions
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - run: python3 -m unittest discover -s research/tools/tests -v

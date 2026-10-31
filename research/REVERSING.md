@@ -1146,6 +1146,12 @@ to `elf/CBv10.unpacked.bin` (9,370,970 bytes, SHA-256 `9cb83c7f…`), which is
 full of plaintext CodeBreaker UI strings — decrypted entirely offline, no
 hardware or PCSX2 run.
 
+The unpacker returns status 2 for invalid keys, truncated or inconsistent body
+lengths, invalid or incomplete zlib streams, and inflated-size mismatches. It
+validates the payload before opening the output file, so invalid input leaves
+an existing output unchanged. Status 0 means a complete, size-checked payload
+was written.
+
 ### 10.6 Modified loader, extracted v10 payload
 
 The decrypted image says `VERSION CodeBreaker PS2 V10.0`, credits Pelican
@@ -1335,6 +1341,12 @@ forced-line handling, and the misplaced key word. The attribution applies to
 the checked corpora, not every possible state history. `tools/runemu.sh`
 drives the headless runs, and `tools/wrap.py` makes the Ghidra-loadable v10
 ELF from the raw `.bin`.
+
+The runner waits for every worker and returns nonzero if any fails. Each run
+clears its old `.out`/`.cov` files and requires fresh nonempty results plus
+EmuP's completion marker in the log; the headless process's exit status alone
+does not establish script completion. Image and corpus names are validated
+before launching workers, including rejection of duplicate corpus names.
 
 ### 11.2 Verdict
 
@@ -1917,3 +1929,38 @@ python3 -I tools/emudiff.py elf/CBv92.unpacked.elf elf/review/v92/report.out \
 
 `tool-regressions.txt` records the test results. `manifest.json` records
 source and output hashes so the replay inputs and tool versions are explicit.
+
+### 12.6 Runner and unpacker failure handling (2026-10-31)
+
+Two additional false-success paths were reproduced after the comparison-tool
+corrections. `runemu.sh` used bare `wait`, which returned status 0 when a
+background headless worker failed. `cbv10_unpack.py` returned status 0 on its
+wrong-key diagnostic, and wrote a payload after only warning about an
+inflated-size mismatch.
+
+`8ab7cfc` makes worker failures and incomplete outputs fail the runner, while
+still waiting for all launched workers. `374dfab` makes invalid unpacking
+input fail with status 2 before writing output, including key, length, zlib
+completion, and inflated-size validation. The current contracts are also
+documented in §§10.5 and 11.1.
+
+The regression suite now has 53 passing tests, including 20 new runner and
+unpacker tests. Runner tests use a fake headless executable in temporary
+projects; unpacker tests construct synthetic RC4-encrypted zlib bodies. The
+suite requires neither Ghidra nor firmware images:
+
+```
+python3 -m unittest discover -s research/tools/tests -v
+```
+
+`.github/workflows/research.yaml` runs this suite for tool or workflow changes
+on pushes and pull requests targeting `research`, and supports manual runs.
+The workflow passes local `actionlint` validation; `runemu.sh` passes
+ShellCheck and Bash syntax validation.
+
+A separate local check unpacked the identified `CBv10.BOOT.ELF` into a
+temporary file using the derived key. The 9,370,970-byte result retains
+SHA-256 `9cb83c7ffd28c09ebadf1bba986b34a4dce86bedb03ebb2023c4f944a5d422e3`.
+Repeating with an all-zero 20-byte key returned status 2 and preserved the
+existing output byte for byte. The source image and archived evidence were
+unchanged.
