@@ -58,8 +58,10 @@
 #[cfg(test)]
 extern crate std;
 
+// Runs the code examples in the README as doctests
 #[cfg(doctest)]
-doc_comment::doctest!("../README.md", readme);
+#[doc = include_str!("../README.md")]
+struct Readme;
 
 pub mod cb1;
 pub mod cb7;
@@ -396,7 +398,6 @@ const fn num_code_lines(addr: u32) -> usize {
 mod tests {
     use super::*;
     use crate::code::Code;
-    use pretty_assertions::assert_eq;
     use std::{vec, vec::Vec};
 
     struct Test {
