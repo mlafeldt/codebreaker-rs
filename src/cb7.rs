@@ -105,10 +105,10 @@ impl Cb7 {
 
         // Use key to encrypt seeds with RC4
         let k = bytes_of_mut(&mut self.key);
-        for i in 0..5 {
+        for seed in &mut self.seeds {
             let mut rc4 = Rc4::new(k);
             // Encrypt seeds
-            rc4.crypt(&mut self.seeds[i]);
+            rc4.crypt(seed);
             // Encrypt original key for next round
             rc4.crypt(k);
         }
