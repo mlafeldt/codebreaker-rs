@@ -43,7 +43,7 @@ Read the [full documentation](https://docs.rs/codebreaker) for more examples.
 
 ## Platform support
 
-The `codebreaker` crate is `no_std` and currently supports little-endian targets only.
+The `codebreaker` crate is `no_std`, has no dependencies, and supports both little- and big-endian targets.
 The CB v7 implementation intentionally preserves byte-level behavior from the original C code.
 
 ## History

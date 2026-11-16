@@ -7,14 +7,15 @@ use crate::rc4::Rc4;
 
 use core::fmt;
 
-use bytemuck::{bytes_of, bytes_of_mut, cast_slice};
-
 /// A processor for CB v7+ codes.
-#[repr(C)]
+// Pins the seeds to a word-aligned offset 0. Left to the compiler, they start
+// at offset 2, which slows down beefcode.
+#[repr(C, align(4))]
 #[derive(Clone)]
 pub struct Cb7 {
     seeds: [[u8; 256]; 5],
-    key: [u32; 5],
+    // Little-endian words, kept as bytes since RC4 uses them as is.
+    key: [[u8; 4]; 5],
     beefcodf: bool,
     initialized: bool,
 }
@@ -34,7 +35,7 @@ impl fmt::Debug for Cb7 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("Cb7")
             .field("seeds[0][0..16]", &&self.seeds[0][0..16])
-            .field("key", &self.key)
+            .field("key", &self.key.map(u32::from_le_bytes))
             .field("beefcodf", &self.beefcodf)
             .field("initialized", &self.initialized)
             .finish()
@@ -47,7 +48,7 @@ impl Cb7 {
     pub const fn new() -> Self {
         Self {
             seeds: ZERO_SEEDS,
-            key: [0; 5],
+            key: [[0; 4]; 5],
             beefcodf: false,
             initialized: false,
         }
@@ -88,29 +89,28 @@ impl Cb7 {
 
         // Set up key and seeds
         if !self.initialized {
-            self.key.copy_from_slice(&RC4_KEY);
+            self.key = RC4_KEY.map(u32::to_le_bytes);
             self.seeds.copy_from_slice(if val != 0 { &SEEDS } else { &ZERO_SEEDS });
             self.initialized = true;
         } else if val == 0 {
             // Special case for 2x BEEFC0DE 00000000 in a row
             self.seeds.copy_from_slice(&ZERO_SEEDS);
-            self.key[..4].fill(0);
+            self.key[..4].fill([0; 4]);
         }
 
         if val != 0 {
             for (i, k) in self.key[..4].iter_mut().enumerate() {
-                *k = u32::from_le_bytes(core::array::from_fn(|j| self.seeds[(i + j) % 4][idx[j]]));
+                *k = core::array::from_fn(|j| self.seeds[(i + j) % 4][idx[j]]);
             }
         }
 
         // Use key to encrypt seeds with RC4
-        let k = bytes_of_mut(&mut self.key);
         for seed in &mut self.seeds {
-            let mut rc4 = Rc4::new(k);
+            let mut rc4 = Rc4::new(self.key.as_flattened());
             // Encrypt seeds
             rc4.crypt(seed);
             // Encrypt original key for next round
-            rc4.crypt(k);
+            rc4.crypt(self.key.as_flattened_mut());
         }
 
         // Since we don't know the extra seed value of BEEFC0DF yet,
@@ -146,44 +146,27 @@ impl Cb7 {
     /// assert_eq!(code, (0x397951B0, 0x41569FE0));
     /// ```
     pub fn encrypt_code_mut(&mut self, addr: &mut u32, val: &mut u32) {
-        let oldaddr = *addr;
-        let oldval = *val;
+        let (oldaddr, oldval) = (*addr, *val);
 
         // Step 1: Multiplication, modulo (2^32)
-        *addr = mul_encrypt(*addr, self.key[0].wrapping_sub(self.key[1]));
-        *val = mul_encrypt(*val, self.key[2].wrapping_add(self.key[3]));
+        let [k0, k1, k2, k3, _] = self.key.map(u32::from_le_bytes);
+        *addr = mul_encrypt(*addr, k0.wrapping_sub(k1));
+        *val = mul_encrypt(*val, k2.wrapping_add(k3));
 
         // Step 2: RC4
-        let mut code = [*addr, *val];
-        let mut rc4 = Rc4::new(bytes_of(&self.key));
-        rc4.crypt(bytes_of_mut(&mut code));
-        *addr = code[0];
-        *val = code[1];
+        rc4_crypt(addr, val, self.key.as_flattened());
 
         // Step 3: RSA
         rsa_crypt(addr, val, RSA_ENC_KEY, RSA_MODULUS);
 
         // Step 4: Encryption loop of 64 cycles, using the generated seeds
-        let s: &[u32] = cast_slice(&self.seeds);
+        let [s0, s1, s2, s3, s4] = &self.seeds;
         for i in 0..64 {
-            *addr = (addr.wrapping_add(s[2 * 64 + i]) ^ s[i]).wrapping_sub(*val ^ s[4 * 64 + i]);
-            *val = (val.wrapping_sub(s[3 * 64 + i]) ^ s[64 + i]).wrapping_add(*addr ^ s[4 * 64 + i]);
+            *addr = (addr.wrapping_add(word(s2, i)) ^ word(s0, i)).wrapping_sub(*val ^ word(s4, i));
+            *val = (val.wrapping_sub(word(s3, i)) ^ word(s1, i)).wrapping_add(*addr ^ word(s4, i));
         }
 
-        // BEEFC0DF uses two codes. If the previous code was the first of the
-        // two, use the current one to encrypt the seeds, even if it's a
-        // beefcode itself. Same order as in decrypt_code_mut.
-        if self.beefcodf {
-            let mut rc4 = Rc4::new(bytes_of(&[oldaddr, oldval]));
-            rc4.crypt(bytes_of_mut(&mut self.seeds));
-            self.beefcodf = false;
-            return;
-        }
-
-        // BEEFC0DE
-        if is_beefcode(oldaddr) {
-            self.beefcode(oldaddr, oldval);
-        }
+        self.update(oldaddr, oldval);
     }
 
     /// Decrypts a code and returns the result.
@@ -215,40 +198,55 @@ impl Cb7 {
     /// ```
     pub fn decrypt_code_mut(&mut self, addr: &mut u32, val: &mut u32) {
         // Step 1: Decryption loop of 64 cycles, using the generated seeds
-        let s: &[u32] = cast_slice(&self.seeds);
+        let [s0, s1, s2, s3, s4] = &self.seeds;
         for i in (0..64).rev() {
-            *val = (val.wrapping_sub(*addr ^ s[4 * 64 + i]) ^ s[64 + i]).wrapping_add(s[3 * 64 + i]);
-            *addr = (addr.wrapping_add(*val ^ s[4 * 64 + i]) ^ s[i]).wrapping_sub(s[2 * 64 + i]);
+            *val = (val.wrapping_sub(*addr ^ word(s4, i)) ^ word(s1, i)).wrapping_add(word(s3, i));
+            *addr = (addr.wrapping_add(*val ^ word(s4, i)) ^ word(s0, i)).wrapping_sub(word(s2, i));
         }
 
         // Step 2: RSA
         rsa_crypt(addr, val, RSA_DEC_KEY, RSA_MODULUS);
 
         // Step 3: RC4
-        let mut code = [*addr, *val];
-        let mut rc4 = Rc4::new(bytes_of(&self.key));
-        rc4.crypt(bytes_of_mut(&mut code));
-        *addr = code[0];
-        *val = code[1];
+        rc4_crypt(addr, val, self.key.as_flattened());
 
         // Step 4: Multiplication with multiplicative inverse, modulo (2^32)
-        *addr = mul_decrypt(*addr, self.key[0].wrapping_sub(self.key[1]));
-        *val = mul_decrypt(*val, self.key[2].wrapping_add(self.key[3]));
+        let [k0, k1, k2, k3, _] = self.key.map(u32::from_le_bytes);
+        *addr = mul_decrypt(*addr, k0.wrapping_sub(k1));
+        *val = mul_decrypt(*val, k2.wrapping_add(k3));
 
-        // BEEFC0DF uses two codes. If the previous code was the first of the
-        // two, use the current one to decrypt the seeds.
+        self.update(*addr, *val);
+    }
+
+    // Applies a decrypted code to the key and seeds. Encryption and decryption
+    // both pass the decrypted code, so they stay in sync.
+    fn update(&mut self, addr: u32, val: u32) {
         if self.beefcodf {
-            let mut rc4 = Rc4::new(bytes_of(&[*addr, *val]));
-            rc4.crypt(bytes_of_mut(&mut self.seeds));
+            // BEEFC0DF uses two codes. If the previous code was the first of
+            // the two, use the current one to crypt the seeds, even if it's a
+            // beefcode itself.
+            let key = [addr, val].map(u32::to_le_bytes);
+            Rc4::new(key.as_flattened()).crypt(self.seeds.as_flattened_mut());
             self.beefcodf = false;
-            return;
-        }
-
-        // BEEFC0DE
-        if is_beefcode(*addr) {
-            self.beefcode(*addr, *val);
+        } else if is_beefcode(addr) {
+            self.beefcode(addr, val);
         }
     }
+}
+
+// RC4 encryption/decryption of a code as CodeBreaker stores it: two
+// little-endian words.
+fn rc4_crypt(addr: &mut u32, val: &mut u32, key: &[u8]) {
+    let mut code = [*addr, *val].map(u32::to_le_bytes);
+    Rc4::new(key).crypt(code.as_flattened_mut());
+    [*addr, *val] = code.map(u32::from_le_bytes);
+}
+
+// Returns the i-th word of a seed table. CodeBreaker stores words in
+// little-endian order.
+#[inline]
+const fn word(seed: &[u8; 256], i: usize) -> u32 {
+    u32::from_le_bytes([seed[4 * i], seed[4 * i + 1], seed[4 * i + 2], seed[4 * i + 3]])
 }
 
 /// Returns true if the code address indicates a "beefcode". In that case, the
