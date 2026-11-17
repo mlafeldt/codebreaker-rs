@@ -3,9 +3,9 @@
 //! RSA uses exact modular exponentiation rather than reproducing the firmware's
 //! reduction bug. Affected codes decrypt differently from the device.
 
-use crate::rc4::Rc4;
-
 use core::fmt;
+
+use crate::rc4::Rc4;
 
 /// A processor for CB v7+ codes.
 // Pins the seeds to a word-aligned offset 0. Left to the compiler, they start
@@ -479,7 +479,6 @@ const SEEDS: [[u8; 256]; 5] = [
 mod tests {
     use super::*;
     use crate::code::Code;
-    use std::{vec, vec::Vec};
 
     const fn mul_tests() -> &'static [(u32, u32, u32)] {
         &[

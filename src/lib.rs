@@ -51,12 +51,7 @@
 #![deny(nonstandard_style, rust_2018_idioms)]
 #![deny(missing_docs, missing_debug_implementations)]
 #![forbid(unsafe_code)]
-#![no_std]
-
-// Unit tests use Vec and vec!, but no_std keeps std out of scope unless we
-// reintroduce it explicitly for test builds.
-#[cfg(test)]
-extern crate std;
+#![cfg_attr(not(test), no_std)]
 
 // Runs the code examples in the README as doctests
 #[cfg(doctest)]
@@ -398,7 +393,6 @@ const fn num_code_lines(addr: u32) -> usize {
 mod tests {
     use super::*;
     use crate::code::Code;
-    use std::{vec, vec::Vec};
 
     struct Test {
         cb: Codebreaker,
@@ -840,7 +834,6 @@ mod tests {
 #[cfg(test)]
 mod code {
     use core::fmt;
-    use std::vec::Vec;
 
     #[derive(Copy, Clone, PartialEq, Eq)]
     pub struct Code(pub u32, pub u32);
